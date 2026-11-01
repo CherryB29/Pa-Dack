@@ -198,7 +198,8 @@ html,body{word-break:keep-all;overflow-wrap:break-word;line-height:1.3}
 .sclose{width:100%}
 #mm{inset:auto;position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 104px);width:92px;height:92px;border-radius:50%;border:3px solid #fff;box-shadow:0 3px 12px rgba(0,40,70,.35);background:#2a6fb0;transition:width .25s,height .25s,top .25s,right .25s,border-radius .25s;z-index:5;cursor:pointer;touch-action:manipulation}
 #mm.big{width:min(86vw,320px);height:min(86vw,320px);right:50%;margin-right:calc(min(86vw,320px)/-2);top:calc(env(safe-area-inset-top) + 110px);border-radius:22px}
-#onl{top:calc(env(safe-area-inset-top) + 204px);right:60px;padding:4px 10px;font-size:12px}
+#onl{top:calc(env(safe-area-inset-top) + 184px);right:20px;padding:3px 10px 3px 8px;font-size:11px;z-index:6;pointer-events:none;display:flex;align-items:center;gap:5px}
+#onl:before{content:'';width:7px;height:7px;border-radius:50%;background:#3bd07a;box-shadow:0 0 0 2px rgba(59,208,122,.3)}
 #chatBtn{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 200px);width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#e8743b;box-shadow:0 3px 10px rgba(0,40,70,.28);display:flex;align-items:center;justify-content:center;z-index:5;padding:0}
 #chatBtn svg{width:22px;height:22px}#chatBtn[hidden]{display:none}
 #qc{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 246px);display:flex;flex-direction:column;gap:6px;z-index:6}
@@ -314,6 +315,7 @@ html,body{word-break:keep-all;overflow-wrap:break-word;line-height:1.3}
       <div class="box">
         <div class="row"><div class="g">효과음</div><label class="sw"><input type="checkbox" id="setSound"><i></i></label></div>
         <div class="row"><div class="g">진동 (안드로이드)</div><label class="sw"><input type="checkbox" id="setVibe"><i></i></label></div>
+        <div class="row"><div class="g">다른 사람이 끌어오기 허용<small>끄면 낚싯대에 걸리지 않아요</small></div><label class="sw"><input type="checkbox" id="setDrag"><i></i></label></div>
       </div>
       <div class="box"><button class="btn" id="helpBtn" style="background:#3b9fd8;box-shadow:0 3px 0 #2677a8">도움말 다시 보기</button></div>
       <div class="box" id="acct"><h3>계정 · 멀티플레이</h3><div id="acInfo" class="acinfo"></div>
@@ -777,7 +779,7 @@ function fld(A,x,y){
   const xa=x0<0?0:x0>=MW?MW-1:x0,xb=x0+1<0?0:x0+1>=MW?MW-1:x0+1,ya=y0<0?0:y0>=MH?MH-1:y0,yb=y0+1<0?0:y0+1>=MH?MH-1:y0+1;
   return (A[ya*MW+xa]*(1-fx)+A[ya*MW+xb]*fx)*(1-fy)+(A[yb*MW+xa]*(1-fx)+A[yb*MW+xb]*fx)*fy}
 const wAt=(x,y)=>fld(FW,x,y);
-const isW=(x,y)=>x<0||y<0||x>=MW||y>=MH||wAt(x,y)>.5;
+const isW=(x,y)=>x<0||y<0||x>=MW||y>=MH||(wAt(x,y)>.5&&!onPier(x,y));
 const isSea=(x,y)=>fld(FS,x,y)/(wAt(x,y)+1e-4)>.5;
 const depthAt=(x,y)=>clamp(Math.round((wAt(x,y)-.5)*14),0,6);
 function bake(){
@@ -971,7 +973,7 @@ fv.addEventListener('pointerdown',e=>{
   unlock();
   if(F.phase==='bite'){hook();return}
   if(F.phase==='reel'){rhythmTap();return}
-  if(F.phase==='pop'||F.phase==='windup'||F.phase==='flight')return;
+  if(F.phase==='pop'||F.phase==='windup'||F.phase==='flight'||F.phase==='drag')return;
   if(joy.id===null){const r=fv.getBoundingClientRect();joy.id=e.pointerId;joy.cx=e.clientX;joy.cy=e.clientY;joy.x=joy.y=0;
     joyEl.style.left=(e.clientX-r.left)+'px';joyEl.style.top=(e.clientY-r.top)+'px';joyEl.className='on';knob.style.transform='translate(0,0)'}
 });
@@ -1024,9 +1026,11 @@ function actionDown(id){
     case 'idle':startCharge(id);break;
     case 'wait':cancelCast();break;
     case 'bite':hook();break;
-    case 'reel':rhythmTap();break}
+    case 'reel':rhythmTap();break;
+    case 'drag':endDrag('줄을 놓았어요');break}
 }
 function startCharge(id){
+  if(P.sw){toast('수영 중에는 낚시할 수 없어요');return}
   let fx=P.fx,fy=P.fy;const fl=Math.hypot(fx,fy);if(fl<.01){fx=0;fy=1}else{fx/=fl;fy/=fl}
   firstHint=false;F.phase='charge';F.ch=0;F.chT=0;chargeId=id;F.aim={dx:fx,dy:fy};F.dx=fx;F.dy=fy;
   P.fx=fx;P.fy=fy;P.vx*=.2;P.vy*=.2;
@@ -1043,6 +1047,8 @@ function cancelCast(){
 }
 function landBobber(){
   F.bx=F.tx;F.by=F.ty;
+  const hk=MP.on&&MP.user?hookTarget():null;
+  if(hk){F.phase='drag';F.t=0;F.pt=0;F.hk=hk.uid;F.bx=hk.o.x;F.by=hk.o.y;splash(F.tx,F.ty,8,.8);toast(hk.o.n+'님이 걸렸어요! 끌어와요');sfx.hook();vib(40);return}
   if(!isW(F.tx,F.ty)){F.phase='ground';F.t=0;for(let i=0;i<8;i++)emit({kind:'d',x:F.bx+rnd(-.1,.1),y:F.by,z:.05,vx:rnd(-.5,.5),vy:rnd(-.3,.3),vz:rnd(.3,1),max:.5,col:'#e9dcb8',sz:rnd(2.5,4),g:3});sfx.tick();vib(10);return}
   F.phase='wait';F.t=0;F.pick=rollFish(F.depth,F.wt?'sea':'fresh');F.waitDur=rnd(2.6,5.2)/save.gear.bite;
   F.nib=[F.waitDur-1.3,F.waitDur-.8,F.waitDur-.35];F.nibI=0;F.rippleT=.5;
@@ -1146,7 +1152,7 @@ function startPop(){
 }
 function finishCatch(){
   const p=F.pick,f=p.f;let cd=save.codex[f.id];const isNew=!cd;if(!cd)cd=save.codex[f.id]={n:0,max:0,seen:false};
-  cd.n++;cd.max=Math.max(cd.max,p.size);save.inv.push({id:f.id,size:p.size,price:p.price});persist();updateHud();updateDexDot();mpFeed(p);
+  cd.n++;cd.max=Math.max(cd.max,p.size);save.inv.push({id:f.id,size:p.size,price:p.price});persist();updateHud();updateDexDot();mpFeed(p);mpCatch(p);
   showCard(p,isNew);sparkBurst(P.x,P.y,p.ri);sfx.jingle(p.ri);
   vib(p.ri>=3?[60,40,60,40,120]:p.ri>=1?[40,30,40]:30);
   if(p.ri>=4){const fl=$('#flash');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go')}
@@ -1161,6 +1167,10 @@ function updateFishing(dt){
       F.dx=F.aim.dx;F.dy=F.aim.dy;if(Math.floor(F.chT*10)!==Math.floor((F.chT-dt)*10))sfx.charge(F.ch);break}
     case 'flight':F.t+=dt;if(F.t>=F.fl)landBobber();break;
     case 'ground':F.t+=dt;if(F.t>.8){F.phase='idle'}break;
+    case 'drag':{F.t+=dt;F.pt-=dt;const o=MP.others[F.hk];if(!o||o.stale){endDrag('줄이 풀렸어요');break}
+      F.bx=o.x;F.by=o.y;const dx=o.x-P.x,dy=o.y-P.y,d=Math.hypot(dx,dy)||1;F.dx=dx/d;F.dy=dy/d;
+      if(F.pt<=0){F.pt=.4;sendEvent(F.hk,'pull',{px:+P.x.toFixed(2),py:+P.y.toFixed(2)})}
+      if(d<1.3){endDrag(o.n+'님을 끌어왔어요!',true)}else if(F.t>5){endDrag('놓쳤어요… 너무 멀어요')}break}
     case 'wait':{
       F.t+=dt;F.rippleT-=dt;if(F.rippleT<=0){ripple(F.bx,F.by,.35);F.rippleT=rnd(.9,1.5)}
       const L=F.lure;if(L){const k=clamp(F.t/(F.waitDur-.95),0,1),e=eOut(k),wob=Math.sin(F.t*3)*(1-k)*.5;
@@ -1177,7 +1187,7 @@ function updateFishing(dt){
 }
 
 /* ================= 플레이어 / 메인 업데이트 ================= */
-function solidPt(x,y){if(x<.2||y<.2||x>MW-.2||y>MH-.2)return true;if(wAt(x,y)>.52)return !onPier(x,y);const ix=Math.floor(x),iy=Math.floor(y),k=iy*MW+ix;if(SOL[k])return true;const d=DEC[k];if(!SOLID[d])return false;const fx=x-ix-.5,fy=y-iy-.78,r=SRAD[d]||.16;return fx*fx+fy*fy<r*r}
+function solidPt(x,y){if(x<.2||y<.2||x>MW-.2||y>MH-.2)return true;const ix=Math.floor(x),iy=Math.floor(y),k=iy*MW+ix;if(SOL[k])return true;const d=DEC[k];if(!SOLID[d])return false;const fx=x-ix-.5,fy=y-iy-.78,r=SRAD[d]||.16;return fx*fx+fy*fy<r*r}
 const SRAD={1:.15,7:.13,8:.12,9:.15,10:.15,11:.1,3:.24,15:.32,13:.22,14:.22,18:.2,22:.14,24:.08};
 function blocked(x,y){const hw=.12,hh=.07;return solidPt(x-hw,y-hh)||solidPt(x+hw,y-hh)||solidPt(x-hw,y+hh)||solidPt(x+hw,y+hh)}
 function moveAxis(dx,dy){const nx=P.x+dx,ny=P.y+dy;if(!blocked(nx,ny)){P.x=nx;P.y=ny}else{if(dx)P.vx=0;if(dy)P.vy=0}}
@@ -1190,7 +1200,14 @@ function update(dt){
     if(kx||ky){const l=Math.hypot(kx,ky);ix=kx/l;iy=ky/l}}
   const mag=Math.min(1,Math.hypot(ix,iy)),canMove=F.phase==='idle'||F.phase==='wait'||F.phase==='bite';
   if((F.phase==='wait'||F.phase==='bite')&&mag>.4)cancelCast();
-  const sp=3.3*save.gear.speed,tvx=canMove?ix*sp:0,tvy=canMove?iy*sp:0,k=Math.min(1,dt*(mag>0?11:14));
+  const wasSw=P.sw;P.sw=isW(P.x,P.y);
+  if(P.sw&&!wasSw){splash(P.x,P.y,12,.9);sfx.splash(.6);vib(15)}else if(!P.sw&&wasSw){splash(P.x,P.y,6,.6)}
+  if(P.sw&&F.phase==='charge')F.phase='idle';
+  if(P.sw&&Math.hypot(P.vx,P.vy)>.5&&((P.rpT=(P.rpT||0)-dt)<=0)){P.rpT=.4;ripple(P.x,P.y,.5)}
+  const pl=!!(P.pull&&performance.now()<P.pull.until&&Math.hypot(P.pull.px-P.x,P.pull.py-P.y)>1.1);
+  const sp=3.3*save.gear.speed*(P.sw?.6:1);let tvx=canMove?ix*sp:0,tvy=canMove?iy*sp:0;
+  if(pl){const dx=P.pull.px-P.x,dy=P.pull.py-P.y,l=Math.hypot(dx,dy);tvx=dx/l*4.6;tvy=dy/l*4.6}
+  const k=Math.min(1,dt*(pl?20:mag>0?11:14));
   P.vx+=(tvx-P.vx)*k;P.vy+=(tvy-P.vy)*k;moveAxis(P.vx*dt,0);moveAxis(0,P.vy*dt);
   const spd=Math.hypot(P.vx,P.vy);
   if(canMove&&F.phase==='idle'&&mag>.1){P.fx=ix/mag;P.fy=iy/mag}
@@ -1436,13 +1453,17 @@ function rodW(){
     case 'pop':return lerp(.7,.05,eOut(Math.min(1,F.t/.3)));
   }return .5;
 }
+function swimOverlay(sx,cy,R,s){
+  const wl=cy+R*.28;ctx.save();ctx.beginPath();ctx.rect(sx-R-8*s,wl,2*R+16*s,R*2);ctx.clip();
+  ctx.fillStyle='rgba(52,140,205,.62)';ctx.beginPath();ctx.arc(sx,cy,R+5*s,0,6.3);ctx.fill();ctx.restore();
+  ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=2*s;for(let k=0;k<2;k++){const p=(time*.9+k*.5)%1;ctx.globalAlpha=1-p;ctx.beginPath();ctx.ellipse(sx,wl+2*s,(R+3*s)*(1+p*.35),(R+3*s)*.3*(1+p*.35),0,0,6.3);ctx.stroke()}ctx.globalAlpha=1}
 function drawPlayer(){
   const s=TS/48,sx=sxv(P.x),sy=syv(P.y),spd=Math.hypot(P.vx,P.vy),mv=Math.min(1,spd/1.5),fishing=F.phase!=='idle';
   const bob=fishing?Math.sin(time*2)*.8*s:(Math.abs(Math.sin(P.walk))*4.5*mv+Math.sin(time*2.2)*.8*(1-mv))*s;
-  const R=21*s,cy=sy-R-6*s-bob,lean=clamp(P.vx*.05,-.18,.18);
-  ctx.fillStyle='rgba(0,40,30,.25)';ctx.beginPath();ctx.ellipse(sx,sy,Math.max(8,13*s-bob*.4),5*s,0,0,6.283);ctx.fill();
+  const sw=P.sw,R=21*s,cy=sy-R-(sw?-3:6)*s-bob*(sw?.3:1),lean=clamp(P.vx*.05,-.18,.18);
+  if(!sw){ctx.fillStyle='rgba(0,40,30,.25)';ctx.beginPath();ctx.ellipse(sx,sy,Math.max(8,13*s-bob*.4),5*s,0,0,6.283);ctx.fill()}
   const st=Math.sin(P.walk)*mv;ctx.fillStyle='#ff8a5b';
-  [[-7,st],[7,-st]].forEach(f=>{ctx.beginPath();ctx.ellipse(sx+f[0]*s,sy-3*s-Math.max(0,f[1])*3.5*s,4.4*s,3.2*s,0,0,6.283);ctx.fill()});
+  if(!sw)[[-7,st],[7,-st]].forEach(f=>{ctx.beginPath();ctx.ellipse(sx+f[0]*s,sy-3*s-Math.max(0,f[1])*3.5*s,4.4*s,3.2*s,0,0,6.283);ctx.fill()});
   ctx.save();ctx.translate(sx,cy+R);ctx.rotate(lean);ctx.translate(0,-R);
   ctx.shadowColor='rgba(0,40,70,.35)';ctx.shadowBlur=8*s;ctx.shadowOffsetY=2*s;
   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,R+4*s,0,6.283);ctx.fill();
@@ -1455,6 +1476,7 @@ function drawPlayer(){
     if(bl){ctx.fillRect(-9*s,-2*s,6*s,1.8*s);ctx.fillRect(3*s,-2*s,6*s,1.8*s)}else{ctx.beginPath();ctx.arc(-7*s,-2*s,2.6*s,0,6.283);ctx.arc(7*s,-2*s,2.6*s,0,6.283);ctx.fill()}
     ctx.strokeStyle='#3a2a2a';ctx.lineWidth=2*s;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,3*s,6*s,.2,Math.PI-.2);ctx.stroke()}
   ctx.restore();
+  if(sw)swimOverlay(sx,cy,R,s);
   if(fishing){
     const hx=sx+F.dx*R*.8,hy=cy+R*.5+F.dy*R*.25,w=rodW(),Bk=[-F.dx*17*s,-34*s],Fr=[F.dx*30*s,F.dy*12*s-26*s];
     let tx=hx+lerp(Bk[0],Fr[0],w),ty=hy+lerp(Bk[1],Fr[1],w);
@@ -1585,6 +1607,7 @@ function updateHud2(){
   switch(F.phase){
     case 'idle':s='ready';st=firstHint?'바라보는 방향으로 던져요 · 던지기를 꾹 눌렀다 놓아요':'';break;
     case 'charge':s='charge';t='던져!';st='조이스틱으로 방향 · 오래 누를수록 멀리';break;
+    case 'drag':s='reel';t='놓기';icn=ICON.rod;st='탭하면 줄을 놓아요 · 가까이 끌어와요';break;
     case 'windup':case 'flight':case 'ground':case 'pop':s='busy';t='…';break;
     case 'wait':s='wait';t='감기';icn=ICON.hook;st='찌가 푹 꺼지면 탭!';break;
     case 'bite':s='bite';t='탭!';icn='<b>!</b>';st='지금이에요! 탭!';break;
@@ -1704,7 +1727,7 @@ async function loadCloud(){
     cloudSaveNow();applySaveUI();
   }catch(e){console.warn(e);toast('클라우드 저장을 불러오지 못했어요')}
 }
-function applySaveUI(){updateHud();renderAv();renderShop();sSound.checked=save.settings.sound;sVibe.checked=save.settings.vibe;$('#nickIn').value=save.nick||''}
+function applySaveUI(){updateHud();renderAv();renderShop();sSound.checked=save.settings.sound;sVibe.checked=save.settings.vibe;$('#setDrag').checked=save.settings.drag!==false;$('#nickIn').value=save.nick||''}
 let cloudT=0;
 function cloudDirty(){if(!MP.on||!MP.user)return;clearTimeout(cloudT);cloudT=setTimeout(cloudSaveNow,1500)}
 function cloudSaveNow(){
@@ -1719,6 +1742,7 @@ function joinWorld(){
   MP.refs=[[pl,'child_added',s=>setOther(s.key,s.val())],[pl,'child_changed',s=>setOther(s.key,s.val())],[pl,'child_removed',s=>{delete MP.others[s.key]}]];
   const fd=MP.db.ref('feed').limitToLast(1);let first=true;setTimeout(()=>first=false,2000);
   MP.refs.push([fd,'child_added',s=>{if(first)return;const v=s.val();if(!v||v.u===u||!FBY[v.f])return;toast(`${v.n}님이 ${RAR[RORD[v.r]].n} ${FBY[v.f].n}을(를) 낚았어요!`,3400)}]);
+  MP.refs.push([MP.db.ref('events/'+u),'child_added',onEvent]);
   MP.refs.forEach(([r,e,fn])=>r.on(e,fn));
 }
 function leaveWorld(){
@@ -1727,23 +1751,55 @@ function leaveWorld(){
 }
 function setOther(k,v){
   if(!MP.user||k===MP.user.uid||!v||typeof v.x!=='number')return;
-  let o=MP.others[k];if(!o)o=MP.others[k]={x:v.x,y:v.y,tx:v.x,ty:v.y,fx:0,fy:1,f:0,bx:0,by:0,n:'',a:0,st:0,bub:null,rt:0,side:1};
-  o.tx=v.x;o.ty=v.y;o.fx=v.fx||0;o.fy=v.fy||1;o.f=v.f||0;o.bx=v.bx||0;o.by=v.by||0;o.n=String(v.n||'낚시꾼').slice(0,10);o.a=v.a|0;o.rt=performance.now();
-  if(v.s&&v.st!==o.st){o.bub={t:String(v.s).slice(0,20),until:performance.now()+4200}}o.st=v.st;
+  const now=performance.now();let o=MP.others[k],fresh=false;
+  if(!o){fresh=true;o=MP.others[k]={uid:k,x:v.x,y:v.y,tx:v.x,ty:v.y,vx:0,vy:0,ut:now,fx:0,fy:1,f:0,bx:0,by:0,n:'',a:0,st:v.st,ct:v.ct,bub:null,rt:0,side:1,pl:1,show:null}}
+  o.tx=v.x;o.ty=v.y;o.vx=v.vx||0;o.vy=v.vy||0;o.ut=now;o.fx=v.fx||0;o.fy=v.fy||1;o.f=v.f||0;o.bx=v.bx||0;o.by=v.by||0;o.n=String(v.n||'낚시꾼').slice(0,10);o.a=v.a|0;o.pl=v.pl===0?0:1;o.rt=now;
+  if(!fresh){
+    if(v.s&&v.st!==o.st)o.bub={t:String(v.s).slice(0,20),until:now+4200};
+    if(v.c&&v.ct!==o.ct&&FBY[v.c])o.show={f:FBY[v.c],ri:v.cr|0,size:v.cs||0,t0:now,until:now+4200}}
+  o.st=v.st;o.ct=v.ct;
 }
 function mpTick(dt){
   const now=performance.now();let n=0;
   for(const k in MP.others){const o=MP.others[k];if(now-o.rt>25000){o.stale=true;continue}o.stale=false;n++;
-    const d=Math.hypot(o.tx-o.x,o.ty-o.y);if(d>6){o.x=o.tx;o.y=o.ty}else{o.x+=(o.tx-o.x)*Math.min(1,dt*9);o.y+=(o.ty-o.y)*Math.min(1,dt*9)}
+    // 속도로 앞질러 예측 + 부드럽게 따라가기
+    const age=Math.min(.4,(now-o.ut)/1000),gx=o.tx+o.vx*age,gy=o.ty+o.vy*age,d=Math.hypot(gx-o.x,gy-o.y);
+    if(d>6){o.x=gx;o.y=gy}else{const a=1-Math.exp(-dt*10);o.x+=(gx-o.x)*a;o.y+=(gy-o.y)*a}
     if(Math.abs(o.fx)>.25)o.side=o.fx>0?1:-1}
   MP.online=n+1;
   if(!MP.on||!MP.user||!MP.me)return;
+  if(MP.say&&Date.now()-MP.say.ts>5000)MP.say=null;
   MP.acc+=dt;const fish=F.phase==='wait'||F.phase==='bite'||F.phase==='reel';
-  const d={x:+P.x.toFixed(2),y:+P.y.toFixed(2),fx:+P.fx.toFixed(2),fy:+P.fy.toFixed(2),f:fish?(F.phase==='reel'?3:F.phase==='bite'?2:1):0,bx:fish?+F.bx.toFixed(1):0,by:fish?+F.by.toFixed(1):0,n:dispName(),a:save.avatar|0};
+  const d={x:+P.x.toFixed(2),y:+P.y.toFixed(2),vx:+P.vx.toFixed(2),vy:+P.vy.toFixed(2),fx:+P.fx.toFixed(2),fy:+P.fy.toFixed(2),f:fish?(F.phase==='reel'?3:F.phase==='bite'?2:1):0,bx:fish?+F.bx.toFixed(1):0,by:fish?+F.by.toFixed(1):0,n:dispName(),a:save.avatar|0,pl:save.settings.drag===false?0:1};
   if(MP.say){d.s=MP.say.t;d.st=MP.say.ts}
-  const key=JSON.stringify(d);
-  if((key!==MP.lastKey&&MP.acc>.18)||MP.acc>4){MP.acc=0;MP.lastKey=key;d.t=firebase.database.ServerValue.TIMESTAMP;MP.me.set(d).catch(()=>{})}
+  if(MP.catchC)Object.assign(d,MP.catchC);
+  const sk=JSON.stringify([d.f,d.bx,d.by,Math.round(d.fx*5),Math.round(d.fy*5),d.n,d.a,d.pl,d.s,d.st,d.ct]),L=MP.ls;
+  let ch=!L||L.sk!==sk;
+  if(!ch){const t=(now-L.ts)/1000,px=L.x+L.vx*Math.min(t,.4),py=L.y+L.vy*Math.min(t,.4);
+    if(Math.hypot(P.x-px,P.y-py)>.12||Math.hypot(P.vx-L.vx,P.vy-L.vy)>.6||(Math.hypot(P.vx,P.vy)<.05&&Math.hypot(L.vx,L.vy)>.05))ch=true}
+  if((ch&&MP.acc>.1)||MP.acc>4){MP.acc=0;MP.ls={sk,x:P.x,y:P.y,vx:P.vx,vy:P.vy,ts:now};d.t=firebase.database.ServerValue.TIMESTAMP;MP.me.set(d).catch(()=>{})}
+  // 수영 중: 다른 사람의 찌 근처에 가면 낚시를 끊어 버려요
+  if(P.sw){for(const k in MP.others){const o=MP.others[k];if(o.stale||!o.f)continue;
+    if(Math.hypot(o.bx-P.x,o.by-P.y)<1.1&&now-(o.cutT||0)>3500){o.cutT=now;sendEvent(k,'cut');toast(o.n+'님의 낚시를 끊었어요');sfx.tick()}}}
 }
+function sendEvent(uid,type,extra){if(!MP.on||!MP.user)return;MP.db.ref('events/'+uid).push(Object.assign({type,from:MP.user.uid,n:dispName(),t:firebase.database.ServerValue.TIMESTAMP},extra||{})).catch(()=>{})}
+function onEvent(s){
+  const v=s.val();MP.db.ref('events/'+MP.user.uid+'/'+s.key).remove().catch(()=>{});
+  if(!v||Math.abs(Date.now()-v.t)>20000)return;
+  const busy=['charge','windup','flight','wait','bite','reel','ground','drag'].includes(F.phase);
+  if(v.type==='cut'){if(F.phase==='wait'||F.phase==='bite'||F.phase==='reel')cutFishing(v.n)}
+  else if(v.type==='pull'&&save.settings.drag!==false&&typeof v.px==='number'){
+    const first=!(P.pull&&performance.now()<P.pull.until);
+    if(busy&&F.phase!=='drag'){R=null;F.lure=null;F.phase='idle'}
+    P.pull={px:v.px,py:v.py,until:performance.now()+900};
+    if(first){toast(v.n+'님이 낚싯대로 끌어당겨요!');shake=Math.max(shake,.5);vib([30,30,60]);sfx.lost()}}
+}
+function cutFishing(by){
+  R=null;F.lure=null;F.phase='idle';splash(F.bx,F.by,10,.9);sfx.lost();vib([60,40,100]);shake=Math.max(shake,.4);toast((by||'누군가')+'님이 낚시를 끊었어요!');
+}
+function hookTarget(){for(const k in MP.others){const o=MP.others[k];if(o.stale||o.pl===0)continue;if(Math.hypot(o.x-F.tx,o.y-F.ty)<.9)return {uid:k,o}}return null}
+function endDrag(msg,ok){F.phase='idle';if(msg)toast(msg);if(ok){splash(F.bx,F.by,8,.7);sfx.jingle(1);vib([30,40,30])}}
+function mpCatch(p){if(!MP.on||!MP.user)return;MP.catchC={c:p.f.id,cr:p.ri,cs:p.size,ct:Date.now()};setTimeout(()=>{MP.catchC=null},5000);MP.acc=9}
 function mpFeed(p){if(MP.on&&MP.user&&p.ri>=3)MP.db.ref('feed').push({u:MP.user.uid,n:dispName(),f:p.f.id,r:p.ri,s:p.size,t:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{})}
 function mpSay(t){if(!MP.on||!MP.user)return;MP.say={t,ts:Date.now()};MP.selfBub={t,until:performance.now()+4200};MP.acc=9}
 /* 다른 플레이어 그리기 */
@@ -1752,17 +1808,24 @@ function drawBubbleAt(x,y,txt,s){
   ctx.fillStyle='rgba(255,255,255,.96)';rr(x-w/2,y-12*s,w,24*s,12*s);ctx.fill();ctx.beginPath();ctx.moveTo(x-5*s,y+11*s);ctx.lineTo(x,y+17*s);ctx.lineTo(x+5*s,y+11*s);ctx.fill();ctx.fillStyle='#24465e';ctx.fillText(txt,x,y+.5)}
 function drawOther(o){
   const s=TS/48,sx=sxv(o.x),sy=syv(o.y);if(sx<-80||sx>W+80||sy<-80||sy>H+140)return;
-  const R=19*s,bob=Math.sin(time*2+o.x)*.8*s,cy=sy-R-6*s-bob;
+  const osw=isW(o.x,o.y),R=19*s,bob=Math.sin(time*2+o.x)*.8*s,cy=sy-R-(osw?-3:6)*s-bob*(osw?.3:1);
   if(o.f){const bx=sxv(o.bx),by=syv(o.by),hx=sx+o.fx*R*.8,hy=cy+R*.5;ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.4*s;ctx.beginPath();ctx.moveTo(hx,hy);ctx.quadraticCurveTo((hx+bx)/2,(hy+by)/2+10*s,bx,by-3*s);ctx.stroke();
     const dip=o.f>=2?Math.abs(Math.sin(time*14))*5*s:Math.sin(time*3)*1.5*s;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(bx,by+dip,4.4*s,0,6.3);ctx.fill();ctx.fillStyle='#e8453c';ctx.beginPath();ctx.arc(bx,by+dip-1.4*s,3*s,Math.PI,0);ctx.fill()}
-  ctx.fillStyle='rgba(0,40,30,.25)';ctx.beginPath();ctx.ellipse(sx,sy,13*s,5*s,0,0,6.3);ctx.fill();
+  if(!osw){ctx.fillStyle='rgba(0,40,30,.25)';ctx.beginPath();ctx.ellipse(sx,sy,13*s,5*s,0,0,6.3);ctx.fill()}
   ctx.save();ctx.shadowColor='rgba(0,40,70,.35)';ctx.shadowBlur=8*s;ctx.shadowOffsetY=2*s;ctx.fillStyle='#8fd3ff';ctx.beginPath();ctx.arc(sx,cy,R+4*s,0,6.3);ctx.fill();ctx.restore();
   ctx.save();ctx.beginPath();ctx.arc(sx,cy,R,0,6.3);ctx.clip();const im=avImg(o.a>=0&&o.a<AVS.length?o.a:0);
   if(im.complete&&im.naturalWidth>0)ctx.drawImage(im,sx-R,cy-R,2*R,2*R);else{ctx.fillStyle=AVBG[o.a%AVBG.length];ctx.fillRect(sx-R,cy-R,2*R,2*R);ctx.fillStyle='#3a2a2a';ctx.beginPath();ctx.arc(sx-6*s,cy-2*s,2.2*s,0,6.3);ctx.arc(sx+6*s,cy-2*s,2.2*s,0,6.3);ctx.fill()}
   ctx.restore();
+  if(osw)swimOverlay(sx,cy,R,s);
   ctx.font=`800 ${11*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';const w=ctx.measureText(o.n).width+14*s;
   ctx.fillStyle='rgba(30,60,80,.72)';rr(sx-w/2,sy+4*s,w,17*s,8.5*s);ctx.fill();ctx.fillStyle='#fff';ctx.fillText(o.n,sx,sy+12.8*s);
-  if(o.bub){if(performance.now()>o.bub.until)o.bub=null;else drawBubbleAt(sx,cy-R-22*s,o.bub.t,s)}
+  let top=cy-R-22*s;
+  if(o.bub){if(performance.now()>o.bub.until)o.bub=null;else{drawBubbleAt(sx,top,o.bub.t,s);top-=30*s}}
+  if(o.show){const e=o.show,now=performance.now();if(now>e.until)o.show=null;else{const k=Math.min(1,(now-e.t0)/260),pop=1-Math.pow(1-k,3),fade=Math.min(1,(e.until-now)/400),rc=RAR[RORD[e.ri]].c,txt=e.f.n+(e.size?' '+e.size+'cm':'');
+    ctx.save();ctx.globalAlpha=fade;ctx.font=`800 ${12*s}px sans-serif`;const tw=ctx.measureText(txt).width,cw=tw+58*s,cx=sx,cyy=top-8*s-pop*8*s;
+    ctx.fillStyle='#fff';ctx.strokeStyle=rc;ctx.lineWidth=3*s;rr(cx-cw/2,cyy-20*s,cw,40*s,20*s);ctx.fill();ctx.stroke();
+    drawArt(ctx,e.f,cx-cw/2+22*s,cyy,34*s*pop,Math.sin(now/200)*.15,e.ri>=3?rc:null);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle='#24465e';ctx.fillText(txt,cx-cw/2+42*s,cyy+.5);ctx.restore();
+    if(e.ri>=2&&Math.random()<.2)emit({kind:'s',x:o.x+rnd(-.4,.4),y:o.y,z:1.4,vx:rnd(-.3,.3),vy:0,vz:rnd(.5,1.5),max:.7,col:rc,sz:3,g:3})}}
 }
 function drawSelfSay(){const b=MP.selfBub;if(!b)return;if(performance.now()>b.until){MP.selfBub=null;return}const s=TS/48;drawBubbleAt(sxv(P.x),syv(P.y)-62*s,b.t,s)}
 /* 계정 UI */
@@ -1820,6 +1883,7 @@ async function renderRank(){
     box.innerHTML=arr.length?arr.map((r,i)=>`<div class="rk ${r.k===MP.user.uid?'me':''}"><b class="rn">${i+1}</b><img src="${avUrl(AVS[(r.avatar|0)%AVS.length])}" alt="" onerror="this.style.visibility='hidden'"><div class="rg"><span>${String(r.nick||'낚시꾼').replace(/[<>&]/g,'')}</span><small>도감 ${r.dex||0}/${FISH.length}</small></div><div class="rc">${ICON.coin}${(r.earned||0).toLocaleString()}</div></div>`).join(''):'<div class="rk0">아직 기록이 없어요</div>'
   }catch(e){box.innerHTML='<div class="rk0">랭킹을 불러오지 못했어요</div>'}
 }
+const sDrag=$('#setDrag');sDrag.checked=save.settings.drag!==false;sDrag.addEventListener('change',()=>{save.settings.drag=sDrag.checked;persist();MP.acc=9});
 mpInit();
 
 window.__game={get R(){return R},get F(){return F},FISH,drawArt,get P(){return P},get save(){return save},setTab,renderShop,STR,PIERS};
