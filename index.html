@@ -4,12 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#2b8fb8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@200..900&display=swap" rel="stylesheet">
 <title>Pa-Dack</title>
 <style>
+button,input,select,textarea{font-family:inherit}
 :root{--nav-h:62px;--ink:#2a3b4a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#1d6f8f;overscroll-behavior:none;
-  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;color:var(--ink)}
+  font-family:'Chiron GoRound TC',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;color:var(--ink)}
 svg{width:1em;height:1em;display:block}
 [data-ic]{display:inline-flex;align-items:center;justify-content:center}
 #app{position:fixed;inset:0;display:flex;flex-direction:column}
@@ -32,7 +36,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #toast{position:absolute;left:50%;bottom:150px;transform:translateX(-50%) translateY(10px);background:rgba(255,255,255,.95);padding:9px 16px;border-radius:14px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 4px 14px rgba(0,50,80,.25);white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-#joy{position:absolute;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;background:rgba(255,255,255,.22);border:3px solid rgba(255,255,255,.55);pointer-events:none;opacity:0;transition:opacity .15s}
+#joy{position:absolute;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;background:rgba(255,255,255,.22);border:3px solid rgba(255,255,255,.55);pointer-events:none;opacity:0;transition:opacity .25s}
 #joy.on{opacity:1}#joy.ghost{opacity:.35}
 #knob{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 3px 8px rgba(0,60,90,.3)}
 
@@ -204,15 +208,6 @@ html,body{word-break:keep-all;overflow-wrap:break-word;line-height:1.3}
 #coChip[hidden]{display:none}
 #onl:before{content:'';width:8px;height:8px;border-radius:50%;background:#3bd07a;box-shadow:0 0 0 3px rgba(59,208,122,.28)}
 #pInv{transition:right .2s}
-#chatBtn{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 200px);width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#e8743b;box-shadow:0 3px 10px rgba(0,40,70,.28);display:flex;align-items:center;justify-content:center;z-index:5;padding:0}
-#chatBtn svg{width:22px;height:22px}#chatBtn[hidden]{display:none}
-#qc{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 246px);display:flex;flex-direction:column;gap:6px;z-index:6}
-#qc button{border:0;border-radius:14px;background:rgba(255,255,255,.96);padding:8px 14px;font-family:inherit;font-weight:800;font-size:13px;color:#24465e;box-shadow:0 2px 8px rgba(0,40,70,.25);white-space:nowrap}
-#qc{align-items:flex-end;width:min(250px,calc(100vw - 24px))}
-#qcRow{display:flex;gap:6px;width:100%;margin-top:2px}
-#qcRow input{flex:1;min-width:0;border:0;border-radius:14px;background:rgba(255,255,255,.97);padding:9px 12px;font-family:inherit;font-weight:700;font-size:14px;color:#24465e;box-shadow:0 2px 8px rgba(0,40,70,.25);outline:none;-webkit-user-select:text;user-select:text;touch-action:auto}
-#qcRow button{flex:none;border:0;border-radius:14px;background:#ff8a3a;color:#fff;padding:9px 12px;font-family:inherit;font-weight:900;font-size:13px;box-shadow:0 2px 8px rgba(180,60,10,.3)}
-#qc[hidden]{display:none}
 #login{position:fixed;inset:0;z-index:70;background:linear-gradient(#9be8d8,#2b8fb8);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
 .lbox{background:#fffdf5;border-radius:26px;padding:22px 20px;width:100%;max-width:360px;box-shadow:0 14px 40px rgba(0,30,50,.4);display:flex;flex-direction:column;gap:10px}
 .lt{font-size:34px;font-weight:900;text-align:center;color:#e8743b;letter-spacing:-.02em}.ls{margin:-4px 0 4px;text-align:center;color:#8a7d66;font-weight:700;font-size:14px}
@@ -283,7 +278,7 @@ html,body{word-break:keep-all;overflow-wrap:break-word;line-height:1.3}
 #ptSheet .pc{width:100%;border:0;border-radius:14px;padding:12px;background:#e9e2d0;font-family:inherit;font-weight:800;font-size:14px;color:#6a5a3a;cursor:pointer;margin-top:4px}
 /* ===== v1.1 UI : 다크 글래스 ===== */
 :root{--bg0:#08151f;--bg1:#0f2736;--cd:rgba(255,255,255,.055);--cd2:rgba(255,255,255,.09);--ln:rgba(255,255,255,.09);--tx:#eef6fa;--tx2:#8ba5b4;--ac:#ffb454;--ac2:#ff7a45;--ok:#3fd08c}
-body{font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif;letter-spacing:-.01em}
+body{font-family:'Chiron GoRound TC',-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif;letter-spacing:-.01em}
 .pill{background:rgba(8,21,31,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--tx);border:1px solid rgba(255,255,255,.14);box-shadow:0 4px 14px rgba(0,0,0,.25);font-size:14px;font-weight:700;padding:6px 13px 6px 9px}
 #onl{background:rgba(8,21,31,.58);backdrop-filter:blur(10px);color:var(--tx);border:1px solid rgba(255,255,255,.14);box-shadow:none;font-weight:700}
 #status{display:none!important}
@@ -292,11 +287,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic 
 #knob{background:rgba(255,255,255,.9);box-shadow:0 4px 12px rgba(0,0,0,.3)}
 #act{border:3px solid rgba(255,255,255,.92);box-shadow:0 8px 22px rgba(0,0,0,.35),inset 0 -6px 12px rgba(0,0,0,.12),inset 0 4px 8px rgba(255,255,255,.3);font-weight:800}
 #mm{border:2px solid rgba(255,255,255,.7);box-shadow:0 4px 16px rgba(0,0,0,.4)}
-#chatBtn{background:rgba(8,21,31,.62);color:#fff;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px)}
-#qc button{background:rgba(8,21,31,.78);color:var(--tx);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);box-shadow:none}
-#qcRow input{background:rgba(8,21,31,.82);color:var(--tx);border:1px solid rgba(255,255,255,.16);box-shadow:none}
-#qcRow input::placeholder{color:var(--tx2)}
-#qcRow button{background:linear-gradient(var(--ac),var(--ac2));color:#2a1200;box-shadow:none}
 #ptBtn{border:1px solid rgba(255,255,255,.4);box-shadow:0 6px 18px rgba(0,0,0,.4)}
 /* 낚은 물고기 카드 */
 #card{background:rgba(8,21,31,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);border-radius:22px;color:var(--tx);box-shadow:0 12px 34px rgba(0,0,0,.5),0 0 28px color-mix(in srgb,var(--rc) 35%,transparent)}
@@ -524,6 +514,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic 
 @keyframes gxcp{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.35)}}
 .gxsum{display:flex;justify-content:center;gap:18px;margin:0 0 14px;color:#9fb0bc;font-size:13px;font-weight:700;opacity:0;transition:opacity .4s}
 .gxsum.on{opacity:1}.gxsum b{color:#f2f6f8;margin-left:6px}
+/* 왼쪽 하단 채팅 로그 */
+#chatDock{--dw:min(340px,62vw);position:absolute;left:12px;bottom:170px;width:var(--dw);z-index:6;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+#chatLog{display:flex;flex-direction:column;height:180px;padding-top:64px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;pointer-events:none;touch-action:none;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 64px);mask-image:linear-gradient(to bottom,transparent 0,#000 64px)}
+#chatLog.has{pointer-events:auto}
+#chatDock.expanded #chatLog{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:0}
+#chatLog{background:transparent}
+#chatLog{transition:opacity 1s linear}
+#chatLog.out{opacity:0}
+#chatLog::-webkit-scrollbar{display:none}
+#chatLog::before{content:'';margin-top:auto}
+.cl{flex:none;width:fit-content;max-width:100%;margin-top:3px;padding:2px 7px;border-radius:6px;background:rgba(8,21,31,.32);color:var(--tx);font-size:13px;font-weight:700;line-height:1.4;text-shadow:0 1px 3px rgba(0,0,0,.75);word-break:break-all}
+.cl .nk{color:#ffe066}
+.cl .ms{color:var(--tx)}
+.cl.sys{color:#d3dde5;font-style:italic}
+.cl.adm .nk{color:#ff4d4d}
+.cl.notice{color:#c1a0ff}
+#chatInputRow{display:flex;align-items:center;width:40px;height:40px;box-sizing:border-box;padding:0;overflow:hidden;pointer-events:auto;border:0;border-radius:20px;background:rgba(8,21,31,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 14px rgba(0,0,0,.25);transition:width .25s ease,padding .25s ease,border-radius .25s ease}
+#chatInputRow.open{width:var(--dw);padding:0 6px 0 10px;border-radius:8px}
+#chatOpen{flex:none;width:38px;height:38px;border:0;background:none;color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;overflow:hidden;transition:width .25s ease,opacity .2s}
+#chatOpen svg{width:20px;height:20px;flex:none}
+#chatInputRow.open #chatOpen{width:0;opacity:0;pointer-events:none}
+#chatTag{flex:none;max-width:0;overflow:hidden;white-space:nowrap;color:#ffe066;font-size:13px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.75);opacity:0;transition:max-width .25s ease,opacity .15s,margin .25s ease}
+#chatInputRow.open #chatTag{max-width:60px;opacity:1;margin-right:6px}
+#chatIn{flex:1 1 0;min-width:0;height:100%;border:0;background:transparent;color:var(--tx);padding:0;font-family:inherit;font-size:13px;font-weight:700;outline:none;opacity:0;transition:opacity .15s;-webkit-user-select:text;user-select:text;touch-action:auto}
+#chatInputRow.open #chatIn{opacity:1}
+#chatSend{flex:none;width:0;height:32px;margin-left:0;border:0;border-radius:50%;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:none;color:var(--tx);opacity:0;pointer-events:none;transition:width .25s ease,margin .25s ease,opacity .2s}
+#chatSend svg{width:16px;height:16px;flex:none}
+#chatInputRow.open #chatSend{width:32px;margin-left:6px;opacity:1;pointer-events:auto}
 </style>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -549,8 +568,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic 
       <canvas id="mm" width="300" height="300"></canvas>
       <div id="onl" class="pill" hidden></div>
       <div id="coChip" class="pill" hidden></div>
-      <button id="chatBtn" hidden aria-label="말풍선"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H11l-5 4v-4H4z"/></svg></button>
-      <div id="qc" hidden></div>
+      <div id="chatDock"><div id="chatLog"></div><div id="chatInputRow"><button id="chatOpen" type="button" aria-label="채팅 입력"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H11l-5 4v-4H4z"/></svg></button><span id="chatTag">전체:</span><input id="chatIn" type="text" maxlength="50" autocomplete="off" enterkeyhint="send"><button id="chatSend" type="button" aria-label="보내기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4v8H6"/><path d="M10 8l-4 4 4 4"/></svg></button></div></div>
       <div id="status" class="hide"></div>
       <div id="toast"></div>
       <div id="joy"><div id="knob"></div></div>
@@ -665,7 +683,7 @@ function applyCfg(v){
   const mt=v.maintenance;MP.maint=!!(mt&&mt.on&&!isAdminUser());MP.maintMsg=mt&&mt.msg?String(mt.msg).slice(0,120):'';syncBlock();
   const bc=v.bc;
   if(bc&&bc.id){let last='';try{last=localStorage.getItem('pd-bc')||''}catch(e){}
-    if(String(bc.id)!==last&&Date.now()+(MP.off||0)-bc.id<600000){try{localStorage.setItem('pd-bc',String(bc.id))}catch(e){}toast('[공지] '+String(bc.text||'').slice(0,100),6500)}}
+    if(String(bc.id)!==last&&Date.now()+(MP.off||0)-bc.id<600000){try{localStorage.setItem('pd-bc',String(bc.id))}catch(e){}{const nt=String(bc.text||'').slice(0,100);showToast('[공지] '+nt,6500);addNotice(nt)}}}
 }
 const MP={on:false,db:null,auth:null,user:null,me:null,refs:null,others:{},acc:0,lastKey:'',online:1,say:null,selfBub:null,skip:false,err:''};
 /* ================= 저장 / 상태 ================= */
@@ -1720,8 +1738,8 @@ function updateAmbient(dt){
 const joy={id:null,cx:0,cy:0,x:0,y:0},keys=new Set();
 let dragTap=null;
 const joyEl=$('#joy'),knob=$('#knob');
-function ghostJoy(){joyEl.style.left='84px';joyEl.style.top=(fv.clientHeight-100)+'px';joyEl.className='ghost';knob.style.transform='translate(0,0)'}
-function releaseJoy(){joy.id=null;joy.x=joy.y=0;ghostJoy()}
+function ghostJoy(){joyEl.style.left='84px';joyEl.style.top=(fv.clientHeight-100)+'px';joyEl.className='';knob.style.transform='translate(0,0)'}
+function releaseJoy(){joy.id=null;joy.x=joy.y=0;joyEl.className=''}
 fv.addEventListener('pointerdown',e=>{
   if(e.target.closest('#act,#card,#mm'))return;
   unlock();
@@ -1901,10 +1919,10 @@ function drawRhythm(){
     ctx.fillStyle=n.res==='miss'?'#7b8a95':col;ctx.beginPath();ctx.arc(x,ty,19*s,0,6.283);ctx.fill();ctx.lineWidth=3.5*s;ctx.strokeStyle='#fff';ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.arc(x-5*s,ty-6*s,4*s,0,6.283);ctx.fill();ctx.globalAlpha=1}
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
-  for(const t of r.texts){ctx.globalAlpha=1-t.t/.7;ctx.font=`900 ${22*s}px sans-serif`;const y=ty-hh-26*s-t.t*30*s;
+  for(const t of r.texts){ctx.globalAlpha=1-t.t/.7;ctx.font=`900 ${22*s}px "Chiron GoRound TC",sans-serif`;const y=ty-hh-26*s-t.t*30*s;
     ctx.lineWidth=5;ctx.strokeStyle='rgba(20,40,60,.85)';ctx.strokeText(t.txt,hx+30*s,y);ctx.fillStyle=t.col;ctx.fillText(t.txt,hx+30*s,y)}
   ctx.globalAlpha=1;
-  if(r.combo>=2){ctx.textAlign='right';ctx.font=`900 ${20*s}px sans-serif`;ctx.lineWidth=5;ctx.strokeStyle='rgba(20,40,60,.85)';const tx=`${r.combo} COMBO`;ctx.strokeText(tx,W-22,ty-hh+22*s);ctx.fillStyle='#fff';ctx.fillText(tx,W-22,ty-hh+22*s)}
+  if(r.combo>=2){ctx.textAlign='right';ctx.font=`900 ${20*s}px "Chiron GoRound TC",sans-serif`;ctx.lineWidth=5;ctx.strokeStyle='rgba(20,40,60,.85)';const tx=`${r.combo} COMBO`;ctx.strokeText(tx,W-22,ty-hh+22*s);ctx.fillStyle='#fff';ctx.fillText(tx,W-22,ty-hh+22*s)}
   const bx=hx+6*s,bw=W*.46,bh=12*s,by=ty+hh+16*s;
   ctx.fillStyle='rgba(18,44,62,.6)';rr(bx-4,by-4,bw+8,bh+8,(bh+8)/2);ctx.fill();
   ctx.fillStyle=`hsl(${Math.round(r.hp*1.2)},80%,55%)`;if(r.hp>0){rr(bx,by,bw*r.hp/100,bh,bh/2);ctx.fill()}
@@ -2399,7 +2417,7 @@ function drawParts(){
 function drawBubble(){
   if(F.phase!=='bite')return;const s=baseTS/48,k=eBack(clamp(F.t/.22,0,1)),x=sxv(P.x),y=syv(P.y)-70*s-Math.sin(time*18)*2*s;
   ctx.save();ctx.translate(x,y);ctx.scale(k,k);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,17*s,0,6.3);ctx.moveTo(-5*s,14*s);ctx.lineTo(0,24*s);ctx.lineTo(5*s,14*s);ctx.fill();
-  ctx.fillStyle='#e8352f';ctx.font=`900 ${26*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('!',0,1*s);ctx.restore();
+  ctx.fillStyle='#e8352f';ctx.font=`900 ${26*s}px "Chiron GoRound TC",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('!',0,1*s);ctx.restore();
 }
 function drawOverlay(){
   ctx.fillStyle='rgba(15,50,70,.07)';
@@ -2420,7 +2438,7 @@ function drawTarget(nw){
   ctx.strokeStyle='rgba(255,255,255,.35)';ctx.setLineDash([4*s,5*s]);ctx.lineWidth=1.6*s;ctx.beginPath();ctx.moveTo(sxv(P.x),syv(P.y)-8*s);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);
   ctx.strokeStyle=ok?`rgba(255,255,255,${.9-p*.7})`:`rgba(255,106,90,${.95-p*.5})`;ctx.lineWidth=2.5*s;ctx.beginPath();ctx.ellipse(x,y,(10+p*14)*s,(10+p*14)*s*.6,0,0,6.3);ctx.stroke();
   ctx.fillStyle=dc;ctx.beginPath();ctx.ellipse(x,y,6*s,3.6*s,0,0,6.3);ctx.fill();
-  ctx.font=`800 ${12*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`800 ${12*s}px "Chiron GoRound TC",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
   const zz=nw.land?'':zoneAt(nw.x,nw.y,nw.wt),tx=nw.land?'땅':(zz?ZN[zz]+' · ':'')+DLAB[nw.d],tw=ctx.measureText(tx).width+18*s,cx=clamp(x,tw/2+8,W-tw/2-8),cy=clamp(y-24*s,112,H-130);
   ctx.fillStyle=ok?'rgba(255,255,255,.9)':'rgba(255,238,236,.95)';rr(cx-tw/2,cy-9.5*s,tw,19*s,9.5*s);ctx.fill();
   ctx.fillStyle=ok?'#24465e':'#c43a2b';ctx.fillText(tx,cx,cy+.5);
@@ -2479,12 +2497,12 @@ function pmDraw(){
     g.fillStyle=q.c;g.globalAlpha=.25+.2*pu;g.beginPath();g.arc(x,y,(sel?22:15)+pu*4,0,6.3);g.fill();g.globalAlpha=1;
     g.fillStyle=q.c;g.strokeStyle='#fff';g.lineWidth=sel?5:3.4;g.beginPath();g.arc(x,y,sel?10:7.5,0,6.3);g.fill();g.stroke();
     if(cur){g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=2.4;g.setLineDash([4,5]);g.beginPath();g.arc(x,y,16,0,6.3);g.stroke();g.setLineDash([])}}
-  if(MP.on&&MP.user){g.textAlign='center';g.font='800 19px sans-serif';
+  if(MP.on&&MP.user){g.textAlign='center';g.font='800 19px "Chiron GoRound TC",sans-serif';
     for(const kk in MP.others){const o=MP.others[kk];if(o.stale)continue;const x=o.x*k,y=o.y*k,tx=Math.min(S-36,Math.max(36,x)),ty=y<26?y+24:y-11;
       g.fillStyle=ringCol(o);g.strokeStyle='#fff';g.lineWidth=2.6;g.beginPath();g.arc(x,y,5.4,0,6.3);g.fill();g.stroke();
       g.lineWidth=4.5;g.strokeStyle='rgba(0,10,20,.75)';g.strokeText(o.n,tx,ty);g.fillStyle='#fff';g.fillText(o.n,tx,ty)}}
   g.fillStyle='#fff';g.strokeStyle='#ff6a3a';g.lineWidth=3;g.beginPath();g.arc(P.x*k,P.y*k,5.6,0,6.3);g.fill();g.stroke();
-  if(MP.on&&MP.user){g.textAlign='center';g.font='800 19px sans-serif';const x=P.x*k,tx=Math.min(S-20,Math.max(20,x)),ty=P.y*k<26?P.y*k+24:P.y*k-11;g.lineWidth=4.5;g.strokeStyle='rgba(0,10,20,.75)';g.strokeText('나',tx,ty);g.fillStyle='#ffd9a0';g.fillText('나',tx,ty)}}
+  if(MP.on&&MP.user){g.textAlign='center';g.font='800 19px "Chiron GoRound TC",sans-serif';const x=P.x*k,tx=Math.min(S-20,Math.max(20,x)),ty=P.y*k<26?P.y*k+24:P.y*k-11;g.lineWidth=4.5;g.strokeStyle='rgba(0,10,20,.75)';g.strokeText('나',tx,ty);g.fillStyle='#ffd9a0';g.fillText('나',tx,ty)}}
 function pmInfo(){
   const q=PORTALS.find(z=>z.id===pmSel),go=$('#pmGo'),inf=$('#pmI');
   if(!q){inf.innerHTML='<b>포탈을 선택해요</b><small>'+save.ptl.length+' / '+PORTALS.length+(MP.on&&MP.user?' · 접속 '+(MP.online||1)+'명':'')+'</small>';go.disabled=true;return}
@@ -2582,7 +2600,8 @@ function updateHud2(){
 function updateHud(){const g=save.gold.toLocaleString();updateDexDot();$('#gv').textContent=g;$('#iv').textContent=save.inv.length;
   document.querySelectorAll('.gv2').forEach(e=>e.textContent=g);const b=$('#tabBadge');if(b){b.hidden=!save.inv.length;b.textContent=save.inv.length>99?'99+':save.inv.length}}
 let toastT=0;const elT=$('#toast');
-function toast(m,ms=1900){elT.textContent=m;elT.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>elT.classList.remove('show'),ms)}
+function showToast(m,ms=1900){elT.textContent=m;elT.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>elT.classList.remove('show'),ms)}
+function toast(m,ms=1900){showToast(m,ms);addSys(m)}
 let cardT=0;const elC=$('#card');
 function showCard(p,isNew){
   const r=RAR[RORD[p.ri]];elC.style.setProperty('--rc',r.c);$('#cImg').src=iconURL(p.f,72);
@@ -3197,7 +3216,8 @@ function cloudSaveNow(){
 function joinWorld(){
   leaveWorld();const u=MP.user.uid,pl=MP.db.ref('world/main/players');
   MP.me=pl.child(u);MP.me.onDisconnect().remove();MP.lastKey='';MP.acc=9;MP.ls=null;MP.conn=MP.conn||false;
-  MP.refs=[[pl,'child_added',s=>setOther(s.key,s.val())],[pl,'child_changed',s=>setOther(s.key,s.val())],[pl,'child_removed',s=>{const o=MP.others[s.key];if(o&&MP.user&&!o.stale)mpLeave(o);delete MP.others[s.key]}]];
+  let plFirst=true;setTimeout(()=>plFirst=false,2000);
+  MP.refs=[[pl,'child_added',s=>{setOther(s.key,s.val());const v=s.val();if(!plFirst&&v&&s.key!==(MP.user&&MP.user.uid))addSys(`${String(v.n||'낚시꾼').slice(0,10)}님이 입장했어요`)}],[pl,'child_changed',s=>setOther(s.key,s.val())],[pl,'child_removed',s=>{const o=MP.others[s.key];if(o&&MP.user&&!o.stale)mpLeave(o);delete MP.others[s.key]}]];
   const fd=MP.db.ref('feed').limitToLast(1);let first=true;setTimeout(()=>first=false,2000);
   MP.refs.push([fd,'child_added',s=>{if(first)return;const v=s.val();if(!v||v.u===u||!FBY[v.f])return;toast(`${v.n}님이 ${RAR[RORD[v.r]].n} ${FBY[v.f].n}을(를) 낚았어요!`,3400)}]);
   MP.refs.push([MP.db.ref('events/'+u),'child_added',onEvent]);
@@ -3222,7 +3242,7 @@ function setOther(k,v){
   const pf=o.f|0;o.tx=v.x;o.ty=v.y;o.vx=v.vx||0;o.vy=v.vy||0;o.ut=now;o.fx=v.fx||0;o.fy=v.fy||1;o.f=v.f||0;o.bx=v.bx||0;o.by=v.by||0;o.n=String(v.n||'낚시꾼').slice(0,10);o.a=v.a|0;o.pl=v.pl===0?0:1;o.eh=typeof v.eh==='string'?v.eh:'';o.es=typeof v.es==='string'?v.es:'';o.er=typeof v.er==='string'?v.er:'';o.ep=typeof v.ep==='string'?v.ep:'';o.rt=now;
   if((o.f|0)!==pf){o.ft=now;if(pf===6&&o.f===1){splash(o.bx,o.by,14,1.1);ripple(o.bx,o.by,.8)}else if(pf===6&&!o.f){splash(o.bx,o.by,5,.5)}}
   if(!fresh){
-    if(v.s&&v.st!==o.st)o.bub={t:String(v.s).slice(0,40),until:now+4800};
+    if(v.s&&v.st!==o.st){o.bub={t:String(v.s).slice(0,50),until:now+4800};addLine(o.n||'낚시꾼',String(v.s).slice(0,50))}
     if(v.c&&v.ct!==o.ct&&FBY[v.c])o.show={f:FBY[v.c],ri:v.cr|0,size:v.cs||0,t0:now,until:now+4200}}
   o.st=v.st;o.ct=v.ct;
 }
@@ -3231,7 +3251,7 @@ function mpLeave(o){
   const w=isW(o.x,o.y);
   for(let q=0;q<18;q++)emit({kind:'d',x:o.x+rnd(-.3,.3),y:o.y+rnd(-.1,.1),z:.1+rnd(0,.5),vz:rnd(.9,2.4),vx:rnd(-.6,.6),vy:rnd(-.3,.3),max:rnd(.7,1.3),col:q%3===0?'#fff6a0':'#cfe9ff',sz:rnd(2.5,5.5),g:0});
   ripple(o.x,o.y,1.1);ripple(o.x,o.y,.6);if(w)splash(o.x,o.y,10,.9);
-  toast(o.n+'님이 나갔어요',1800);sfx.tick&&sfx.tick()}
+  addSys(o.n+'님이 나갔어요');sfx.tick&&sfx.tick()}
 function mpSmooth(dt){
   const now=performance.now();let n=0;
   for(const k in MP.others){const o=MP.others[k];if(now-o.rt>60000){delete MP.others[k];continue}if(now-o.rt>25000){o.stale=true;continue}o.stale=false;n++;
@@ -3277,7 +3297,7 @@ function onEvent(s){
   const v=s.val();MP.db.ref('events/'+MP.user.uid+'/'+s.key).remove().catch(()=>{});
   if(!v||Math.abs(Date.now()+(MP.off||0)-v.t)>40000)return;
   const busy=['charge','windup','flight','wait','bite','reel','ground','drag'].includes(F.phase);
-  if(v.type==='msg'){if(v.m)toast('[관리자] '+String(v.m).slice(0,120),6500)}
+  if(v.type==='msg'){if(v.m)addLine('관리자',String(v.m).slice(0,120),'adm')}
   else if(v.type==='kick'){toast('관리자에 의해 접속이 종료됐어요',3000);setTimeout(()=>{try{MP.auth.signOut()}catch(e){}},600)}
   else if(v.type==='reload'){clearTimeout(cloudT);loadCloud().then(()=>toast('관리자가 데이터를 갱신했어요',3000))}
   else if(v.type==='cut'){if(F.phase==='wait'||F.phase==='bite'||F.phase==='reel')cutFishing(v.n)}
@@ -3294,10 +3314,10 @@ function hookTarget(){for(const k in MP.others){const o=MP.others[k];if(o.stale|
 function endDrag(msg,ok){F.phase='idle';F.pull=false;pullId=null;if(msg)toast(msg);if(ok){splash(F.bx,F.by,8,.7);sfx.jingle(1);vib([30,40,30])}}
 function mpCatch(p){if(!MP.on||!MP.user)return;MP.catchC={c:p.f.id,cr:p.ri,cs:p.size,ct:Date.now()};setTimeout(()=>{MP.catchC=null},5000);MP.acc=9}
 function mpFeed(p){if(MP.on&&MP.user&&p.ri>=3)MP.db.ref('feed').push({u:MP.user.uid,n:dispName(),f:p.f.id,r:p.ri,s:p.size,t:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{})}
-function mpSay(t){t=String(t).trim().slice(0,40);if(!t)return;MP.selfBub={t,until:performance.now()+4800};if(!MP.on||!MP.user)return;MP.say={t,ts:Date.now()};MP.acc=9}
+function mpSay(t){t=String(t).trim().slice(0,50);if(!t)return;addLine(dispName(),t);MP.selfBub={t,until:performance.now()+4800};if(!MP.on||!MP.user)return;MP.say={t,ts:Date.now()};MP.acc=9}
 /* 다른 플레이어 그리기 */
 function drawBubbleAt(x,y,txt,s){
-  ctx.font=`800 ${12*s}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`800 ${12*s}px "Chiron GoRound TC",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
   const maxW=150*s,lines=[];let cur='';for(const ch of String(txt)){if(ctx.measureText(cur+ch).width>maxW&&cur){lines.push(cur);cur=ch}else cur+=ch}if(cur)lines.push(cur);
   let w=0;for(const l of lines)w=Math.max(w,ctx.measureText(l).width);w+=18*s;const lh=16*s,hh=lines.length*lh+8*s,cy=y-(hh-24*s)/2;
   ctx.fillStyle='rgba(255,255,255,.96)';rr(x-w/2,cy-hh/2,w,hh,12*s);ctx.fill();ctx.beginPath();ctx.moveTo(x-5*s,cy+hh/2-1*s);ctx.lineTo(x,cy+hh/2+6*s);ctx.lineTo(x+5*s,cy+hh/2-1*s);ctx.fill();
@@ -3333,18 +3353,18 @@ function drawOther(o){
   ctx.restore();
   if(osw)swimOverlay(sx,cy,R,s);
   drawHat(o.eh,sx,cy,R);
-  ctx.font=`700 ${12*s}px -apple-system,"Pretendard","Noto Sans KR",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';const w=ctx.measureText(o.n).width+18*s;
+  ctx.font=`700 ${12*s}px "Chiron GoRound TC",-apple-system,"Pretendard","Noto Sans KR",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';const w=ctx.measureText(o.n).width+18*s;
   ctx.fillStyle='rgba(8,21,31,.72)';rr(sx-w/2,sy+5*s,w,19*s,9.5*s);ctx.fill();ctx.strokeStyle=rc;ctx.lineWidth=1.4*s;ctx.stroke();ctx.fillStyle='#fff';ctx.fillText(o.n,sx,sy+14.8*s);
   let top=cy-R-22*s;
   if(o.bub){if(performance.now()>o.bub.until)o.bub=null;else{drawBubbleAt(sx,top,o.bub.t,s);top-=30*s}}
   if(o.show){const e=o.show,now=performance.now();if(now>e.until)o.show=null;else{const k=Math.min(1,(now-e.t0)/260),pop=1-Math.pow(1-k,3),fade=Math.min(1,(e.until-now)/400),rc=RAR[RORD[e.ri]].c,txt=e.f.n+(e.size?' '+e.size+'cm':'');
-    ctx.save();ctx.globalAlpha=fade;ctx.font=`800 ${12*s}px sans-serif`;const tw=ctx.measureText(txt).width,cw=tw+58*s,cx=sx,cyy=top-8*s-pop*8*s;
+    ctx.save();ctx.globalAlpha=fade;ctx.font=`800 ${12*s}px "Chiron GoRound TC",sans-serif`;const tw=ctx.measureText(txt).width,cw=tw+58*s,cx=sx,cyy=top-8*s-pop*8*s;
     ctx.fillStyle='#fff';ctx.strokeStyle=rc;ctx.lineWidth=3*s;rr(cx-cw/2,cyy-20*s,cw,40*s,20*s);ctx.fill();ctx.stroke();
     drawArt(ctx,e.f,cx-cw/2+22*s,cyy,34*s*pop,Math.sin(now/200)*.15,e.ri>=3?rc:null);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle='#24465e';ctx.fillText(txt,cx-cw/2+42*s,cyy+.5);ctx.restore();
     if(e.ri>=2&&Math.random()<.2)emit({kind:'s',x:o.x+rnd(-.4,.4),y:o.y,z:1.4,vx:rnd(-.3,.3),vy:0,vz:rnd(.5,1.5),max:.7,col:rc,sz:3,g:3})}}
 }
 function drawOtherArrows(){
-  const s=TS/48;ctx.font=`800 ${12*s}px -apple-system,"Noto Sans KR",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  const s=TS/48;ctx.font=`800 ${12*s}px "Chiron GoRound TC",-apple-system,"Noto Sans KR",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
   for(const k in MP.others){const o=MP.others[k];if(o.stale)continue;const sx=sxv(o.x),sy=syv(o.y),d=Math.hypot(o.x-P.x,o.y-P.y);
     if(d>28||(sx>20&&sx<W-20&&sy>70&&sy<H-130))continue;
     const dx=sx-W/2,dy=sy-H/2,m=26*s,bx=W/2-m,by1=H/2-m-52,by2=H/2-m-70,t=Math.min(bx/(Math.abs(dx)||1e-6),(dy<0?by1:by2)/(Math.abs(dy)||1e-6)),ax=W/2+dx*t,ay=H/2+dy*t,ang=Math.atan2(dy,dx),rc=ringCol(o);
@@ -3367,7 +3387,7 @@ function drawSelfSay(){const b=MP.selfBub;if(!b)return;if(performance.now()>b.un
 /* 계정 UI */
 function mpUI(){
   const el=$('#acInfo'),on=MP.on,u=MP.user;
-  const online=on&&u;$('#chatBtn').hidden=false;$('#onl').hidden=!online;$('#pInv').style.right=online?'104px':'12px';
+  const online=on&&u;$('#onl').hidden=!online;$('#pInv').style.right=online?'104px':'12px';
   if(!FIREBASE_CONFIG.apiKey){el.innerHTML='<b>싱글 모드</b><small>Firebase 설정을 넣으면 멀티플레이가 켜져요</small>';}
   else if(!on){el.innerHTML=`<b>오프라인</b><small>${MP.err||'연결 중…'}</small>`}
   else if(!u){el.innerHTML='<b>로그아웃 상태</b><small>로그인하면 진행 상황이 저장되고 다른 플레이어와 만나요</small>'}
@@ -3405,13 +3425,108 @@ $('#acIn').addEventListener('click',()=>{MP.skip=false;$('#login').hidden=false}
 $('#acLink').addEventListener('click',()=>{$('#login').hidden=false});
 $('#acOut').addEventListener('click',async()=>{cloudSaveNow();leaveWorld();await MP.auth.signOut();toast('로그아웃했어요')});
 $('#nickSave').addEventListener('click',()=>{const v=$('#nickIn').value.trim().slice(0,10);if(!v){toast('닉네임을 입력해 주세요');return}save.nick=v;persist();cloudSaveNow();mpUI();toast('닉네임을 바꿨어요');sfx.tick()});
-/* 빠른 말풍선 */
-const QC=['안녕하세요!','같이 낚시해요','대물이다!','입질 왔어요','ㅋㅋㅋ','고마워요','바이바이'];
-$('#qc').innerHTML=QC.map((t,i)=>`<button data-q="${i}">${t}</button>`).join('')+'<div id="qcRow"><input id="chatIn" type="text" maxlength="40" placeholder="하고 싶은 말 (40자)" autocomplete="off" enterkeyhint="send"><button id="chatSend" data-send="1">보내기</button></div>';
-const sendChat=()=>{const i=$('#chatIn'),v=i.value.trim();if(!v)return;mpSay(v);i.value='';i.blur();$('#qc').hidden=true;sfx.tick()};
-$('#chatIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();sendChat()}});
-$('#chatBtn').addEventListener('pointerdown',e=>{e.stopPropagation();$('#qc').hidden=!$('#qc').hidden;sfx.tick()});
-$('#qc').addEventListener('pointerdown',e=>{e.stopPropagation();const b=e.target.closest('[data-q]');if(b){mpSay(QC[+b.dataset.q]);$('#qc').hidden=true;sfx.tick()}else if(e.target.closest('#chatSend')){e.preventDefault();sendChat()}});
+/* 채팅 로그: DOM은 유지하고 투명도(보임 여부)만 바꾼다 */
+const CL_MAX=50,CL_DELAY=3000,CL_FADE=1000;
+const getLog=()=>document.getElementById('chatLog');
+const isChatOpen=()=>{const r=document.getElementById('chatInputRow');return !!r&&r.classList.contains('open')};
+let logT1=0,logT2=0;
+/* 애니메이션 없이 out 상태만 즉시 바꾼다 */
+function setLogOutNow(on){
+  const l=getLog();if(!l)return;
+  l.style.transition='none';l.classList.toggle('out',on);void l.offsetWidth;l.style.transition='';
+}
+/* 페이드 타이머를 취소하고 로그를 정상 투명도로 보이게 */
+function showLog(){
+  clearTimeout(logT1);clearTimeout(logT2);
+  const l=getLog();if(!l)return;
+  setLogOutNow(false);
+  l.classList.toggle('has',l.children.length>0);
+}
+/* CL_DELAY 후 로그 전체 투명도 페이드아웃 (요소는 그대로 둠) */
+function scheduleLogFade(){
+  clearTimeout(logT1);clearTimeout(logT2);
+  if(isChatOpen())return;
+  logT1=setTimeout(()=>{
+    const l=getLog();if(!l||isChatOpen())return;
+    l.classList.add('out');
+    logT2=setTimeout(()=>{if(!isChatOpen())getLog()?.classList.remove('has')},CL_FADE);
+  },CL_DELAY);
+}
+function pushLine(d){
+  const l=getLog();if(!l)return;
+  l.appendChild(d);
+  while(l.children.length>CL_MAX)l.firstChild.remove();
+  l.scrollTop=l.scrollHeight;
+  if(isChatOpen())return;
+  showLog();scheduleLogFade();     // 새 메시지: 보이게 하고 타이머 (재)시작
+}
+function addLine(name,text,cls){
+  const d=document.createElement('div');d.className='cl'+(cls?' '+cls:'');
+  const nk=document.createElement('span');nk.className='nk';nk.textContent=String(name||'낚시꾼');
+  const ms=document.createElement('span');ms.className='ms';ms.textContent=': '+text;
+  d.append(nk,ms);pushLine(d);
+}
+function addNotice(text){
+  const d=document.createElement('div');d.className='cl notice';d.textContent='[공지] '+String(text);pushLine(d);
+}
+function addSys(text){
+  const d=document.createElement('div');d.className='cl sys';d.textContent=String(text);pushLine(d);
+}
+const chatDock=$('#chatDock'),chatRow=$('#chatInputRow'),chatIn=$('#chatIn'),chatOpenBtn=$('#chatOpen'),chatSendBtn=$('#chatSend'),chatLogEl=$('#chatLog');
+let chatManual=false;   // 수동(버튼/로그 클릭)으로 펼쳤는지
+let chatOpenT=0;
+/* 입력창 펼침: 로그 전체를 보이게 하고 타이머 중지 */
+function openChat(focus,manual){
+  chatRow.classList.add('open');chatDock.classList.add('expanded');chatManual=!!manual;chatOpenT=performance.now();
+  showLog();
+  if(focus)chatIn.focus();
+}
+/* reason: 'send' | 'esc' | 'other'(외부 행동) */
+function closeChat(reason){
+  if(!isChatOpen())return;
+  if(reason==='other'&&performance.now()-chatOpenT<300)return;
+  chatRow.classList.remove('open');chatDock.classList.remove('expanded');   // 먼저 접고 나서 blur 처리
+  if(document.activeElement===chatIn)chatIn.blur();
+  showLog();scheduleLogFade();                    // 접힌 시점부터 페이드 타이머 시작 (수동/일반 동일)
+  chatManual=false;
+}
+function sendNow(){const v=chatIn.value.trim();if(v)mpSay(v);chatIn.value='';closeChat('send')}
+chatIn.addEventListener('blur',()=>closeChat('other'));
+chatIn.addEventListener('pointerdown',e=>e.stopPropagation());
+chatIn.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();sendNow()}
+  else if(e.key==='Escape'){e.preventDefault();closeChat('esc')}
+});
+/* 로그를 누르면 입력창을 포커스 없이 펼침 (페이드 중이어도 정상 투명도로 복귀) */
+/* 모바일/데스크톱 공통: 드래그로 로그 스크롤 (브라우저 기본 스크롤은 touch-action:none으로 끔) */
+let clDrag=null;
+chatLogEl.addEventListener('pointerdown',e=>{
+  e.stopPropagation();
+  clDrag={id:e.pointerId,y:e.clientY};
+  try{chatLogEl.setPointerCapture(e.pointerId)}catch(_){}
+  if(!isChatOpen())openChat(false,true);
+});
+chatLogEl.addEventListener('pointermove',e=>{
+  if(!clDrag||e.pointerId!==clDrag.id)return;
+  chatLogEl.scrollTop-=e.clientY-clDrag.y;
+  clDrag.y=e.clientY;
+});
+const endLogDrag=e=>{if(clDrag&&e.pointerId===clDrag.id)clDrag=null};
+chatLogEl.addEventListener('pointerup',endLogDrag);
+chatLogEl.addEventListener('pointercancel',endLogDrag);
+/* 펼쳐진 상태에서 입력창 밖을 누르면 외부 행동으로 보고 접음 */
+addEventListener('pointerdown',e=>{
+  if(isChatOpen()&&!chatDock.contains(e.target))closeChat('other');
+},true);
+chatOpenBtn.addEventListener('mousedown',e=>e.preventDefault());
+chatOpenBtn.addEventListener('pointerdown',e=>e.stopPropagation());
+chatOpenBtn.addEventListener('click',()=>{openChat(true,true);sfx.tick()});
+chatSendBtn.addEventListener('mousedown',e=>e.preventDefault());
+chatSendBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();sendNow();sfx.tick()});
+addEventListener('keydown',e=>{
+  if(e.key.toLowerCase()!=='t'||e.isComposing||(e.target&&e.target.tagName==='INPUT'))return;
+  e.preventDefault();keys.delete('t');openChat(true,false);
+});
 /* 랭킹 */
 async function renderRank(){
   const box=$('#rankList');
