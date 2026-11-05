@@ -638,6 +638,35 @@ const FIREBASE_CONFIG={
   messagingSenderId:"373128457861",
   appId:"1:373128457861:web:563eb2cfe200f9f7a3c3ec"
 };
+const ADMIN_EMAIL='geniusted1129@gmail.com';
+const CFGX={price:1,luck:0,bite:1,fish:{}};
+const isAdminUser=()=>!!(MP.user&&MP.user.email===ADMIN_EMAIL);
+function blockScreen(msg,sub,btn){
+  let el=document.getElementById('blk');
+  if(!msg){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.id='blk';
+    el.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(6,14,22,.96);color:#eef6fa;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;font-weight:800;font-size:19px;word-break:keep-all;touch-action:auto';
+    document.body.appendChild(el)}
+  el.innerHTML='';
+  const a=document.createElement('div');a.textContent=msg;el.appendChild(a);
+  if(sub){const b=document.createElement('div');b.textContent=sub;b.style.cssText='font-size:14px;font-weight:600;color:#8ba5b4;max-width:320px';el.appendChild(b)}
+  if(btn){const x=document.createElement('button');x.textContent='로그아웃';x.style.cssText='margin-top:8px;border:0;border-radius:12px;padding:10px 18px;font-weight:800;font-size:14px;background:#ffb454;color:#2a1200';x.onclick=()=>{try{MP.auth.signOut()}catch(e){}};el.appendChild(x)}
+}
+function syncBlock(){
+  if(MP.ban)blockScreen('이용이 제한된 계정이에요',MP.ban.reason||'',true);
+  else if(MP.maint)blockScreen('점검 중이에요',MP.maintMsg||'잠시 후 다시 접속해 주세요');
+  else blockScreen('')
+}
+function applyBan(v){MP.ban=v?(typeof v==='object'?v:{reason:''}):null;syncBlock()}
+function applyCfg(v){
+  v=v||{};
+  CFGX.price=clamp(+v.price||1,.1,10);CFGX.luck=clamp(+v.luck||0,0,5);CFGX.bite=clamp(+v.bite||1,.2,5);
+  CFGX.fish=(v.fish&&typeof v.fish==='object')?v.fish:{};
+  const mt=v.maintenance;MP.maint=!!(mt&&mt.on&&!isAdminUser());MP.maintMsg=mt&&mt.msg?String(mt.msg).slice(0,120):'';syncBlock();
+  const bc=v.bc;
+  if(bc&&bc.id){let last='';try{last=localStorage.getItem('pd-bc')||''}catch(e){}
+    if(String(bc.id)!==last&&Date.now()+(MP.off||0)-bc.id<600000){try{localStorage.setItem('pd-bc',String(bc.id))}catch(e){}toast('[공지] '+String(bc.text||'').slice(0,100),6500)}}
+}
 const MP={on:false,db:null,auth:null,user:null,me:null,refs:null,others:{},acc:0,lastKey:'',online:1,say:null,selfBub:null,skip:false,err:''};
 /* ================= 저장 / 상태 ================= */
 const SAVE_KEY='healing-fishing-v3';
@@ -1082,7 +1111,7 @@ const FBY={};FISH.forEach(f=>{f.p=Math.round(f.p*1.1*(ZPF[f.z]||1));FBY[f.id]=f;
 const FRW={common:1.06,uncommon:1,rare:.85,epic:.72,legendary:.7};
 function rollFish(depth,wt,zone){
   if(Math.random()<.025){const f=FBY.bungeo,t=clamp(Math.pow(Math.random(),1.5),0,1),bg=save.gear.big||0,gd=save.gear.gold||0;return {f,size:Math.round((f.min+(f.max-f.min)*t)*(1+bg)*10)/10,price:Math.round(f.p*(.75+.7*t)*(1+bg*.8)*(1+gd)),ri:f.ri}}
-  const L=save.gear.luck+coBuff().luck;let tot=0;
+  const L=save.gear.luck+coBuff().luck+CFGX.luck;let tot=0;
   const ws=RORD.map((r,i)=>{const w=RAR[r].w*FRW[r]*(1+L*i);tot+=w;return w});
   let x=Math.random()*tot,ri=0;for(;ri<ws.length-1;ri++){if(x<ws[ri])break;x-=ws[ri]}
   const base=FISH.filter(f=>f.w===wt&&f.r===RORD[ri]);
@@ -1785,7 +1814,7 @@ function landBobber(){
     const dx=F.tx-P.x,dy=F.ty-P.y,L=Math.hypot(dx,dy);let ok=0;for(let d=.4;d<=L;d+=.3){if(solidPt(P.x+dx/L*d,P.y+dy/L*d))break;ok=d}
     if(ok>1.2){F.phase='ground';F.t=0;F.gr={x:P.x+dx/L*ok,y:P.y+dy/L*ok};F.bx=F.gr.x;F.by=F.gr.y;sfx.hook&&sfx.hook();vib(25);return}}
   if(!isW(F.tx,F.ty)){F.phase='ground';F.t=0;for(let i=0;i<8;i++)emit({kind:'d',x:F.bx+rnd(-.1,.1),y:F.by,z:.05,vx:rnd(-.5,.5),vy:rnd(-.3,.3),vz:rnd(.3,1),max:.5,col:'#e9dcb8',sz:rnd(2.5,4),g:3});sfx.tick();vib(10);return}
-  F.phase='wait';F.t=0;F.zone=zoneAt(F.tx,F.ty,F.wt?1:0);F.pick=rollFish(F.depth,F.wt?'sea':'fresh',F.zone);F.waitDur=rnd(7,13)/(save.gear.bite*coBuff().bite);
+  F.phase='wait';F.t=0;F.zone=zoneAt(F.tx,F.ty,F.wt?1:0);F.pick=rollFish(F.depth,F.wt?'sea':'fresh',F.zone);F.waitDur=rnd(7,13)/(save.gear.bite*coBuff().bite*CFGX.bite);
   {const n=Math.floor(rnd(0,4)),lo=Math.max(1.2,F.waitDur*.35),hi=F.waitDur-.3;F.nib=Array.from({length:n},()=>rnd(lo,hi)).sort((a,b)=>a-b)}F.nibI=0;F.rippleT=.5;
   splash(F.bx,F.by,14,1.1);sfx.splash();vib(15);
   let lx=F.bx,ly=F.by;for(let k=0;k<14;k++){const a=rnd(0,6.283),r=rnd(2.2,3.2),x=F.bx+Math.cos(a)*r,y=F.by+Math.sin(a)*r;
@@ -1885,7 +1914,7 @@ function startPop(){
   splash(F.bx,F.by,26,1.8);sfx.splash(1.5);shake=.5;vib([20,20,40]);
 }
 function finishCatch(){
-  const p=F.pick,f=p.f;let cd=save.codex[f.id];const isNew=!cd;if(!cd)cd=save.codex[f.id]={n:0,max:0,seen:false};
+  const p=F.pick,f=p.f;p.price=Math.max(1,Math.round(p.price*CFGX.price*((+CFGX.fish[f.id])>0?+CFGX.fish[f.id]:1)));let cd=save.codex[f.id];const isNew=!cd;if(!cd)cd=save.codex[f.id]={n:0,max:0,seen:false};
   cd.n++;cd.max=Math.max(cd.max,p.size);save.inv.push({id:f.id,size:p.size,price:p.price});
   if(Math.random()<(save.gear.twin||0)){cd.n++;save.inv.push({id:f.id,size:Math.round(p.size*rnd(.8,1)*10)/10,price:Math.round(p.price*.9)});toast('쌍걸이! 한 마리 더',1500)}persist();updateHud();updateDexDot();mpFeed(p);mpCatch(p);
   showCard(p,isNew);sparkBurst(P.x,P.y,p.ri);sfx.jingle(p.ri);
@@ -3143,7 +3172,7 @@ function mpInit(){
 }
 async function onAuth(u){
   MP.user=u;
-  if(!u){leaveWorld();if(!MP.skip)$('#login').hidden=false;mpUI();return}
+  if(!u){leaveWorld();MP.ban=null;MP.maint=false;syncBlock();if(!MP.skip)$('#login').hidden=false;mpUI();return}
   $('#login').hidden=true;MP.skip=false;
   await loadCloud();joinWorld();mpUI();
 }
@@ -3153,7 +3182,7 @@ async function loadCloud(){
     const snap=await MP.db.ref('users/'+MP.user.uid+'/save').once('value'),c=snap.val();
     if(c){const tut=save.tut;save=Object.assign(defaultSave(),c);if(!Array.isArray(save.inv))save.inv=Object.values(save.inv||{});save.tut=save.tut||tut;try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(e){}}
     if(!save.nick){save.nick=((MP.user.displayName||'').split(' ')[0]||'낚시꾼').slice(0,8)+(Math.floor(Math.random()*90)+10)}
-    cloudSaveNow();applySaveUI();
+    if(!c){try{await MP.db.ref('users/'+MP.user.uid+'/meta/created').set(firebase.database.ServerValue.TIMESTAMP)}catch(e){console.warn(e)}}cloudSaveNow();applySaveUI();
   }catch(e){console.warn(e);toast('클라우드 저장을 불러오지 못했어요')}
 }
 function applySaveUI(){updateHud();renderAv();renderShop();recalcGear();sSound.checked=save.settings.sound;sVibe.checked=save.settings.vibe;$('#setDrag').checked=save.settings.drag!==false;$('#nickIn').value=save.nick||''}
@@ -3174,6 +3203,8 @@ function joinWorld(){
   MP.refs.push([MP.db.ref('events/'+u),'child_added',onEvent]);
   MP.refs.push([MP.db.ref('.info/connected'),'value',sn=>{MP.conn=!!sn.val();if(MP.conn&&MP.me){try{MP.me.onDisconnect().remove()}catch(e){}MP.ls=null;MP.acc=9;mpUI&&mpUI()}else mpUI&&mpUI()}]);
   MP.refs.push([MP.db.ref('.info/serverTimeOffset'),'value',sn=>{MP.off=+sn.val()||0}]);
+  MP.refs.push([MP.db.ref('config'),'value',sn=>applyCfg(sn.val())]);
+  MP.refs.push([MP.db.ref('bans/'+u),'value',sn=>applyBan(sn.val())]);
   MP.refs.forEach(([r,e,fn])=>r.on(e,fn));
 }
 window.addEventListener('pagehide',()=>{try{if(MP.me)MP.me.remove()}catch(e){}});
@@ -3246,7 +3277,10 @@ function onEvent(s){
   const v=s.val();MP.db.ref('events/'+MP.user.uid+'/'+s.key).remove().catch(()=>{});
   if(!v||Math.abs(Date.now()+(MP.off||0)-v.t)>40000)return;
   const busy=['charge','windup','flight','wait','bite','reel','ground','drag'].includes(F.phase);
-  if(v.type==='cut'){if(F.phase==='wait'||F.phase==='bite'||F.phase==='reel')cutFishing(v.n)}
+  if(v.type==='msg'){if(v.m)toast('[관리자] '+String(v.m).slice(0,120),6500)}
+  else if(v.type==='kick'){toast('관리자에 의해 접속이 종료됐어요',3000);setTimeout(()=>{try{MP.auth.signOut()}catch(e){}},600)}
+  else if(v.type==='reload'){clearTimeout(cloudT);loadCloud().then(()=>toast('관리자가 데이터를 갱신했어요',3000))}
+  else if(v.type==='cut'){if(F.phase==='wait'||F.phase==='bite'||F.phase==='reel')cutFishing(v.n)}
   else if(v.type==='pull'&&save.settings.drag!==false&&typeof v.px==='number'){
     const first=!(P.pull&&performance.now()<P.pull.until);
     if(busy&&F.phase!=='drag'){R=null;F.lure=null;F.phase='idle'}
