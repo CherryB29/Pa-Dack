@@ -37,7 +37,7 @@
         margin: 0;
         height: 100%;
         overflow: hidden;
-        background: #1d6f8f;
+        background: #000;
         overscroll-behavior: none;
         font-family:
           "Chiron GoRound TC",
@@ -172,16 +172,24 @@
         left: 50%;
         bottom: 150px;
         transform: translateX(-50%) translateY(10px);
-        background: rgba(255, 255, 255, 0.95);
-        padding: 9px 16px;
-        border-radius: 14px;
-        font-weight: 700;
+        background: rgba(8, 21, 31, 0.78);
+        backdrop-filter: blur(12px);
+        color: var(--tx);
+        border-radius: 999px;
+        padding: 9px 18px;
+        font-weight: 600;
         font-size: 14px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
         opacity: 0;
         pointer-events: none;
-        transition: 0.25s;
-        box-shadow: 0 4px 14px rgba(0, 50, 80, 0.25);
-        white-space: nowrap;
+        transition: 0.25s cubic-bezier(0.64, 0.03, 0.21, 0.97);
+        white-space: normal;
+        width: max-content;
+        max-width: min(86%, 340px);
+        text-align: center;
+        text-wrap: balance;
+        line-height: 1.35;
+        word-break: keep-all;
       }
       #toast.show {
         opacity: 1;
@@ -676,15 +684,6 @@
         word-break: keep-all;
         text-wrap: balance;
       }
-      #toast {
-        white-space: normal;
-        width: max-content;
-        max-width: min(88%, 380px);
-        text-align: center;
-        line-height: 1.35;
-        word-break: keep-all;
-        text-wrap: balance;
-      }
       .cname {
         flex-wrap: wrap;
       }
@@ -856,14 +855,6 @@
         border-radius: 18px;
         padding: 7px 15px;
         box-shadow: 0 3px 10px rgba(0, 40, 70, 0.18);
-      }
-      #toast {
-        white-space: normal;
-        width: max-content;
-        max-width: min(86%, 340px);
-        text-align: center;
-        text-wrap: balance;
-        line-height: 1.35;
       }
       .pill {
         white-space: nowrap;
@@ -2012,17 +2003,6 @@
       }
       #status {
         display: none !important;
-      }
-      #toast {
-        background: rgba(8, 21, 31, 0.78);
-        backdrop-filter: blur(12px);
-        color: var(--tx);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 999px;
-        padding: 9px 18px;
-        font-weight: 700;
-        font-size: 14px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
       }
       #joy {
         background: rgba(255, 255, 255, 0.1);
