@@ -3720,6 +3720,62 @@
         opacity: 1;
         pointer-events: auto;
       }
+      #chatQ {
+        display: none;
+        flex-wrap: wrap;
+        gap: 6px;
+        pointer-events: auto;
+      }
+      #chatDock.expanded #chatQ {
+        display: flex;
+      }
+      #chatQ .qc {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        box-sizing: border-box;
+        height: 30px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 15px;
+        background: rgba(8, 21, 31, 0.58);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: var(--tx);
+        font-family: inherit;
+        font-size: 12.5px;
+        font-weight: 800;
+        white-space: nowrap;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #chatQ .qc span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #chatQ .qc.cu {
+        padding-right: 6px;
+      }
+      #chatQ .qc.add {
+        width: 30px;
+        padding: 0;
+        justify-content: center;
+        font-size: 17px;
+        line-height: 1;
+      }
+      #chatQ .qx {
+        flex: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 12px;
+        line-height: 1;
+      }
       /* 넓은 화면: 패널 콘텐츠 폭 제한 */
       .panel > * {
         max-width: 560px;
@@ -3904,6 +3960,7 @@
                 </svg>
               </button>
             </div>
+            <div id="chatQ"></div>
           </div>
           <div id="status" class="hide"></div>
           <div id="toast"></div>
@@ -4208,6 +4265,8 @@
           say: null,
           selfBub: null,
           skip: false,
+          ready: false,
+          sUid: null,
           err: "",
         }
         /* ================= 저장 / 상태 ================= */
@@ -4235,11 +4294,24 @@
             return defaultSave()
           }
         })()
+        /* 로그인 계정은 uid별 캐시 키, 비로그인(오프라인) 진행은 SAVE_KEY. 서로 섞이지 않는다. */
+        const ukey = (uid) => SAVE_KEY + ":u:" + uid
         function persist() {
           try {
-            localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+            if (MP.user) {
+              if (MP.ready && MP.sUid === MP.user.uid)
+                localStorage.setItem(ukey(MP.user.uid), JSON.stringify(save))
+            } else localStorage.setItem(SAVE_KEY, JSON.stringify(save))
           } catch (e) {}
-          cloudDirty() // Firebase 로그인 상태면 1.5초 뒤 클라우드에 저장
+          cloudDirty() // 클라우드 로드가 끝난 계정만 1.5초 뒤 저장
+        }
+        function readOffline() {
+          try {
+            const s = JSON.parse(localStorage.getItem(SAVE_KEY))
+            return s ? Object.assign(defaultSave(), s) : defaultSave()
+          } catch (e) {
+            return defaultSave()
+          }
         }
 
         /* ================= 아이콘 (SVG) ================= */
@@ -18742,62 +18814,108 @@
             }
           }, 200)
         }
+        let authSeq = 0,
+          retryT = 0
+        function resetPlayState() {
+          try {
+            F.phase = "idle"
+            F.t = 0
+            R = null
+            chargeId = null
+          } catch (e) {}
+        }
         async function onAuth(u) {
-          MP.user = u
+          const seq = ++authSeq
+          clearTimeout(cloudT)
+          clearTimeout(retryT)
+          const prev = MP.user
+          MP.ready = false
+          MP.sUid = null
           if (!u) {
+            MP.user = null
             leaveWorld()
             MP.ban = null
             MP.maint = false
             syncBlock()
+            /* 계정 진행은 메모리에서 비우고 오프라인 저장으로 되돌린다 */
+            if (prev) {
+              save = readOffline()
+              resetPlayState()
+              applySaveUI()
+            }
             if (!MP.skip) $("#login").hidden = false
             mpUI()
             return
           }
+          if (prev && prev.uid !== u.uid) {
+            leaveWorld()
+            save = readOffline()
+            resetPlayState()
+          }
+          MP.user = u
           $("#login").hidden = true
           MP.skip = false
-          await loadCloud()
-          joinWorld()
+          const ok = await loadCloud(u, seq)
+          if (seq !== authSeq) return
+          if (ok) joinWorld()
+          else {
+            toast("계정 정보를 불러오지 못했어요. 다시 시도해요")
+            retryT = setTimeout(() => {
+              if (seq === authSeq && MP.user === u) onAuth(u)
+            }, 5000)
+          }
           mpUI()
         }
         const dispName = () => save.nick || "낚시꾼"
-        async function loadCloud() {
+        async function loadCloud(u, seq) {
           try {
             const snap = await MP.db
-                .ref("users/" + MP.user.uid + "/save")
+                .ref("users/" + u.uid + "/save")
                 .once("value"),
               c = snap.val()
+            if (seq !== authSeq) return false
             if (c) {
-              const tut = save.tut
               save = Object.assign(defaultSave(), c)
               if (!Array.isArray(save.inv))
                 save.inv = Object.values(save.inv || {})
-              save.tut = save.tut || tut
+              /* 예전 버전이 남긴 같은 계정의 오프라인 기록이면 비운다 */
+              const off = readOffline()
+              if (off.nick && off.nick === save.nick)
+                try {
+                  localStorage.removeItem(SAVE_KEY)
+                } catch (e) {}
+            } else {
+              /* 새 계정: 오프라인으로 하던 진행을 한 번만 이어받고 오프라인 슬롯은 비운다 */
+              save = readOffline()
               try {
-                localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+                localStorage.removeItem(SAVE_KEY)
               } catch (e) {}
-            }
-            if (!save.nick) {
-              save.nick =
-                ((MP.user.displayName || "").split(" ")[0] || "낚시꾼").slice(
-                  0,
-                  8,
-                ) +
-                (Math.floor(Math.random() * 90) + 10)
-            }
-            if (!c) {
+              if (!save.nick) {
+                save.nick =
+                  ((u.displayName || "").split(" ")[0] || "낚시꾼").slice(0, 8) +
+                  (Math.floor(Math.random() * 90) + 10)
+              }
               try {
                 await MP.db
-                  .ref("users/" + MP.user.uid + "/meta/created")
+                  .ref("users/" + u.uid + "/meta/created")
                   .set(firebase.database.ServerValue.TIMESTAMP)
               } catch (e) {
                 console.warn(e)
               }
+              if (seq !== authSeq) return false
             }
-            cloudSaveNow()
+            MP.sUid = u.uid
+            MP.ready = true
+            try {
+              localStorage.setItem(ukey(u.uid), JSON.stringify(save))
+            } catch (e) {}
+            resetPlayState()
+            await cloudSaveNow()
             applySaveUI()
+            return true
           } catch (e) {
             console.warn(e)
-            toast("클라우드 저장을 불러오지 못했어요")
+            return false
           }
         }
         function applySaveUI() {
@@ -18809,17 +18927,21 @@
           sVibe.checked = save.settings.vibe
           $("#setDrag").checked = save.settings.drag !== false
           $("#nickIn").value = save.nick || ""
+          try {
+            renderQ()
+          } catch (e) {}
         }
         let cloudT = 0
         function cloudDirty() {
-          if (!MP.on || !MP.user) return
+          if (!MP.on || !MP.user || !MP.ready) return
           clearTimeout(cloudT)
           cloudT = setTimeout(cloudSaveNow, 1500)
         }
         function cloudSaveNow() {
-          if (!MP.on || !MP.user) return
+          if (!MP.on || !MP.user || !MP.ready || MP.sUid !== MP.user.uid)
+            return Promise.resolve()
           const u = MP.user.uid
-          MP.db
+          const pr = MP.db
             .ref("users/" + u + "/save")
             .set(JSON.parse(JSON.stringify(save)))
             .catch((e) => console.warn(e))
@@ -18836,6 +18958,7 @@
               dex: Object.keys(save.codex).length,
             })
             .catch(() => {})
+          return pr
         }
         function joinWorld() {
           leaveWorld()
@@ -18927,6 +19050,7 @@
         window.addEventListener("pagehide", () => {
           try {
             if (MP.me) MP.me.remove()
+            if (MP.ready) cloudSaveNow()
           } catch (e) {}
         })
         document.addEventListener("visibilitychange", () => {
@@ -18943,13 +19067,15 @@
               } catch (x) {}
             })
           MP.refs = null
+          let pr = Promise.resolve()
           if (MP.me) {
             try {
-              MP.me.remove()
+              pr = MP.me.remove().catch(() => {})
             } catch (e) {}
             MP.me = null
           }
           MP.others = {}
+          return pr
         }
         function setOther(k, v) {
           if (
@@ -19981,11 +20107,54 @@
         $("#acLink").addEventListener("click", () => {
           $("#login").hidden = false
         })
+        let outBusy = false
         $("#acOut").addEventListener("click", async () => {
-          cloudSaveNow()
-          leaveWorld()
-          await MP.auth.signOut()
-          toast("로그아웃했어요")
+          if (outBusy || !MP.user) return
+          const u = MP.user,
+            guest = u.isAnonymous
+          if (guest) {
+            let ok = true
+            try {
+              ok = confirm(
+                "게스트 계정은 로그아웃하면 사라져요. 연동하지 않았다면 기록을 되찾을 수 없어요. 로그아웃할까요?",
+              )
+            } catch (e) {}
+            if (!ok) return
+          }
+          outBusy = true
+          try {
+            clearTimeout(cloudT)
+            if (!guest) await cloudSaveNow()
+            await leaveWorld() // 인증이 살아 있을 때 접속 흔적부터 지운다
+            if (guest) {
+              const q = [
+                "users/" + u.uid,
+                "profiles/" + u.uid,
+                "leaderboard/" + u.uid,
+              ]
+              MP.ready = false
+              await Promise.all(
+                q.map((p) =>
+                  MP.db
+                    .ref(p)
+                    .remove()
+                    .catch(() => {}),
+                ),
+              )
+              try {
+                localStorage.removeItem(ukey(u.uid))
+              } catch (e) {}
+              try {
+                await u.delete()
+              } catch (e) {}
+            }
+            if (MP.auth.currentUser) await MP.auth.signOut()
+            toast("로그아웃했어요")
+          } catch (e) {
+            console.warn(e)
+            toast("로그아웃에 실패했어요")
+          }
+          outBusy = false
         })
         $("#nickSave").addEventListener("click", () => {
           const v = $("#nickIn").value.trim().slice(0, 10)
@@ -20108,6 +20277,80 @@
           chatIn.value = ""
           closeChat("send")
         }
+        /* 단축어: 기본 4개 + 직접 추가 최대 4개 (계정 저장에 포함) */
+        const QDEF = ["안녕하세요", "대물이다!", "고마워요", "바이바이"],
+          QMAX = 4,
+          chatQ = $("#chatQ")
+        const getQ = () =>
+          Array.isArray(save.chips)
+            ? save.chips.filter((x) => typeof x === "string").slice(0, QMAX)
+            : []
+        function qBtn(txt, cls) {
+          const b = document.createElement("button")
+          b.type = "button"
+          b.className = "qc" + (cls ? " " + cls : "")
+          b.addEventListener("mousedown", (e) => e.preventDefault())
+          b.addEventListener("pointerdown", (e) => e.stopPropagation())
+          if (txt != null) {
+            const sp = document.createElement("span")
+            sp.textContent = txt
+            b.appendChild(sp)
+          }
+          return b
+        }
+        function renderQ() {
+          chatQ.innerHTML = ""
+          const say = (t) => {
+            mpSay(t)
+            closeChat("send")
+            sfx.tick()
+          }
+          QDEF.forEach((t) => {
+            const b = qBtn(t)
+            b.addEventListener("click", () => say(t))
+            chatQ.appendChild(b)
+          })
+          getQ().forEach((t, i) => {
+            const b = qBtn(t, "cu")
+            b.addEventListener("click", () => say(t))
+            const x = document.createElement("span")
+            x.className = "qx"
+            x.textContent = "×"
+            x.addEventListener("click", (e) => {
+              e.stopPropagation()
+              const a = getQ()
+              a.splice(i, 1)
+              save.chips = a
+              persist()
+              renderQ()
+            })
+            b.appendChild(x)
+            chatQ.appendChild(b)
+          })
+          if (getQ().length < QMAX) {
+            const b = qBtn("+", "add")
+            b.setAttribute("aria-label", "입력한 문구를 단축어로 추가")
+            b.addEventListener("click", () => {
+              const v = chatIn.value.trim().slice(0, 20)
+              if (!v) {
+                toast("입력창에 문구를 적고 + 를 눌러요")
+                return
+              }
+              const a = getQ()
+              if (QDEF.includes(v) || a.includes(v)) {
+                toast("이미 있는 단축어예요")
+                return
+              }
+              a.push(v)
+              save.chips = a
+              chatIn.value = ""
+              persist()
+              renderQ()
+            })
+            chatQ.appendChild(b)
+          }
+        }
+        renderQ()
         chatIn.addEventListener("blur", () => closeChat("other"))
         chatIn.addEventListener("pointerdown", (e) => e.stopPropagation())
         chatIn.addEventListener("keydown", (e) => {
