@@ -434,13 +434,6 @@
         padding: calc(env(safe-area-inset-top) + 18px) 16px
           calc(env(safe-area-inset-bottom) + 96px);
         display: none;
-        background:
-          radial-gradient(
-            120% 60% at 50% -10%,
-            var(--blue-900) 0,
-            transparent 60%
-          ),
-          linear-gradient(var(--bg1), var(--bg0));
         color: var(--tx);
         padding-top: calc(env(safe-area-inset-top) + 16px);
       }
@@ -682,7 +675,8 @@
         min-width: 0;
       }
       /* ---- UI 보정: 줄바꿈 / 넘침 ---- */
-      html {
+      html,
+      body {
         margin: 0;
         height: 100%;
         overflow: hidden;
@@ -701,27 +695,17 @@
         word-break: keep-all;
         overflow-wrap: break-word;
         line-height: 1.3;
-      }
-      body {
-        margin: 0;
-        height: 100%;
-        overflow: hidden;
-        background: var(--black);
-        overscroll-behavior: none;
-        font-family:
-          "Chiron GoRound TC",
-          -apple-system,
-          BlinkMacSystemFont,
-          "Pretendard",
-          "Apple SD Gothic Neo",
-          "Noto Sans KR",
-          "Segoe UI",
-          sans-serif;
-        color: var(--ink);
-        word-break: keep-all;
-        overflow-wrap: break-word;
-        line-height: 1.3;
         letter-spacing: -0.01em;
+        background:
+          radial-gradient(
+            120% 60% at 50% -10%,
+            var(--blue-900) 0,
+            transparent 60%
+          ),
+          linear-gradient(var(--bg1), var(--bg0));
+      }
+      ::-webkit-scrollbar {
+        display: none;
       }
 
       .cbadges {
@@ -816,9 +800,6 @@
         padding: 2px 1px 8px;
         scrollbar-width: none;
         touch-action: manipulation;
-      }
-      .chips::-webkit-scrollbar {
-        display: none;
       }
       .panel .chips,
       .panel .chips * {
@@ -1723,7 +1704,8 @@
         border-radius: 15px;
         padding: 4px;
         gap: 4px;
-        margin: 0 0 14px;
+        margin: auto;
+        margin-bottom: 14px;
         background: rgb(var(--white-rgb) / 0.05);
         border: 1px solid var(--ln);
       }
@@ -3318,9 +3300,6 @@
       }
       #chatLogWrap.out {
         opacity: var(--opacity-dim);
-      }
-      #chatLog::-webkit-scrollbar {
-        display: none;
       }
       #chatLog::before {
         content: "";
