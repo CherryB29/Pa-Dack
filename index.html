@@ -10049,6 +10049,7 @@
           if (r.width < 10 || r.height < 10) return
           W = r.width
           H = r.height
+          measureArrowEdges()
           dpr = Math.min(window.devicePixelRatio || 1, 2.5)
           cv.width = Math.round(W * dpr)
           cv.height = Math.round(H * dpr)
@@ -14211,9 +14212,12 @@
           ctx.fillStyle = "#fff"
           ctx.beginPath()
           ctx.arc(0, 0, 17 * s, 0, 6.3)
+          ctx.fill()
+          ctx.beginPath()
           ctx.moveTo(-5 * s, 14 * s)
           ctx.lineTo(0, 24 * s)
           ctx.lineTo(5 * s, 14 * s)
+          ctx.closePath()
           ctx.fill()
           ctx.fillStyle = "#e8352f"
           ctx.font = `900 ${26 * s}px "Chiron GoRound TC",sans-serif`
@@ -19529,8 +19533,25 @@
             }
           }
         }
+        /* 화살표 기준선: 코인 알약 아래 / 내비 위 (스테이지 기준 px). resize(초기 포함)에서만 측정 */
+        var arrowEdges
+        function measureArrowEdges() {
+          const sr = stage.getBoundingClientRect(),
+            g = $("#pGold"),
+            nv = $("#nav")
+          arrowEdges = {
+            top: g ? g.getBoundingClientRect().bottom - sr.top : 0,
+            bottom: nv ? nv.getBoundingClientRect().top - sr.top : H,
+          }
+        }
         function drawOtherArrows() {
           const s = TS / 48
+          const reach = (15 + 8) * s, // 화살표 반지름 + 화살표 길이
+            gap = 12, // 화살표 끝과 경계(알약/내비/화면 가장자리) 사이 간격
+            R = {
+              top: arrowEdges.top + gap + reach,
+              bottom: arrowEdges.bottom - gap - reach,
+            }
           ctx.font = `800 ${12 * s}px "Chiron GoRound TC",-apple-system,"Noto Sans KR",sans-serif`
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
@@ -19540,17 +19561,15 @@
             const sx = sxv(o.x),
               sy = syv(o.y),
               d = Math.hypot(o.x - P.x, o.y - P.y)
-            if (d > 28 || (sx > 20 && sx < W - 20 && sy > 70 && sy < H - 130))
-              continue
+            if (d > 28) continue
+            if (sx > 20 && sx < W - 20 && sy > R.top && sy < R.bottom) continue
             const dx = sx - W / 2,
               dy = sy - H / 2,
-              m = 26 * s,
-              bx = W / 2 - m,
-              by1 = H / 2 - m - 52,
-              by2 = H / 2 - m - 70,
+              bx = W / 2 - (gap + reach),
               t = Math.min(
                 bx / (Math.abs(dx) || 1e-6),
-                (dy < 0 ? by1 : by2) / (Math.abs(dy) || 1e-6),
+                (dy < 0 ? H / 2 - R.top : R.bottom - H / 2) /
+                  (Math.abs(dy) || 1e-6),
               ),
               ax = W / 2 + dx * t,
               ay = H / 2 + dy * t,
