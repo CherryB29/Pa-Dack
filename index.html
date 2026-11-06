@@ -16,7 +16,6 @@
     <title>Pa-Dack</title>
     <style>
       :root {
-        /* ---------- color palette ---------- */
         --black: #000000;
         --black-rgb: 0 0 0;
         --blue-300: #9a8cff;
@@ -119,7 +118,6 @@
         --yellow-400-rgb: 255 224 102;
         --yellow-500: #ffd23f;
         --yellow-500-rgb: 255 210 63;
-        /* ---------- numeric tokens ---------- */
         --dur-fast: 0.15s;
         --dur-base: 0.25s;
         --dur-slow: 0.45s;
@@ -132,13 +130,31 @@
         --opacity-muted: 0.7;
         --opacity-soft: 0.85;
         --opacity-strong: 0.95;
+        --nav-h: 62px;
+        --ink: var(--blue-900);
+        --bg0: var(--blue-950);
+        --bg1: var(--blue-900);
+        --cd: rgb(var(--white-rgb) / 0.05);
+        --cd2: rgb(var(--white-rgb) / 0.1);
+        --ln: rgb(var(--white-rgb) / 0.1);
+        --tx: var(--slate-100);
+        --tx2: var(--slate-500);
+        --ac: var(--orange-400);
+        --ac2: var(--orange-500);
+        --ok: var(--green-600-b);
       }
-      button,
+
+      button {
+        font-family: inherit;
+      }
       input,
       select,
       textarea {
         font-family: inherit;
+        font-size: 16px;
       }
+
+      /* iOS: 입력창 포커스 시 자동 확대 방지 (16px 미만이면 Safari가 확대) */
 
       * {
         box-sizing: border-box;
@@ -296,10 +312,24 @@
         white-space: nowrap;
         letter-spacing: -0.02em;
       }
-      #act[data-s="reel"],
+      #act[data-s="reel"] {
+        font-size: 18px;
+        background: radial-gradient(
+          circle at 35% 30%,
+          var(--green-400),
+          var(--green-600)
+        );
+      }
       #act[data-s="bite"] {
         font-size: 17px;
+        background: radial-gradient(
+          circle at 35% 30%,
+          var(--red-400-b),
+          var(--red-600)
+        );
+        animation: bite 0.22s infinite alternate;
       }
+
       #act .ai {
         font-size: 36px;
         height: 36px;
@@ -345,27 +375,13 @@
           var(--blue-600)
         );
       }
-      #act[data-s="bite"] {
-        background: radial-gradient(
-          circle at 35% 30%,
-          var(--red-400-b),
-          var(--red-600)
-        );
-        animation: bite 0.22s infinite alternate;
-      }
+
       @keyframes bite {
         to {
           transform: scale(1.1);
         }
       }
-      #act[data-s="reel"] {
-        background: radial-gradient(
-          circle at 35% 30%,
-          var(--green-400),
-          var(--green-600)
-        );
-        font-size: 18px;
-      }
+
       #act[data-s="charge"] {
         animation: bite 0.3s infinite alternate;
       }
@@ -407,10 +423,28 @@
         gap: 4px;
       }
 
-      .panel,
       .panel * {
         touch-action: manipulation;
       }
+      .panel {
+        touch-action: manipulation;
+        position: absolute;
+        inset: 0;
+        overflow: auto;
+        padding: calc(env(safe-area-inset-top) + 18px) 16px
+          calc(env(safe-area-inset-bottom) + 96px);
+        display: none;
+        background:
+          radial-gradient(
+            120% 60% at 50% -10%,
+            var(--blue-900) 0,
+            transparent 60%
+          ),
+          linear-gradient(var(--bg1), var(--bg0));
+        color: var(--tx);
+        padding-top: calc(env(safe-area-inset-top) + 16px);
+      }
+
       .panel.on {
         display: block;
       }
@@ -556,7 +590,11 @@
         position: fixed;
         inset: 0;
         z-index: 100;
-        background: linear-gradient(var(--teal-300), var(--teal-700));
+        background: radial-gradient(
+          120% 70% at 50% 0,
+          var(--teal-800),
+          var(--blue-950) 70%
+        );
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -566,6 +604,7 @@
         font-weight: 800;
         font-size: 16px;
       }
+
       #loader p {
         margin: 0;
         text-shadow: 0 2px 6px rgb(var(--blue-900-rgb) / 0.3);
@@ -643,8 +682,7 @@
         min-width: 0;
       }
       /* ---- UI 보정: 줄바꿈 / 넘침 ---- */
-      html,
-      body {
+      html {
         margin: 0;
         height: 100%;
         overflow: hidden;
@@ -664,6 +702,27 @@
         overflow-wrap: break-word;
         line-height: 1.3;
       }
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: var(--black);
+        overscroll-behavior: none;
+        font-family:
+          "Chiron GoRound TC",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Pretendard",
+          "Apple SD Gothic Neo",
+          "Noto Sans KR",
+          "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+      }
 
       .cbadges {
         display: flex;
@@ -675,10 +734,6 @@
       #card > div:last-child {
         min-width: 0;
         flex: 1;
-      }
-      .row .g,
-      .mach .t {
-        min-width: 0;
       }
 
       /* ---- 도감 ---- */
@@ -921,7 +976,11 @@
         position: fixed;
         inset: 0;
         z-index: 70;
-        background: linear-gradient(var(--teal-300), var(--teal-700));
+        background: radial-gradient(
+          120% 70% at 50% 0,
+          var(--teal-800),
+          var(--blue-950) 70%
+        );
         display: flex;
         align-items: center;
         justify-content: center;
@@ -930,16 +989,18 @@
       }
 
       .lbox input {
-        border: 2px solid var(--yellow-200);
+        border: 1px solid var(--ln);
         border-radius: 13px;
         padding: 12px 13px;
         font-size: 15px;
         font-family: inherit;
-        background: var(--white);
+        background: rgb(var(--white-rgb) / 0.05);
         min-width: 0;
         width: 100%;
         box-sizing: border-box;
+        color: var(--tx);
       }
+
       .lbox input:focus {
         outline: 0;
         border-color: var(--orange-400-b);
@@ -984,12 +1045,15 @@
       .nickrow input {
         flex: 1;
         min-width: 0;
-        border: 2px solid var(--yellow-200);
+        border: 1px solid var(--ln);
         border-radius: 12px;
         padding: 9px 12px;
         font-size: 15px;
         font-family: inherit;
+        background: rgb(var(--white-rgb) / 0.05);
+        color: var(--tx);
       }
+
       .acbtns {
         display: flex;
         gap: 8px;
@@ -1022,10 +1086,11 @@
       }
       .rk .rg small {
         display: block;
-        color: var(--gray-600);
+        color: var(--tx2);
         font-weight: 600;
         font-size: 12px;
       }
+
       .rk .rc {
         display: flex;
         align-items: center;
@@ -1040,7 +1105,7 @@
       }
       .rk0 {
         text-align: center;
-        color: var(--gray-600);
+        color: var(--tx2);
         font-weight: 700;
         padding: 18px;
         word-break: keep-all;
@@ -1172,7 +1237,7 @@
       #ptSheet p {
         margin: 0 0 10px;
         font-size: 12.5px;
-        color: var(--stone-700);
+        color: var(--tx2);
         text-align: center;
         line-height: 1.35;
       }
@@ -1200,36 +1265,11 @@
         display: block;
         font-weight: 700;
         font-size: 11.5px;
-        color: var(--stone-700);
+        color: var(--tx2);
       }
 
       /* ===== v1.1 UI : 다크 글래스 ===== */
-      :root {
-        --nav-h: 62px;
-        --ink: var(--blue-900);
-        --bg0: var(--blue-950);
-        --bg1: var(--blue-900);
-        --cd: rgb(var(--white-rgb) / 0.05);
-        --cd2: rgb(var(--white-rgb) / 0.1);
-        --ln: rgb(var(--white-rgb) / 0.1);
-        --tx: var(--slate-100);
-        --tx2: var(--slate-500);
-        --ac: var(--orange-400);
-        --ac2: var(--orange-500);
-        --ok: var(--green-600-b);
-      }
-      body {
-        font-family:
-          "Chiron GoRound TC",
-          -apple-system,
-          BlinkMacSystemFont,
-          "Pretendard",
-          "Apple SD Gothic Neo",
-          "Noto Sans KR",
-          "Segoe UI",
-          sans-serif;
-        letter-spacing: -0.01em;
-      }
+
       .pill {
         position: absolute;
         top: calc(env(safe-area-inset-top) + 10px);
@@ -1434,25 +1474,93 @@
         display: none;
       }
       /* 하단 내비 */
-
-      /* 패널 */
-      .panel {
+      #nav {
         position: absolute;
-        inset: 0;
-        overflow: auto;
-        padding: calc(env(safe-area-inset-top) + 18px) 16px
-          calc(env(safe-area-inset-bottom) + 96px);
-        display: none;
-        touch-action: manipulation;
-        background:
-          radial-gradient(
-            120% 60% at 50% -10%,
-            var(--blue-900) 0,
-            transparent 60%
-          ),
-          linear-gradient(var(--bg1), var(--bg0));
-        color: var(--tx);
-        padding-top: calc(env(safe-area-inset-top) + 16px);
+        left: 50%;
+        bottom: calc(env(safe-area-inset-bottom) + 12px);
+        transform: translateX(-50%);
+        width: min(calc(100% - 24px), 420px);
+        height: 64px;
+        padding: 6px;
+        display: flex;
+        align-items: stretch;
+        border: 0;
+        border-radius: 999px;
+        background: rgb(var(--gray-950-rgb) / 0.8);
+        backdrop-filter: blur(var(--blur-lg));
+        -webkit-backdrop-filter: blur(var(--blur-lg));
+        box-shadow: 0 8px 24px rgb(var(--black-rgb) / 0.4);
+        z-index: 20;
+      }
+      .tab {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        padding: 0 2px;
+        position: relative;
+        z-index: 1;
+        border: 0;
+        border-radius: 999px;
+        background: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0;
+        white-space: nowrap;
+        color: var(--gray-400);
+        cursor: pointer;
+        transition:
+          background var(--dur-base),
+          color var(--dur-base),
+          box-shadow var(--dur-base),
+          transform var(--dur-fast);
+      }
+      .tab:active {
+        transform: scale(0.95);
+      }
+      .tab .ic {
+        font-size: 22px;
+        transition: transform var(--dur-base);
+      }
+      .tab.on {
+        color: var(--white);
+        background: none;
+        box-shadow: none;
+      }
+      .tab.on .ic {
+        transform: none;
+      }
+      #navPill {
+        position: absolute;
+        top: 6px;
+        bottom: 6px;
+        left: 0;
+        width: 0;
+        border-radius: 999px;
+        z-index: 0;
+        pointer-events: none;
+        background: rgb(var(--white-rgb) / 0.15);
+        backdrop-filter: blur(var(--blur-sm)) saturate(140%);
+        -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(140%);
+        box-shadow:
+          inset 0 1px 0 rgb(var(--white-rgb) / 0.3),
+          inset 0 -1px 0 rgb(var(--white-rgb) / 0.1),
+          0 3px 10px rgb(var(--black-rgb) / 0.2);
+        transition:
+          left var(--dur-slow) var(--ease-std),
+          width var(--dur-slow) var(--ease-std);
+      }
+      /* 패널 */
+
+      .panel > * {
+        max-width: 560px;
+        margin-left: auto;
+        margin-right: auto;
       }
       .ph {
         display: flex;
@@ -1983,10 +2091,7 @@
         flex: none;
         background: var(--blue-900);
       }
-      .rk .rg small,
-      .rk0 {
-        color: var(--tx2);
-      }
+
       .acinfo small {
         display: block;
         font-weight: 600;
@@ -1994,12 +2099,6 @@
         margin-top: 2px;
         word-break: keep-all;
         color: var(--tx2);
-      }
-      .nickrow input,
-      .lbox input {
-        background: rgb(var(--white-rgb) / 0.05);
-        border: 1px solid var(--ln);
-        color: var(--tx);
       }
 
       .av.on {
@@ -2024,10 +2123,7 @@
         border: 1px solid var(--ln);
         color: var(--tx);
       }
-      #ptSheet .ps,
-      #ptSheet p {
-        color: var(--tx2);
-      }
+
       #ptSheet .pc {
         width: 100%;
         border: 0;
@@ -2042,14 +2138,7 @@
         color: var(--tx);
       }
       /* 로그인/로더 */
-      #loader,
-      #login {
-        background: radial-gradient(
-          120% 70% at 50% 0,
-          var(--teal-800),
-          var(--blue-950) 70%
-        );
-      }
+
       .lbox {
         border-radius: 26px;
         padding: 22px 20px;
@@ -2656,15 +2745,10 @@
       .gxone .gxst {
         margin-bottom: 18px;
       }
-      .gxd1,
-      .gxd2,
-      .gxring,
-      .gxpulse {
+      .gxd1 {
         position: absolute;
         inset: 0;
         border-radius: 50%;
-      }
-      .gxd1 {
         background: radial-gradient(
           circle at 50% 36%,
           var(--slate-100),
@@ -2674,6 +2758,9 @@
         animation: gxin 0.7s 0.1s ease-out forwards;
       }
       .gxd2 {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
         background: radial-gradient(
           circle at 50% 36%,
           color-mix(in srgb, var(--rc) 26%, var(--blue-900)),
@@ -2682,13 +2769,10 @@
         opacity: 0;
         transition: opacity var(--dur-slow);
       }
-      @keyframes gxin {
-        to {
-          opacity: var(--opacity-strong);
-        }
-      }
       .gxring {
+        position: absolute;
         inset: auto;
+        border-radius: 50%;
         left: -7%;
         top: -7%;
         width: 114%;
@@ -2696,6 +2780,20 @@
         transform: rotate(-90deg);
         overflow: visible;
       }
+      .gxpulse {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1.5px solid var(--rc);
+        opacity: 0;
+      }
+
+      @keyframes gxin {
+        to {
+          opacity: var(--opacity-strong);
+        }
+      }
+
       .gxring circle {
         fill: none;
         stroke-width: 1.6;
@@ -2708,10 +2806,7 @@
       .gxst.cr .gxring .fg {
         stroke: var(--rc);
       }
-      .gxpulse {
-        border: 1.5px solid var(--rc);
-        opacity: 0;
-      }
+
       .gxst.op .gxpulse {
         animation: gxpl 0.9s ease-out;
       }
@@ -3035,28 +3130,24 @@
       .gxc.lf.fl .in {
         transform: rotateY(180deg);
       }
-      .gxc .gxb,
-      .gxc .gxf {
+      .gxc .gxb {
         position: absolute;
         inset: 0;
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         border-radius: 12px;
-      }
-      .gxc .gxb {
         background: var(--blue-950);
         border: 1px solid rgb(var(--white-rgb) / 0.15);
         display: flex;
         align-items: center;
         justify-content: center;
       }
-      .gxc .gxb i {
-        width: 26%;
-        aspect-ratio: 1;
-        border: 1px solid rgb(var(--white-rgb) / 0.3);
-        border-radius: 50%;
-      }
       .gxc .gxf {
+        position: absolute;
+        inset: 0;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        border-radius: 12px;
         transform: rotateY(180deg);
         display: flex;
         flex-direction: column;
@@ -3070,6 +3161,14 @@
         );
         border: 1px solid color-mix(in srgb, var(--rc) 55%, transparent);
       }
+
+      .gxc .gxb i {
+        width: 26%;
+        aspect-ratio: 1;
+        border: 1px solid rgb(var(--white-rgb) / 0.3);
+        border-radius: 50%;
+      }
+
       .gxc .gxf img {
         width: 74%;
         aspect-ratio: 1;
@@ -3165,31 +3264,59 @@
         border-radius: 0;
       }
 
+      #chatLogWrap {
+        position: relative;
+        height: 180px;
+        transition: opacity 1s linear;
+      }
+      #chatNew {
+        top: auto;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        padding: 2px 9px;
+        border: 0;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        pointer-events: auto;
+      }
+      #chatNew.on {
+        display: block;
+      }
+
       #chatLog {
+        position: relative;
         display: flex;
         flex-direction: column;
         height: 180px;
         padding-top: 64px;
+        padding-bottom: 5px;
         box-sizing: border-box;
         overflow-y: auto;
         overscroll-behavior: contain;
+        overflow-anchor: none; /* 스크롤 위치는 pushLine에서 직접 보정 (브라우저 앵커링과 이중 보정 방지) */
         scrollbar-width: none;
         pointer-events: none;
         touch-action: none;
         -webkit-mask-image: linear-gradient(
           to bottom,
           transparent 0,
-          var(--black) 64px
+          var(--black) 64px,
+          var(--black) calc(100% - 5px),
+          transparent 100%
         );
         mask-image: linear-gradient(
           to bottom,
           transparent 0,
-          var(--black) 64px
+          var(--black) 64px,
+          var(--black) calc(100% - 5px),
+          transparent 100%
         );
         background: transparent;
-        transition: opacity 1s linear;
       }
-      #chatLog.out {
+      #chatLogWrap.out {
         opacity: var(--opacity-dim);
       }
       #chatLog::-webkit-scrollbar {
@@ -3411,115 +3538,6 @@
         font-size: 12px;
         line-height: 1;
       }
-      /* 넓은 화면: 패널 콘텐츠 폭 제한 */
-      .panel > * {
-        max-width: 560px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      /* 플로팅 내비게이션 디자인 개선 */
-
-      .tab:active {
-        transform: scale(0.95);
-      }
-      .tab .ic {
-        transition: transform var(--dur-base);
-        font-size: 22px;
-      }
-
-      .tab.on::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 30%;
-        right: 30%;
-        height: 3px;
-        border-radius: 0 0 4px 4px;
-        background: var(--orange-500);
-        display: none;
-      }
-      /* 네비게이션 무채색 + 유리 선택 인디케이터 */
-      #nav {
-        position: absolute;
-        left: 50%;
-        bottom: calc(env(safe-area-inset-bottom) + 12px);
-        transform: translateX(-50%);
-        width: min(calc(100% - 24px), 420px);
-        display: flex;
-        align-items: stretch;
-        border-radius: 999px;
-        z-index: 20;
-        height: 64px;
-        padding: 6px;
-        backdrop-filter: blur(var(--blur-lg));
-        -webkit-backdrop-filter: blur(var(--blur-lg));
-        box-shadow: 0 8px 24px rgb(var(--black-rgb) / 0.4);
-        border: 0;
-        background: rgb(var(--gray-950-rgb) / 0.8);
-      }
-      .tab {
-        flex: 1;
-        border: 0;
-        background: none;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: inherit;
-        cursor: pointer;
-        min-width: 0;
-        white-space: nowrap;
-        letter-spacing: 0;
-        height: 100%;
-        padding: 0 2px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 800;
-        gap: 3px;
-        transition:
-          background var(--dur-base),
-          color var(--dur-base),
-          box-shadow var(--dur-base),
-          transform var(--dur-fast);
-        position: relative;
-        z-index: 1;
-        color: var(--gray-400);
-      }
-      .tab.on {
-        border-radius: 999px;
-        color: var(--white);
-        background: none;
-        box-shadow: none;
-      }
-      .tab.on .ic {
-        transform: none;
-      }
-      #navPill {
-        position: absolute;
-        top: 6px;
-        bottom: 6px;
-        left: 0;
-        width: 0;
-        border-radius: 999px;
-        z-index: 0;
-        pointer-events: none;
-        background: rgb(var(--white-rgb) / 0.15);
-        backdrop-filter: blur(var(--blur-sm)) saturate(140%);
-        -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(140%);
-        box-shadow:
-          inset 0 1px 0 rgb(var(--white-rgb) / 0.3),
-          inset 0 -1px 0 rgb(var(--white-rgb) / 0.1),
-          0 3px 10px rgb(var(--black-rgb) / 0.2);
-        transition:
-          left var(--dur-slow) var(--ease-std),
-          width var(--dur-slow) var(--ease-std);
-      }
-      /* iOS: 입력창 포커스 시 자동 확대 방지 (16px 미만이면 Safari가 확대) */
-      input,
-      textarea,
-      select {
-        font-size: 16px;
-      }
     </style>
     <script
       defer
@@ -3586,7 +3604,10 @@
           <div id="onl" class="pill" hidden></div>
           <div id="coChip" class="pill" hidden></div>
           <div id="chatDock">
-            <div id="chatLog"></div>
+            <div id="chatLogWrap">
+              <div id="chatLog"></div>
+              <button id="chatNew" class="pill" type="button"></button>
+            </div>
             <div id="chatInputRow">
               <button id="chatOpen" type="button" aria-label="채팅 입력">
                 <svg
@@ -19210,7 +19231,7 @@
         function mpSay(t) {
           t = String(t).trim().slice(0, 50)
           if (!t) return
-          addLine(dispName(), t)
+          addLine(dispName(), t, "", true)
           MP.selfBub = { t, until: performance.now() + 4800 }
           if (!MP.on || !MP.user) return
           MP.say = { t, ts: Date.now() }
@@ -19864,7 +19885,7 @@
           logT2 = 0
         /* 애니메이션 없이 out 상태만 즉시 바꾼다 */
         function setLogOutNow(on) {
-          const l = getLog()
+          const l = document.getElementById("chatLogWrap")
           if (!l) return
           l.style.transition = "none"
           l.classList.toggle("out", on)
@@ -19886,22 +19907,58 @@
           clearTimeout(logT2)
           if (isChatOpen()) return
           logT1 = setTimeout(() => {
-            const l = getLog()
+            const l = document.getElementById("chatLogWrap")
             if (!l || isChatOpen()) return
             l.classList.add("out")
           }, CL_DELAY)
         }
-        function pushLine(d) {
+        /* 안 읽은 메시지 상태 */
+        let chatUnread = 0
+        const nearBottom = (l) =>
+          l.scrollHeight - l.scrollTop - l.clientHeight <= 4
+        function renderNew() {
+          const b = document.getElementById("chatNew")
+          if (!b) return
+          b.textContent =
+            "↓ 새 메시지 " + (chatUnread > 99 ? "99+" : chatUnread)
+          b.classList.toggle("on", chatUnread > 0)
+        }
+        function clearUnread() {
+          chatUnread = 0
+          renderNew()
+        }
+        function jumpToBottom() {
+          if (!isChatOpen()) openChat(false, true)
+          const l = getLog()
+          if (l) l.scrollTo({ top: l.scrollHeight, behavior: "smooth" })
+          clearUnread()
+        }
+        function pushLine(d, own) {
           const l = getLog()
           if (!l) return
+          const atBottom = nearBottom(l)
           l.appendChild(d)
-          while (l.children.length > CL_MAX) l.firstChild.remove()
-          l.scrollTop = l.scrollHeight
+          let n = l.querySelectorAll(".cl").length
+          while (n > CL_MAX) {
+            const f = l.querySelector(".cl"),
+              h = f.offsetHeight + 3 // .cl의 margin-top 3px 포함
+            f.remove()
+            n--
+            if (!atBottom) l.scrollTop -= h // 보고 있던 내용이 밀리지 않도록 보정
+          }
+          if (!atBottom && !own) {
+            chatUnread++
+          }
+          if (atBottom || own) {
+            l.scrollTop = l.scrollHeight
+            clearUnread()
+          }
+          renderNew()
           if (isChatOpen()) return
           showLog()
           scheduleLogFade() // 새 메시지: 보이게 하고 타이머 (재)시작
         }
-        function addLine(name, text, cls) {
+        function addLine(name, text, cls, own) {
           const d = document.createElement("div")
           d.className = "cl" + (cls ? " " + cls : "")
           const nk = document.createElement("span")
@@ -19911,7 +19968,7 @@
           ms.className = "ms"
           ms.textContent = ": " + text
           d.append(nk, ms)
-          pushLine(d)
+          pushLine(d, own)
         }
         function addNotice(text) {
           const d = document.createElement("div")
@@ -20047,6 +20104,16 @@
         /* 로그를 누르면 입력창을 포커스 없이 펼침 (페이드 중이어도 정상 투명도로 복귀) */
         /* 모바일/데스크톱 공통: 드래그로 로그 스크롤 (브라우저 기본 스크롤은 touch-action:none으로 끔) */
         let clDrag = null
+        chatLogEl.addEventListener("scroll", () => {
+          if (nearBottom(chatLogEl)) clearUnread()
+        })
+        const chatNewBtn = document.getElementById("chatNew")
+        chatNewBtn.addEventListener("mousedown", (e) => e.preventDefault())
+        chatNewBtn.addEventListener("pointerdown", (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          jumpToBottom()
+        })
         chatLogEl.addEventListener("pointerdown", (e) => {
           e.stopPropagation()
           clDrag = { id: e.pointerId, y: e.clientY }
