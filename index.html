@@ -271,6 +271,7 @@
       }
       #toast {
         position: absolute;
+        z-index: var(--z-float);
         left: 50%;
         bottom: 150px;
         transform: translateX(-50%) translateY(10px);
@@ -470,7 +471,10 @@
       .panel {
         touch-action: manipulation;
         position: absolute;
-        top: calc(env(safe-area-inset-top) + var(--pill-top) + var(--pill-h) + var(--gap-panel));
+        top: calc(
+          env(safe-area-inset-top) + var(--pill-top) + var(--pill-h) +
+            var(--gap-panel)
+        );
         left: 50%;
         bottom: calc(env(safe-area-inset-bottom) + 96px);
         width: min(calc(100% - 32px), 600px);
@@ -1812,11 +1816,38 @@
         box-shadow: none;
         border: 1px solid var(--ln);
       }
+      .rk0 .spin {
+        margin: 24px auto;
+      }
+      .sk {
+        border-radius: 18px;
+        animation: skPulse 1.2s ease-in-out infinite;
+      }
+      @keyframes skPulse {
+        0%,
+        100% {
+          background: var(--cd);
+        }
+        50% {
+          background: var(--cd2);
+        }
+      }
+      .sk-row {
+        height: 64px;
+      }
+      .sk-card {
+        height: 110px;
+      }
+      .sk-slot {
+        height: 118px;
+      }
       .dcard {
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
+        min-height: 110px;
         gap: 3px;
         border: 0;
         border-radius: 18px;
@@ -3704,21 +3735,63 @@
         <div id="dim"></div>
 
         <div class="panel" role="dialog" aria-modal="true" id="p-gacha">
-          <header class="ph"><h2>뽑기</h2><button type="button" aria-label="닫기" data-close><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+          <header class="ph">
+            <h2>뽑기</h2>
+            <button type="button" aria-label="닫기" data-close>
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </header>
           <div id="gaBan"></div>
         </div>
 
         <div class="panel" role="dialog" aria-modal="true" id="p-gear">
           <header class="ph">
             <h2>장비</h2>
-            <button type="button" aria-label="닫기" data-close><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <button type="button" aria-label="닫기" data-close>
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
           </header>
           <div id="gearTop"></div>
           <div class="dgrid" id="gearGrid"></div>
         </div>
 
         <div class="panel" role="dialog" aria-modal="true" id="p-shop">
-          <header class="ph"><h2>판매소</h2><button type="button" aria-label="닫기" data-close><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+          <header class="ph">
+            <h2>판매소</h2>
+            <button type="button" aria-label="닫기" data-close>
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </header>
           <div class="seg">
             <button data-v="sell" class="on">판매</button
             ><button data-v="dex">
@@ -3771,7 +3844,22 @@
         </div>
 
         <div class="panel" role="dialog" aria-modal="true" id="p-set">
-          <header class="ph"><h2>설정</h2><button type="button" aria-label="닫기" data-close><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+          <header class="ph">
+            <h2>설정</h2>
+            <button type="button" aria-label="닫기" data-close>
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </header>
           <div class="box">
             <div class="row">
               <div class="g">효과음</div>
@@ -8581,13 +8669,36 @@
         }
         const iconCache = {}
         // 그림이 칸을 넘치면 비율은 유지한 채 줄이고, 가운데로 맞춰서 아이콘 이미지로 만들어요
-        function fitIcon(px, sil, draw) {
+        /* 아이콘 영구 캐시: 완성된 dataURL을 localStorage에 저장 (아이콘 그림이 바뀌면 버전 올리기) */
+        const ICON_STORE = "pd-icons-v1"
+        let iconStore = {}
+        try {
+          iconStore = JSON.parse(localStorage.getItem(ICON_STORE) || "{}") || {}
+        } catch (e) {
+          iconStore = {}
+        }
+        let iconStoreT = 0,
+          iconStoreOK = true
+        function persistIcon(key, url) {
+          iconStore[key] = url
+          clearTimeout(iconStoreT)
+          iconStoreT = setTimeout(() => {
+            if (!iconStoreOK) return
+            try {
+              localStorage.setItem(ICON_STORE, JSON.stringify(iconStore))
+            } catch (e) {
+              iconStoreOK = false // 용량 초과 등: 이후에는 메모리 캐시만 사용
+            }
+          }, 1000)
+        }
+        function fitIcon(px, sil, draw, key) {
+          if (key && iconStore[key]) return iconStore[key]
           const d = 2,
             S = px * d,
             B = S * 3,
             big = document.createElement("canvas")
           big.width = big.height = B
-          const bg = big.getContext("2d")
+          const bg = big.getContext("2d", { willReadFrequently: true })
           draw(bg, B / 2, B / 2, S)
           const dt = bg.getImageData(0, 0, B, B).data
           let x0 = B,
@@ -8627,13 +8738,18 @@
             g.fillStyle = "#5b6670"
             g.fillRect(0, 0, S, S)
           }
-          return c.toDataURL()
+          const url = c.toDataURL()
+          if (key) persistIcon(key, url)
+          return url
         }
         function iconURL(f, px = 48, sil = false) {
           const k = f.id + "|" + px + "|" + sil
           if (iconCache[k]) return iconCache[k]
-          return (iconCache[k] = fitIcon(px, sil, (g, x, y, S) =>
-            drawArt(g, f, x, y, S),
+          return (iconCache[k] = fitIcon(
+            px,
+            sil,
+            (g, x, y, S) => drawArt(g, f, x, y, S),
+            "i:" + k,
           ))
         }
 
@@ -15302,6 +15418,108 @@
 
         /* ================= 탭 / 판매소 / 설정 ================= */
         let tab = null
+        /* 무거운 탭 렌더: 스켈레톤을 먼저 보이고, 아이콘 캐시를 조금씩 채운 뒤 실제 내용으로 교체 */
+        const yieldFrame = () =>
+          new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)))
+        let renderTok = 0
+        /* 아이콘 작업 단위: has() 로 이미 캐시됐는지 확인, make() 로 생성 */
+        const iconJob = (f, px, sil) => {
+          const k = f.id + "|" + px + "|" + sil
+          return {
+            has: () => !!(iconCache[k] || iconStore["i:" + k]),
+            make: () => iconURL(f, px, sil),
+          }
+        }
+        const gearJob = (id, px, sil) => {
+          const k = id + "|" + px + "|" + sil
+          return {
+            has: () => !!(gearCache[k] || iconStore["g:" + k]),
+            make: () => gearURL(id, px, sil),
+          }
+        }
+        /* 미생성 아이콘이 있을 때만 스켈레톤을 보이고, 청크로 만든 뒤 실제 렌더 */
+        async function renderTab(taskFn, render, skel) {
+          const tok = ++renderTok
+          const pending = taskFn().filter((j) => !j.has())
+          if (!pending.length) {
+            render()
+            return
+          }
+          if (skel) skel()
+          await yieldFrame()
+          for (let i = 0; i < pending.length && tok === renderTok; i += 3) {
+            pending.slice(i, i + 3).forEach((j) => j.make())
+            await yieldFrame()
+          }
+          if (tok === renderTok) render()
+        }
+        const shopTasks = () =>
+          [...new Set((save.inv || []).map((i) => i.id))]
+            .map((id) => FBY[id])
+            .filter(Boolean)
+            .map((f) => iconJob(f, 44, false))
+        const dexTasks = () =>
+          FISH.flatMap((f) => [iconJob(f, 56, false), iconJob(f, 56, true)])
+        const gearTasks = () =>
+          ITEMS.filter((i) => i.slot === gearSlot).flatMap((it) => [
+            gearJob(it.id, 56, false),
+            gearJob(it.id, 56, true),
+          ])
+        const skShown = {}
+        const skelOnce = (key, fn) => {
+          if (skShown[key]) return null
+          skShown[key] = true
+          return fn
+        }
+        const skBlock = (n, cls) =>
+          Array.from({ length: n }, () => `<div class="sk ${cls}"></div>`).join(
+            "",
+          )
+        const skShop = () => {
+          $("#shopList").innerHTML = skBlock(4, "sk-row")
+        }
+        const skDex = () => {
+          $("#dexGrid").innerHTML = skBlock(FISH.length, "sk-card")
+        }
+        const skGearTop = () => {
+          $("#gearTop").innerHTML =
+            `<div class="eslots">${skBlock(4, "sk-slot")}</div>`
+        }
+        const skGearGrid = () => {
+          $("#gearGrid").innerHTML = skBlock(
+            ITEMS.filter((i) => i.slot === gearSlot).length,
+            "sk-card",
+          )
+        }
+        const skGearAll = () => {
+          const top = skelOnce("gearTop", skGearTop)
+          if (top) top()
+          skGearGrid()
+        }
+        /* 로딩 후 백그라운드 예열: 한 번에 하나씩 천천히 */
+        function prewarmIcons() {
+          const jobs = []
+          FISH.forEach((f) => {
+            jobs.push(
+              () => iconURL(f, 44),
+              () => iconURL(f, 56, false),
+              () => iconURL(f, 56, true),
+            )
+          })
+          ITEMS.forEach((it) => {
+            jobs.push(
+              () => gearURL(it.id, 56, false),
+              () => gearURL(it.id, 56, true),
+            )
+          })
+          let i = 0
+          ;(function step() {
+            if (i < jobs.length) {
+              jobs[i++]()
+              setTimeout(step, 16)
+            }
+          })()
+        }
         function setTab(t) {
           if (F.phase === "charge") F.phase = "idle"
           const switching = !!tab && !!t // 팝업이 열린 상태에서 다른 팝업으로 이동
@@ -15318,9 +15536,10 @@
             panels.forEach((p) => (p.style.transition = ""))
           }
           $("#dim").classList.toggle("on", !!t)
-          if (t === "shop") renderShop()
-          if (t === "gear") renderGear()
-          if (t === "gacha") renderGacha()
+          if (t === "shop")
+            renderTab(shopTasks, renderShop, skelOnce("shop", skShop))
+          if (t === "gear") renderTab(gearTasks, renderGear, skGearAll)
+          if (t === "gacha") renderTab(() => [], renderGacha)
           if (!t) {
             releaseJoy()
             setTimeout(resize, 30)
@@ -15379,7 +15598,8 @@
           document
             .querySelectorAll(".seg button")
             .forEach((b) => b.classList.toggle("on", b.dataset.v === v))
-          if (v === "dex") renderDex()
+          if (v === "dex")
+            renderTab(dexTasks, renderDex, skelOnce("dex", skDex))
         }
         document.querySelector(".seg").addEventListener("click", (e) => {
           const b = e.target.closest("[data-v]")
@@ -18067,13 +18287,18 @@
           const k = id + "|" + px + "|" + sil
           if (gearCache[k]) return gearCache[k]
           const it = IBY[id]
-          return (gearCache[k] = fitIcon(px, sil, (g, x, y, S) => {
-            g.save()
-            g.translate(x - S / 2, y - S / 2)
-            g.scale(S / 64, S / 64)
-            gearArt(g, it)
-            g.restore()
-          }))
+          return (gearCache[k] = fitIcon(
+            px,
+            sil,
+            (g, x, y, S) => {
+              g.save()
+              g.translate(x - S / 2, y - S / 2)
+              g.scale(S / 64, S / 64)
+              gearArt(g, it)
+              g.restore()
+            },
+            "g:" + k,
+          ))
         }
         function gearImg(id) {
           if (!gearImgs[id]) {
@@ -18350,7 +18575,12 @@
           const g = e.target.closest("[data-es]")
           if (g) {
             gearSlot = g.dataset.es
-            renderGear()
+            document
+              .querySelectorAll(".eslot")
+              .forEach((b) =>
+                b.classList.toggle("on", b.dataset.es === gearSlot),
+              )
+            renderTab(gearTasks, renderGearGrid, skGearGrid)
             sfx.tick()
             return
           }
@@ -18433,7 +18663,7 @@
             ? `<div class="spc">${l.map((x) => `<span><i></i>${x[0]} <b>${x[1]}</b></span>`).join("")}</div><div class="spd">${l.map((x) => `<p><b>${x[0]}</b>${SPD[x[0]] || ""}</p>`).join("")}</div>`
             : ""
         }
-        function renderGear() {
+        function renderGearTop() {
           const g = save.gear,
             eq = save.equip || {}
           $("#gearTop").innerHTML = `<div class="eslots">${Object.keys(SLOTS)
@@ -18457,6 +18687,9 @@
      )
      .join("")}</div>
    ${spChips(g)}`
+        }
+        function renderGearGrid() {
+          const eq = save.equip || {}
           const own = ITEMS.filter((i) => i.slot === gearSlot).sort(
             (a, b) => b.ri - a.ri,
           )
@@ -18468,6 +18701,10 @@
               return `<button class="dcard ${lv ? "" : "lock"} ${lv && it.ri === 4 ? "lg" : ""} ${on ? "eqd" : ""}" style="--rc:${c}" data-it="${it.id}">${on ? '<span class="eqb">장착 중</span>' : ""}<img src="${gearURL(it.id, 56, !lv)}" alt=""><div class="dn">${lv ? it.n : "???"}</div><div class="pips">${Array.from({ length: it.ri + 1 }, () => "<i></i>").join("")}</div>${Object.keys(it.sp || {}).length ? '<span class="spb"></span>' : ""}</button>`
             })
             .join("")
+        }
+        function renderGear() {
+          renderGearTop()
+          renderGearGrid()
         }
         function renderAv() {
           $("#avGrid").innerHTML = AVS.map(
@@ -20216,7 +20453,7 @@
               '<div class="rk0">로그인하면 전체 랭킹을 볼 수 있어요</div>'
             return
           }
-          box.innerHTML = '<div class="rk0">불러오는 중…</div>'
+          box.innerHTML = '<div class="rk0"><div class="spin"></div></div>'
           try {
             const sn = await MP.db
                 .ref("leaderboard")
@@ -20356,6 +20593,7 @@
           }
         }
         resize()
+        setTimeout(prewarmIcons, 1500)
         updateHud()
         ghostJoy()
         moveNavPill(true)
