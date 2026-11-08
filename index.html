@@ -14,6 +14,8 @@
       rel="stylesheet"
     />
     <title>Pa-Dack</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
     <style>
       :root {
         --black: #000000;
@@ -157,6 +159,17 @@
         --ac2: var(--orange-500);
         --ok: var(--green-600-b);
       }
+      /* 저사양 모드: 블러 비용 제거 */
+      html[data-lowspec] {
+        --blur-xs: 0px;
+        --blur-sm: 0px;
+        --blur-md: 0px;
+        --blur-lg: 0px;
+      }
+      html[data-lowspec] * {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
 
       button {
         font: inherit;
@@ -292,6 +305,7 @@
         text-wrap: balance;
         line-height: 1.35;
         word-break: keep-all;
+        z-index: var(--z-float);
       }
       #toast.show {
         opacity: 1;
@@ -656,6 +670,10 @@
       #loader p {
         margin: 0;
         text-shadow: 0 2px 6px rgb(var(--blue-900-rgb) / 0.3);
+      }
+      #loadMsg {
+        font-size: 14px;
+        opacity: var(--opacity-muted);
       }
       .spin {
         width: 46px;
@@ -3620,6 +3638,7 @@
     <div id="loader">
       <div class="spin"></div>
       <p>Pa-Dack</p>
+      <p id="loadMsg">연결 중...</p>
     </div>
     <div id="login" hidden>
       <div class="lbox">
@@ -3875,6 +3894,12 @@
               ></label>
             </div>
             <div class="row">
+              <div class="g">저사양 모드</div>
+              <label class="sw"
+                ><input type="checkbox" id="setLow" /><i></i
+              ></label>
+            </div>
+            <div class="row">
               <div class="g">끌어오기 허용</div>
               <label class="sw"
                 ><input type="checkbox" id="setDrag" /><i></i
@@ -4089,6 +4114,8 @@
           pity: { rod: 0, shoes: 0, hat: 0 },
           ptl: [],
         }) // 뽑기/강화가 이 값을 바꿀 예정
+        /* 저사양 모드: 기기별 설정이라 클라우드가 아닌 localStorage 에만 저장 */
+        let lowSpecOn = localStorage.getItem("pd-lowspec") === "1"
         let save = (() => {
           try {
             const s = JSON.parse(localStorage.getItem(SAVE_KEY))
@@ -10221,7 +10248,7 @@
           W = r.width
           H = r.height
           measureArrowEdges()
-          dpr = Math.min(window.devicePixelRatio || 1, 2.5)
+          dpr = lowSpecOn ? 1 : Math.min(window.devicePixelRatio || 1, 2.5)
           cv.width = Math.round(W * dpr)
           cv.height = Math.round(H * dpr)
           baseTS = Math.round(clamp(Math.min(W, H * 0.56) / 7, 40, 72))
@@ -14550,7 +14577,7 @@
         const MMP = 3
         /* 캔버스 내부 해상도를 표시 크기 x 기기 배율에 맞춤 (확대해도 선명하게) */
         function sizeMini() {
-          const dpr = Math.min(window.devicePixelRatio || 1, 3),
+          const dpr = lowSpecOn ? 1 : Math.min(window.devicePixelRatio || 1, 3),
             px = Math.round(mm.getBoundingClientRect().width * dpr)
           if (px > 0 && mm.width !== px) mm.width = mm.height = px
         }
@@ -18768,6 +18795,7 @@
             return
           }
           let tries = 0
+          setTimeout(loaderHide, 15000) // 네트워크 문제로 응답이 없으면 로딩을 닫고 진행
           const iv = setInterval(() => {
             if (window.firebase && firebase.database && firebase.auth) {
               clearInterval(iv)
@@ -18777,6 +18805,7 @@
                 MP.db = firebase.database()
                 MP.on = true
                 MP.auth.getRedirectResult().catch(() => {})
+                setLoadMsg("로그인 상태 확인 중...")
                 MP.auth.onAuthStateChanged(onAuth)
               } catch (e) {
                 console.warn(e)
@@ -18831,14 +18860,17 @@
           MP.user = u
           $("#login").hidden = true
           MP.skip = false
+          setLoadMsg("데이터를 불러오는 중...")
           const ok = await loadCloud(u, seq)
           if (seq !== authSeq) return
-          if (ok) joinWorld()
-          else {
+          joinWorld() // 맵(월드) 연결은 저장 데이터 성공 여부와 무관하게 진행
+          if (!ok) {
+            setLoadMsg("연결이 불안정해요. 다시 시도하는 중...")
             toast("계정 정보를 불러오지 못했어요. 다시 시도해요")
             retryT = setTimeout(() => {
               if (seq === authSeq && MP.user === u) onAuth(u)
             }, 5000)
+            return
           }
           mpUI()
         }
@@ -18862,6 +18894,7 @@
                 } catch (e) {}
             } else {
               /* 새 계정: 오프라인으로 하던 진행을 한 번만 이어받고 오프라인 슬롯은 비운다 */
+              setLoadMsg("새 계정 준비 중...")
               save = readOffline()
               try {
                 localStorage.removeItem(SAVE_KEY)
@@ -18874,13 +18907,10 @@
                   ) +
                   (Math.floor(Math.random() * 90) + 10)
               }
-              try {
-                await MP.db
-                  .ref("users/" + u.uid + "/meta/created")
-                  .set(firebase.database.ServerValue.TIMESTAMP)
-              } catch (e) {
-                console.warn(e)
-              }
+              MP.db
+                .ref("users/" + u.uid + "/meta/created")
+                .set(firebase.database.ServerValue.TIMESTAMP)
+                .catch((e) => console.warn(e))
               if (seq !== authSeq) return false
             }
             MP.sUid = u.uid
@@ -18889,7 +18919,7 @@
               localStorage.setItem(ukey(u.uid), JSON.stringify(save))
             } catch (e) {}
             resetPlayState()
-            await cloudSaveNow()
+            cloudSaveNow() // 쓰기는 백그라운드로: 응답을 기다리면 새 계정에서 멈출 수 있음
             applySaveUI()
             return true
           } catch (e) {
@@ -19977,7 +20007,22 @@
           )
         }
         /* 계정 UI */
+        let loaderGone = false
+        function setLoadMsg(t) {
+          const m = document.getElementById("loadMsg")
+          if (m) m.textContent = t
+        }
+        function loaderHide() {
+          if (loaderGone) return
+          loaderGone = true
+          const l = document.getElementById("loader")
+          if (!l) return
+          l.style.transition = "opacity var(--dur-base) var(--ease-out)"
+          l.style.opacity = "0"
+          setTimeout(() => l.remove(), 300)
+        }
         function mpUI() {
+          loaderHide()
           const el = $("#acInfo"),
             on = MP.on,
             u = MP.user
@@ -20085,8 +20130,13 @@
         $("#loIn").addEventListener("click", () => MP.on && emailAuth(false))
         $("#loUp").addEventListener("click", () => MP.on && emailAuth(true))
         $("#loGuest").addEventListener("click", () => {
-          if (!MP.on) return
           loErr()
+          if (!MP.on || !MP.auth) {
+            loErr(
+              "서버에 연결하지 못했어요. 인터넷을 확인하고 다시 눌러 주세요",
+            )
+            return
+          }
           MP.auth.signInAnonymously().catch((e) => loErr(errMsg(e)))
         })
         $("#loSkip").addEventListener("click", () => {
@@ -20493,6 +20543,21 @@
           persist()
           MP.acc = 9
         })
+        /* 저사양 모드 적용: 블러 제거(CSS 속성), 캔버스 해상도 낮춤(resize) */
+        const applyLowSpec = () => {
+          document.documentElement.toggleAttribute("data-lowspec", lowSpecOn)
+          resize()
+        }
+        const sLow = $("#setLow")
+        sLow.checked = lowSpecOn
+        applyLowSpec()
+        sLow.addEventListener("change", () => {
+          lowSpecOn = sLow.checked
+          try {
+            localStorage.setItem("pd-lowspec", lowSpecOn ? "1" : "0")
+          } catch (e) {}
+          applyLowSpec()
+        })
         mpInit()
 
         window.__game = {
@@ -20544,24 +20609,7 @@
           PIERS,
         }
         /* ================= 메인 루프 ================= */
-        /* 로딩 중 랜덤 메시지 */
-        const LOAD_TIPS = [
-          "낚싯대 준비하는 중...",
-          "준비 운동 하는 중...",
-          "물고기 먹이 준비하는 중...",
-          "주디 덕질 중...",
-          "찌 점검하는 중...",
-          "미끼 고르는 중...",
-          "바다 날씨 살피는 중...",
-        ]
-        {
-          const lp = document.querySelector("#loader p")
-          if (lp)
-            lp.textContent =
-              LOAD_TIPS[Math.floor(Math.random() * LOAD_TIPS.length)]
-        }
-        let last = performance.now(),
-          loaded = false
+        let last = performance.now()
         function loop(now) {
           const dt = Math.min(0.05, (now - last) / 1000)
           last = now
@@ -20569,11 +20617,6 @@
             update(dt)
             updateHud2()
             render()
-            if (!loaded) {
-              loaded = true
-              const l = document.getElementById("loader")
-              if (l) l.remove()
-            }
           }
           requestAnimationFrame(loop)
         }
