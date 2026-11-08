@@ -933,6 +933,35 @@
           transform: translateX(120%);
         }
       }
+      .attg {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin: 14px 0;
+      }
+      .atc {
+        border: 1px solid var(--ln);
+        border-radius: 14px;
+        padding: 10px 4px;
+        text-align: center;
+        font-size: 13px;
+        background: rgb(255 255 255 / 0.05);
+      }
+      .atc small {
+        display: block;
+        color: var(--tx2);
+        margin-bottom: 4px;
+      }
+      .atc.done {
+        opacity: 0.5;
+      }
+      .atc.now {
+        border-color: var(--ac);
+        box-shadow: 0 0 0 2px var(--ac) inset;
+      }
+      .atc.big {
+        grid-column: span 2;
+      }
       .sheet {
         position: fixed;
         inset: 0;
@@ -2949,7 +2978,7 @@
         transform: scale(0.92);
       }
       /* 종류별 등장 */
-      .sw-rod::before {
+      .sw-rod .gxwb::before {
         content: "";
         position: absolute;
         left: 50%;
@@ -2973,10 +3002,10 @@
           transform: none;
         }
       }
-      .sw-rod.w1 {
+      .sw-rod .gxwb.w1 {
         animation: gxrw 1.1s ease-in-out infinite alternate;
       }
-      .sw-rod.w2 {
+      .sw-rod .gxwb.w2 {
         animation: gxrw2 0.22s ease-in-out infinite alternate;
       }
       @keyframes gxrw {
@@ -3015,10 +3044,10 @@
           transform: none;
         }
       }
-      .sw-shoes.w1 {
+      .sw-shoes .gxwb.w1 {
         animation: gxsw1 0.9s ease-in-out infinite;
       }
-      .sw-shoes.w2 {
+      .sw-shoes .gxwb.w2 {
         animation: gxsw1 0.45s ease-in-out infinite;
       }
       @keyframes gxsw1 {
@@ -3047,10 +3076,10 @@
           transform: none;
         }
       }
-      .sw-hat.w1 {
+      .sw-hat .gxwb.w1 {
         animation: gxhw 1.4s ease-in-out infinite alternate;
       }
-      .sw-hat.w2 {
+      .sw-hat .gxwb.w2 {
         animation: gxhw 0.5s ease-in-out infinite alternate;
       }
       @keyframes gxhw {
@@ -3081,10 +3110,10 @@
           transform: none;
         }
       }
-      .sw-pet.w1 {
+      .sw-pet .gxwb.w1 {
         animation: gxpw 1s ease-in-out infinite;
       }
-      .sw-pet.w2 {
+      .sw-pet .gxwb.w2 {
         animation: gxpw 0.5s ease-in-out infinite;
       }
       @keyframes gxpw {
@@ -3324,6 +3353,409 @@
       .gxsum b {
         color: var(--slate-100);
         margin-left: 6px;
+      }
+      /* ===== 뽑기 연출 다듬기 v4 ===== */
+      .gxwb {
+        position: absolute;
+        inset: 0;
+        will-change: transform;
+        backface-visibility: hidden;
+      }
+      .gxsw {
+        will-change: transform;
+      }
+      .gxst.op .gxwb {
+        animation: gxpop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+      }
+      @keyframes gxpop {
+        0% {
+          transform: scale(0.93);
+        }
+        100% {
+          transform: none;
+        }
+      }
+      .gxd2 {
+        box-shadow: 0 0 36px color-mix(in srgb, var(--rc) 30%, transparent);
+      }
+      .gxinfo {
+        opacity: 1;
+        transform: none;
+        transition: none;
+        visibility: hidden;
+      }
+      .gxinfo.on {
+        visibility: visible;
+      }
+      .gxinfo > * {
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 0.45s ease,
+          transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1);
+      }
+      .gxinfo.on > * {
+        opacity: 1;
+        transform: none;
+      }
+      .gxinfo.on > :nth-child(2) {
+        transition-delay: 0.07s;
+      }
+      .gxinfo.on > :nth-child(3) {
+        transition-delay: 0.14s;
+      }
+      .gxinfo.on > :nth-child(4) {
+        transition-delay: 0.2s;
+      }
+      .gxinfo.on > :nth-child(5) {
+        transition-delay: 0.26s;
+      }
+      .gxinfo.on > :nth-child(6) {
+        transition-delay: 0.32s;
+      }
+      .gxinst .gxinfo > * {
+        transition: none !important;
+      }
+      .gxc .in {
+        will-change: transform;
+      }
+      /* ===== 출석 보상 팝업 ===== */
+      #attSheet {
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+      }
+      #attSheet .sbody {
+        width: min(100%, 380px);
+        max-height: 92%;
+        border-radius: 26px;
+        padding: 0 16px 16px;
+        border: 1px solid rgb(var(--white-rgb) / 0.14);
+        background: linear-gradient(170deg, var(--blue-900), var(--blue-950) 70%);
+        box-shadow:
+          0 20px 60px rgb(var(--black-rgb) / 0.55),
+          0 0 0 1px rgb(255 200 61 / 0.12) inset;
+        animation: attin 0.36s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+      }
+      @keyframes attin {
+        from {
+          opacity: 0;
+          transform: translateY(18px) scale(0.94);
+        }
+      }
+      .atph {
+        position: relative;
+        margin: 0 -16px 10px;
+        padding: 22px 0 10px;
+        text-align: center;
+        overflow: hidden;
+        border-radius: 26px 26px 0 0;
+      }
+      .atglow {
+        position: absolute;
+        left: 50%;
+        top: 8px;
+        width: 220px;
+        height: 150px;
+        margin-left: -110px;
+        background: radial-gradient(closest-side, rgb(255 200 61 / 0.32), transparent);
+        pointer-events: none;
+      }
+      .atbadge {
+        position: relative;
+        width: 62px;
+        height: 62px;
+        margin: 0 auto 8px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 35%, #ffe28a, #f2a43a);
+        box-shadow:
+          0 6px 18px rgb(var(--black-rgb) / 0.4),
+          0 0 0 3px rgb(255 255 255 / 0.18) inset;
+      }
+      .atbadge svg {
+        width: 40px;
+        height: 40px;
+      }
+      .atph h3 {
+        position: relative;
+        margin: 0;
+        font-size: 20px;
+      }
+      .atph p {
+        position: relative;
+        margin: 4px 0 0;
+        font-size: 12.5px;
+        color: var(--tx2);
+      }
+      .atph p b {
+        color: #ffd34d;
+      }
+      #attSheet .attg {
+        margin: 10px 0;
+        gap: 7px;
+      }
+      #attSheet .atc {
+        position: relative;
+        padding: 8px 2px 7px;
+        border-radius: 14px;
+        background: linear-gradient(rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.03));
+        overflow: hidden;
+      }
+      #attSheet .atc small {
+        margin-bottom: 2px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      #attSheet .atc .aic svg {
+        width: 30px;
+        height: 30px;
+        display: block;
+        margin: 0 auto 2px;
+      }
+      #attSheet .atc.big .aic svg {
+        width: 38px;
+        height: 38px;
+      }
+      #attSheet .atc b {
+        font-size: 12.5px;
+        font-weight: 800;
+      }
+      #attSheet .atc.done {
+        opacity: 1;
+      }
+      #attSheet .atc.done .aic,
+      #attSheet .atc.done b {
+        opacity: 0.35;
+      }
+      #attSheet .atc .stamp {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: var(--green-500);
+        animation: atst 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+      }
+      #attSheet .atc .stamp svg {
+        width: 30px;
+        height: 30px;
+        filter: drop-shadow(0 2px 4px rgb(var(--black-rgb) / 0.5));
+      }
+      @keyframes atst {
+        from {
+          opacity: 0;
+          transform: scale(1.8) rotate(-12deg);
+        }
+      }
+      #attSheet .atc.now {
+        border-color: #ffc83d;
+        box-shadow: 0 0 0 2px #ffc83d inset;
+        background: linear-gradient(rgb(255 200 61 / 0.22), rgb(255 200 61 / 0.06));
+        animation: atnow 1.4s ease-in-out infinite alternate;
+      }
+      @keyframes atnow {
+        to {
+          transform: translateY(-2px);
+        }
+      }
+      .atnote {
+        text-align: center;
+        margin: 4px 0 12px;
+        font-size: 13px;
+        color: var(--tx2);
+        font-weight: 700;
+      }
+      .atnote b {
+        color: #ffd34d;
+        font-size: 15px;
+      }
+      .atcoin {
+        position: absolute;
+        left: 50%;
+        top: 40%;
+        width: 22px;
+        height: 22px;
+        margin: -11px 0 0 -11px;
+        pointer-events: none;
+        animation: atfly 0.95s cubic-bezier(0.2, 0.7, 0.4, 1) both;
+        will-change: transform;
+      }
+      .atcoin svg {
+        width: 100%;
+        height: 100%;
+      }
+      @keyframes atfly {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) scale(0.5);
+        }
+        20% {
+          opacity: 1;
+        }
+        45% {
+          transform: translate(calc(var(--dx) * 0.7), var(--dy)) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--dx), 90px) scale(0.9);
+        }
+      }
+      /* ===== 시간제 퀘스트 ===== */
+      #qBtn {
+        position: absolute;
+        right: 12px;
+        top: calc(env(safe-area-inset-top) + 104px + 92px + 8px);
+        width: 92px;
+        z-index: 5;
+        padding: 6px 0;
+        border: 1px solid rgb(var(--white-rgb) / 0.4);
+        border-radius: 99px;
+        font-family: inherit;
+        font-weight: 800;
+        font-size: 12px;
+        color: var(--white);
+        background: rgb(var(--blue-950-rgb) / 0.78);
+        box-shadow: 0 4px 12px rgb(var(--black-rgb) / 0.35);
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #qBtn .dot {
+        position: absolute;
+        right: 2px;
+        top: -3px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ff4d4d;
+        border: 2px solid #fff;
+      }
+      #qBtn .dot[hidden] {
+        display: none;
+      }
+      #mm.big + #qBtn {
+        display: none;
+      }
+      #qSheet {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgb(var(--blue-950-b-rgb) / 0.4);
+      }
+      #qSheet[hidden] {
+        display: none;
+      }
+      #qSheet .qb {
+        width: min(100%, 460px);
+        overflow: auto;
+        border-radius: 22px 22px 0 0;
+        box-shadow: 0 -6px 24px rgb(var(--black-rgb) / 0.25);
+        background: linear-gradient(var(--blue-900), var(--blue-950));
+        color: var(--tx);
+        border-top: 1px solid var(--ln);
+        padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+        max-height: 92%;
+        touch-action: manipulation;
+      }
+      #qSheet h3 {
+        margin: 2px 0 4px;
+        font-size: 18px;
+        text-align: center;
+      }
+      #qSheet p {
+        margin: 0 0 12px;
+        font-size: 12.5px;
+        color: var(--tx2);
+        text-align: center;
+      }
+      #qSheet .qr {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 12px;
+        margin-bottom: 8px;
+        border-radius: 14px;
+        background: var(--cd2);
+        border: 1px solid var(--ln);
+      }
+      #qSheet .qr.ok {
+        border-color: var(--green-500);
+      }
+      #qSheet .qr.done {
+        opacity: 0.55;
+      }
+      #qSheet .qr.bonus {
+        margin-top: 12px;
+        border-color: #ffc83d;
+        background: linear-gradient(135deg, rgb(255 200 61 / 0.2), rgb(255 200 61 / 0.05));
+      }
+      #qSheet .qr.bonus em {
+        display: block;
+        font-style: normal;
+        font-weight: 900;
+        font-size: 16px;
+        color: #ffd34d;
+        margin-top: 2px;
+      }
+      #qSheet .qr.bonus.ok {
+        box-shadow: 0 0 0 2px #ffc83d inset;
+      }
+      #qSheet .qtot {
+        margin: -6px 0 12px;
+      }
+      #qSheet .qtot b {
+        color: #ffd34d;
+      }
+      #qSheet .qic {
+        flex: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: rgb(var(--white-rgb) / 0.07);
+      }
+      #qSheet .qic svg {
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 2px 3px rgb(var(--black-rgb) / 0.35));
+      }
+      #qSheet .qi {
+        flex: 1;
+        min-width: 0;
+      }
+      #qSheet .qi b {
+        display: block;
+        font-size: 14px;
+        line-height: 1.3;
+        word-break: keep-all;
+      }
+      #qSheet .qi small {
+        display: block;
+        margin-top: 4px;
+        font-weight: 700;
+        font-size: 11.5px;
+        color: var(--tx2);
+      }
+      #qSheet .qbar {
+        height: 5px;
+        margin-top: 7px;
+        border-radius: 3px;
+        background: rgb(var(--white-rgb) / 0.12);
+        overflow: hidden;
+      }
+      #qSheet .qbar i {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--green-500);
+        transition: width 0.3s;
+      }
+      #qSheet .qr .btn {
+        min-width: 64px;
       }
       /* 왼쪽 하단 채팅 로그 */
       #chatDock {
@@ -3688,6 +4120,7 @@
             <div id="coChip" class="pill" hidden></div>
           </div>
           <canvas id="mm" width="300" height="300"></canvas>
+          <button id="qBtn" type="button" aria-label="퀘스트">퀘스트 <span id="qBtnN">0/3</span><i class="dot" hidden></i></button>
           <div id="chatDock">
             <div id="chatLogWrap">
               <div id="chatLog"></div>
@@ -3939,6 +4372,13 @@
             <div class="avgrid" id="avGrid"></div>
           </div>
           <div class="box">
+            <h3>출석 보상</h3>
+            <button class="btn" id="attOpen">출석 체크 열기</button>
+          </div>
+          <div class="box">
+            <small id="mapCode" style="color: var(--tx2)"></small>
+          </div>
+          <div class="box">
             <button
               class="btn"
               id="reset"
@@ -3967,13 +4407,22 @@
           >
         </button>
         <button class="tab" data-t="set">
-          <span class="ic" data-ic="gear"></span>설정
+          <span class="ic" data-ic="gear"></span>설정<i
+            class="badge"
+            id="setBadge"
+            hidden
+            >!</i
+          >
         </button>
       </nav>
       <div id="grOv" hidden></div>
       <div class="sheet" id="itSheet" hidden>
         <div class="sbk"></div>
         <div class="sbody" id="itBody"></div>
+      </div>
+      <div class="sheet" id="attSheet" hidden>
+        <div class="sbk"></div>
+        <div class="sbody" id="attBody"></div>
       </div>
       <div class="sheet" id="dexSheet" hidden>
         <div class="sbk"></div>
@@ -4113,6 +4562,10 @@
           equip: { rod: "", shoes: "", hat: "" },
           pity: { rod: 0, shoes: 0, hat: 0 },
           ptl: [],
+          att: { last: -1, streak: 0, total: 0 },
+          tr: 0,
+          trc: [],
+          qs: null,
         }) // 뽑기/강화가 이 값을 바꿀 예정
         /* 저사양 모드: 기기별 설정이라 클라우드가 아닌 localStorage 에만 저장 */
         let lowSpecOn = localStorage.getItem("pd-lowspec") === "1"
@@ -9286,6 +9739,33 @@
           }
         }
         ;(function build() {
+          /* 기기/브라우저마다 Math.sin 등의 결과가 미세하게 달라 강 위치가 달라지던 문제:
+             맵 생성 구간에서만 순수 사칙연산 기반 구현으로 교체 (모든 기기에서 동일 결과) */
+          const Math = (() => {
+            const G = globalThis.Math, PI = G.PI, TAU = PI * 2, M2 = Object.create(G)
+            const sin = (x) => {
+              x = x - TAU * G.floor(x / TAU + 0.5)
+              if (x > PI / 2) x = PI - x
+              else if (x < -PI / 2) x = -PI - x
+              const x2 = x * x
+              return x * (1 + x2 * (-1 / 6 + x2 * (1 / 120 + x2 * (-1 / 5040 + x2 * (1 / 362880 + x2 * (-1 / 39916800 + x2 * (1 / 6227020800)))))))
+            }
+            const atan = (z) => {
+              const a = G.abs(z), inv = a > 1
+              let t = inv ? 1 / a : a, off = 0
+              if (t > 0.4142135623730951) { t = (t - 1) / (t + 1); off = PI / 4 }
+              const t2 = t * t
+              let r = off + t * (1 + t2 * (-1 / 3 + t2 * (1 / 5 + t2 * (-1 / 7 + t2 * (1 / 9 + t2 * (-1 / 11 + t2 * (1 / 13 + t2 * (-1 / 15 + t2 * (1 / 17)))))))))
+              if (inv) r = PI / 2 - r
+              return z < 0 ? -r : r
+            }
+            M2.sin = sin
+            M2.cos = (x) => sin(x + PI / 2)
+            M2.atan2 = (y, x) => x > 0 ? atan(y / x) : x < 0 ? (y >= 0 ? atan(y / x) + PI : atan(y / x) - PI) : y > 0 ? PI / 2 : y < 0 ? -PI / 2 : 0
+            M2.hypot = (a, b) => G.sqrt(a * a + b * b)
+            M2.pow = (x, y) => (y === 1.5 ? x * G.sqrt(x) : G.pow(x, y))
+            return M2
+          })()
           const rng = mulberry(20261101)
           const sm = (a, b, x) => {
             const t = clamp((x - a) / (b - a), 0, 1)
@@ -9477,7 +9957,12 @@
                 )
                   cand.push([x, y, L1[i]])
               }
-            cand.sort((a, b) => b[2] - a[2] + (rng() - 0.5) * 10)
+            /* 비교 함수 안에서 rng 를 부르면 엔진마다 호출 순서가 달라 맵이 갈라짐 → 먼저 키를 확정 */
+            cand.forEach((c, i) => {
+              c[3] = c[2] + (rng() - 0.5) * 10
+              c[4] = i
+            })
+            cand.sort((a, b) => b[3] - a[3] || a[4] - b[4])
             for (const c of cand) {
               if (starts.length >= 7) break
               if (
@@ -10198,6 +10683,21 @@
           SHD.set(boxBlur(SHD, 1, 0))
           prebake()
         })()
+        /* 맵 코드: 모든 기기에서 같아야 정상 (설정 화면에서 확인) */
+        const MAPHASH = (() => {
+          let h = 2166136261 >>> 0
+          const mix = (v) => {
+            h ^= v & 255
+            h = Math.imul(h, 16777619) >>> 0
+          }
+          for (let i = 0; i < M.length; i++) {
+            mix(M[i]); mix(SEA[i]); mix(DEC[i])
+            mix(Math.round(HT ? HT[i] * 255 : 0))
+          }
+          for (const p of PIERS) { mix(p.sx); mix(p.sy) }
+          for (const p of STR) { mix(p.x || 0); mix(p.y || 0) }
+          return h.toString(16).toUpperCase().padStart(8, "0")
+        })()
         function drawPaths(tc) {
           const dab = (x, y, r, col) => {
             tc.fillStyle = col
@@ -10457,7 +10957,7 @@
           joyEl.className = ""
         }
         fv.addEventListener("pointerdown", (e) => {
-          if (e.target.closest("#act,#card,#mm")) return
+          if (e.target.closest("#act,#card,#mm,#qBtn")) return
           unlock()
           if (mmBig) {
             mmBig = false
@@ -10466,6 +10966,10 @@
           }
           if (F.phase === "bite") {
             hook()
+            return
+          }
+          if (F.phase === "tdig") {
+            treasureStart()
             return
           }
           if (F.phase === "reel") {
@@ -10689,6 +11193,9 @@
             case "wait":
               cancelCast()
               break
+            case "tdig":
+              treasureStart()
+              break
             case "bite":
               hook()
               break
@@ -10747,6 +11254,12 @@
           F.dip = 0
         }
         function cancelCast() {
+          if (F.phase === "tdig") {
+            F.phase = "idle"
+            F.lure = null
+            sfx.tick()
+            return
+          }
           if (F.phase !== "wait" && F.phase !== "bite") return
           ripple(F.bx, F.by, 0.7)
           sfx.tick()
@@ -10767,6 +11280,696 @@
           const cp = save.gear.coop || 0
           return { n, bite: 1 + (0.1 + cp) * n, luck: (0.08 + cp * 0.8) * n }
         }
+        /* ================= 보물찾기 (매 정각 2개씩, 3시간 유지, 전원 같은 위치) ================= */
+        const TR_TABLE = [
+          // [확률 가중치, 최소, 최대, 이름]
+          [20, 0, 0, "꽝"],
+          [45, 2200, 3800, "작은 보물"],
+          [27, 4500, 6800, "보물 상자"],
+          [8, 7000, 9000, "큰 보물"],
+        ]
+        const TR_PER_HOUR = 2,
+          TR_HOURS = 3
+        const trHour = () => Math.floor((Date.now() + (MP.off || 0)) / 3600000)
+        let trLand = null
+        function trTiles() {
+          if (trLand) return trLand
+          const seen = new Uint8Array(MW * MH),
+            q = [SPY * MW + SPX],
+            out = []
+          seen[q[0]] = 1
+          const ok = (x, y) => !isW(x + 0.5, y + 0.5) && !solidPt(x + 0.5, y + 0.5)
+          for (let h = 0; h < q.length; h++) {
+            const k = q[h],
+              x = k % MW,
+              y = (k / MW) | 0
+            if (Math.hypot(x - SPX, y - SPY) > 10 && x > 3 && y > 3 && x < MW - 4 && y < MH - 4)
+              out.push(k)
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+              const nx = x + dx,
+                ny = y + dy
+              if (nx < 0 || ny < 0 || nx >= MW || ny >= MH) continue
+              const nk = ny * MW + nx
+              if (seen[nk] || !ok(nx, ny)) continue
+              seen[nk] = 1
+              q.push(nk)
+            }
+          }
+          return (trLand = out)
+        }
+        const trPos = (id) => {
+          const L = trTiles()
+          if (!L.length) return null
+          const r = mulberry((id * 2654435761 + 12345) >>> 0)
+          r()
+          const k = L[Math.floor(r() * L.length)]
+          return { id, x: (k % MW) + 0.5, y: ((k / MW) | 0) + 0.5 }
+        }
+        let trCache = { h: -1, a: [] }
+        // 지금 떠 있는 보물 목록 (최근 3시간 × 2개, 내가 이미 연 것 제외)
+        function trSpots() {
+          if (MP.user && !MP.offKnown) return []
+          const h = trHour()
+          if (trCache.h !== h) {
+            const a = []
+            for (let hh = h - TR_HOURS + 1; hh <= h; hh++)
+              for (let i = 0; i < TR_PER_HOUR; i++) {
+                const p = trPos(hh * TR_PER_HOUR + i)
+                if (p) a.push(p)
+              }
+            trCache = { h, a }
+          }
+          const done = save.trc || []
+          return trCache.a.filter((p) => !done.includes(p.id))
+        }
+        let trSeenH = -1,
+          trT = 0
+        function trTick(dt) {
+          trT -= dt
+          if (trT > 0) return
+          trT = 1
+          qTick()
+          if (save && save.bf) {
+            const nt = Date.now()
+            let ch = false
+            for (const k in save.bf)
+              if (save.bf[k] <= nt) {
+                delete save.bf[k]
+                ch = true
+              }
+            if (ch) {
+              recalcGear()
+              persist()
+              showToast("보물 버프가 끝났어요", 1800)
+            }
+          }
+          if (!save || (MP.user && !(MP.offKnown && MP.ready))) return
+          const h = trHour()
+          if (h !== trSeenH) {
+            const first = trSeenH === -1
+            trSeenH = h
+            if (save.trc) save.trc = save.trc.filter((id) => id >= (h - TR_HOURS) * TR_PER_HOUR)
+            const n = trSpots().length
+            if (n)
+              toast(
+                first
+                  ? "보물이 " + n + "개 숨어 있어요! 직접 돌아다니며 찾아봐요"
+                  : "정각이에요! 새 보물이 2개 숨겨졌어요",
+                3000,
+              )
+          }
+        }
+
+        /* ================= 시간제 퀘스트 (매 정각 갱신, 3개 / 전부 받으면 총 10,000G) ================= */
+
+        /* 퀘스트/출석 공용 SVG 아이콘 (그라디언트 id가 겹치지 않도록 호출할 때마다 새로 생성) */
+        let svgUid = 0
+        const SVGI = {
+          coin: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="#ffc83d" stroke="#d98f1e" stroke-width="2"/><circle cx="16" cy="16" r="6.5" fill="none" stroke="#e6a52a" stroke-width="2"/><path d="M10.5 11.5c2-2.2 5.5-2.6 8.5-1" stroke="#fff6b0" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".85"/></svg>',
+          bag: '<svg viewBox="0 0 32 32"><path d="M11 8h10l-2 4c4 2 7 6 7 10 0 3-2 5-5 5H11c-3 0-5-2-5-5 0-4 3-8 7-10z" fill="#d9a35f" stroke="#8a5a26" stroke-width="2" stroke-linejoin="round"/><path d="M12 8l1.5-3.5h5L20 8" fill="#c28a45" stroke="#8a5a26" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="21" r="4" fill="#ffc83d" stroke="#d98f1e" stroke-width="1.6"/></svg>',
+          gem: '<svg viewBox="0 0 32 32"><path d="M9 6h14l5 7-12 14L4 13z" fill="#5fd3ff" stroke="#1d7fb0" stroke-width="2" stroke-linejoin="round"/><path d="M4 13h24M13 6l-3 7 6 14M19 6l3 7-6 14" fill="none" stroke="#1d7fb0" stroke-width="1.5" stroke-linejoin="round" opacity=".7"/></svg>',
+          check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+          /* 보물상자 */
+          chest: () => {
+            const u = "sc" + ++svgUid
+            return `<svg viewBox="0 0 48 48"><defs><radialGradient id="${u}g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff3a8" stop-opacity=".85"/><stop offset="1" stop-color="#ffd34d" stop-opacity="0"/></radialGradient><linearGradient id="${u}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d98d3c"/><stop offset="1" stop-color="#9a5a1c"/></linearGradient><linearGradient id="${u}l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4be70"/><stop offset="1" stop-color="#c47a2c"/></linearGradient><linearGradient id="${u}m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2a6"/><stop offset="1" stop-color="#e5a41f"/></linearGradient><clipPath id="${u}c"><path d="M7 26C7 14 14 8.500 24 8.500S41 14 41 26v13a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3z"/></clipPath></defs><circle cx="24" cy="22" r="22" fill="url(#${u}g)"/><g clip-path="url(#${u}c)"><rect x="6" y="8" width="36" height="35" fill="url(#${u}w)"/><path d="M6 8h36v18H6z" fill="url(#${u}l)"/><rect x="13" y="6" width="5" height="38" fill="url(#${u}m)" stroke="#5a320f" stroke-width="1.200"/><rect x="30" y="6" width="5" height="38" fill="url(#${u}m)" stroke="#5a320f" stroke-width="1.200"/><rect x="6" y="25" width="36" height="3.500" fill="#5a320f" opacity=".55"/><path d="M10 11c3-2 6-3 10-3" stroke="#fff" stroke-width="1.800" fill="none" stroke-linecap="round" opacity=".45"/></g><path d="M7 26C7 14 14 8.500 24 8.500S41 14 41 26v13a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3z" fill="none" stroke="#5a320f" stroke-width="2" stroke-linejoin="round"/><rect x="20" y="23" width="8" height="10" rx="2" fill="url(#${u}m)" stroke="#5a320f" stroke-width="1.600"/><circle cx="24" cy="27.500" r="1.600" fill="#5a320f"/><rect x="23.200" y="28" width="1.600" height="3" rx=".8" fill="#5a320f"/><path d="M40 6l1.400 3.200L44.600 10.600 41.400 12 40 15.200 38.600 12 35.400 10.600 38.600 9.200z" fill="#fff" opacity=".95"/></svg>`
+          },
+          /* 민물: 언덕 사이로 흐르는 강 */
+          fresh: () => {
+            const u = "sf" + ++svgUid
+            return `<svg viewBox="0 0 48 48"><defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9edcff"/><stop offset="1" stop-color="#eafaff"/></linearGradient><linearGradient id="${u}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#62d8d4"/><stop offset="1" stop-color="#1a8ea8"/></linearGradient><clipPath id="${u}c"><circle cx="24" cy="24" r="22"/></clipPath></defs><g clip-path="url(#${u}c)"><rect width="48" height="48" fill="url(#${u}s)"/><circle cx="34" cy="14" r="5.500" fill="#fff0a6"/><circle cx="34" cy="14" r="8" fill="#fff0a6" opacity=".35"/><path d="M-2 31C5 19 14 19 21 26 27 17 37 17 50 28v22H-2z" fill="#7bd592"/><path d="M-2 35C8 27 17 29 25 34 33 28 41 29 50 34v16H-2z" fill="#45b26f"/><path d="M-2 36C9 33 15 41 25 38S40 38 50 40v10H-2z" fill="url(#${u}w)"/><path d="M8 42q3.500-2.500 7 0M23 44.500q3.500-2.500 7 0M33 41q3.500-2.500 7 0" stroke="#eafcff" stroke-width="1.700" fill="none" stroke-linecap="round"/><path d="M11 33v-5M13.500 33v-7M16 33v-4" stroke="#2c8a4f" stroke-width="1.600" stroke-linecap="round"/></g><circle cx="24" cy="24" r="22" fill="none" stroke="#1b7f94" stroke-width="2"/></svg>`
+          },
+          /* 바다: 노을빛 하늘과 겹겹의 파도 */
+          sea: () => {
+            const u = "ss" + ++svgUid
+            return `<svg viewBox="0 0 48 48"><defs><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc8ff"/><stop offset="1" stop-color="#ffe9c4"/></linearGradient><linearGradient id="${u}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4aaeea"/><stop offset="1" stop-color="#2a7fd0"/></linearGradient><linearGradient id="${u}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b7fd2"/><stop offset="1" stop-color="#17559f"/></linearGradient><clipPath id="${u}c"><circle cx="24" cy="24" r="22"/></clipPath></defs><g clip-path="url(#${u}c)"><rect width="48" height="48" fill="url(#${u}s)"/><circle cx="31" cy="21" r="6" fill="#ffd36a"/><circle cx="31" cy="21" r="9.500" fill="#ffd36a" opacity=".3"/><path d="M-2 26q6-4 12 0t12 0 12 0 12 0 12 0V50H-2z" fill="url(#${u}a)"/><path d="M-2 32q6-4 12 0t12 0 12 0 12 0 12 0V50H-2z" fill="url(#${u}b)"/><path d="M-2 39q6-4 12 0t12 0 12 0 12 0 12 0V50H-2z" fill="#14478a"/><path d="M4 27.500q3-2.500 6 0M22 27.500q3-2.500 6 0M12 33.500q3-2.500 6 0M30 33.500q3-2.500 6 0" stroke="#fff" stroke-width="1.700" fill="none" stroke-linecap="round" opacity=".9"/><path d="M13 18l5 .2-2.400-8.200z" fill="#fff"/><path d="M12 19.500h8l-1.400 2.200h-5.200z" fill="#8a5a2c"/></g><circle cx="24" cy="24" r="22" fill="none" stroke="#1a5aa6" stroke-width="2"/></svg>`
+          },
+          /* 물고기 (등급 색상) */
+          fish: (top, bot, line, star) => {
+            const u = "sh" + ++svgUid
+            return `<svg viewBox="0 0 48 48"><defs><linearGradient id="${u}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient></defs><path d="M33 24L45 13c-1.700 6.500-1.700 14.500 0 22z" fill="url(#${u}b)" stroke="${line}" stroke-width="1.800" stroke-linejoin="round"/><path d="M15 14.500C18 8 25 8 29 15.500c-4.500-1.800-9.500-1.800-14-1z" fill="${bot}" stroke="${line}" stroke-width="1.600" stroke-linejoin="round"/><path d="M19 33c1.800 5 6 5.500 9 2.500z" fill="${bot}" stroke="${line}" stroke-width="1.600" stroke-linejoin="round"/><path d="M3.500 24C8.500 12.500 24 9.500 34.500 19.500L35.500 24 34.500 28.500C24 38.500 8.500 35.500 3.500 24z" fill="url(#${u}b)" stroke="${line}" stroke-width="1.800" stroke-linejoin="round"/><path d="M8 26.500C16 32.500 26 32.500 33 27c-6 7.500-19 7.500-25 -.5z" fill="#fff" opacity=".28"/><path d="M13.500 17.500c-2.200 4.200-2.200 8.800 0 13" stroke="${line}" stroke-width="1.600" fill="none" stroke-linecap="round" opacity=".6"/><path d="M20 19.500q2.500 2 0 4.500M26 19.500q2.500 2 0 4.500M23 25q2.500 2 0 4.500" stroke="#fff" stroke-width="1.300" fill="none" stroke-linecap="round" opacity=".4"/><circle cx="9.500" cy="21.500" r="2.800" fill="#fff" stroke="${line}" stroke-width="1.200"/><circle cx="9.100" cy="21.500" r="1.400" fill="#1d2530"/><circle cx="8.500" cy="20.800" r=".6" fill="#fff"/>${star ? '<path d="M38 5l1.600 3.600L43.200 10l-3.600 1.600L38 15.200l-1.600-3.600L32.800 10l3.600-1.400z" fill="#fff" opacity=".95"/>' : ""}</svg>`
+          },
+        }
+        const QTOT = 10000
+        const QPOOL = [
+          { t: "민물에서 낚시 3번", n: 3, r: 1200, ic: () => SVGI.fresh(), ev: (e) => e.k === "fish" && !e.sea },
+          { t: "바다에서 낚시 3번", n: 3, r: 1200, ic: () => SVGI.sea(), ev: (e) => e.k === "fish" && e.sea },
+          { t: "보라색(영웅) 등급 이상 물고기 1회 낚기", n: 1, r: 2000, ic: () => SVGI.fish("#c98bff", "#8a45d6", "#4f2290", 1), ev: (e) => e.k === "fish" && e.ri >= 3 },
+          { t: "일반 등급 물고기 7회 낚기", n: 7, r: 1300, ic: () => SVGI.fish("#b9c8d2", "#7f93a1", "#4a5a66"), ev: (e) => e.k === "fish" && e.ri === 0 },
+          { t: "초록(고급) 등급 이상 물고기 3회 낚기", n: 3, r: 1400, ic: () => SVGI.fish("#6fe0a0", "#2fa468", "#1a6a42"), ev: (e) => e.k === "fish" && e.ri >= 1 },
+          { t: "파랑(희귀) 등급 이상 물고기 2회 낚기", n: 2, r: 1700, ic: () => SVGI.fish("#7cc0ff", "#3a82e0", "#1d4f9a"), ev: (e) => e.k === "fish" && e.ri >= 2 },
+          { t: "물고기 8마리 낚기", n: 8, r: 1300, ic: () => SVGI.fish("#ffc27a", "#f0892e", "#a8541a"), ev: (e) => e.k === "fish" },
+          { t: "보물 1개 찾아 열기", n: 1, r: 1500, ic: () => SVGI.chest(), ev: (e) => e.k === "treasure" },
+        ]
+        let qCache = { h: -1, l: [], bonus: 0 }
+        const qHour = () => (MP.user && !MP.offKnown ? null : trHour())
+        function qList(h) {
+          if (qCache.h !== h) {
+            const r = mulberry((h * 2246822519 + 97) >>> 0),
+              a = QPOOL.slice()
+            r()
+            for (let i = a.length - 1; i > 0; i--) {
+              const j = Math.floor(r() * (i + 1))
+              ;[a[i], a[j]] = [a[j], a[i]]
+            }
+            const l = a.slice(0, 3)
+            qCache = { h, l, bonus: QTOT - l.reduce((x, q) => x + q.r, 0) }
+          }
+          return qCache
+        }
+        function qState() {
+          const h = qHour()
+          if (h === null || !save) return null
+          if (!save.qs || save.qs.h !== h) save.qs = { h, p: [0, 0, 0], c: [0, 0, 0], b: 0 }
+          const L = qList(h)
+          return { s: save.qs, l: L.l, bonus: L.bonus, h }
+        }
+        const qSheet = document.createElement("div")
+        qSheet.id = "qSheet"
+        qSheet.hidden = true
+        document.body.appendChild(qSheet)
+        function qTimeText() {
+          const el = $("#qTm")
+          if (!el) return
+          const h = qHour()
+          if (h === null) return
+          const ms = Math.max(0, (h + 1) * 3600000 - (Date.now() + (MP.off || 0))),
+            m = Math.floor(ms / 60000),
+            sc = Math.floor((ms % 60000) / 1000)
+          el.textContent = "다음 갱신까지 " + m + ":" + String(sc).padStart(2, "0")
+        }
+        function qUI() {
+          const st = qState(),
+            b = $("#qBtn")
+          if (!b) return
+          if (!st) {
+            $("#qBtnN").textContent = "…"
+            b.querySelector(".dot").hidden = true
+          } else {
+            const claimed = st.s.c.filter(Boolean).length,
+              can = st.l.some((q, i) => !st.s.c[i] && st.s.p[i] >= q.n) || (claimed === 3 && !st.s.b)
+            $("#qBtnN").textContent = claimed + "/3"
+            b.querySelector(".dot").hidden = !can
+          }
+          if (!qSheet.hidden) qRender()
+        }
+        function qRender() {
+          const st = qState()
+          if (!st) {
+            qSheet.innerHTML = '<div class="qb"><h3>퀘스트</h3><p>시간을 맞추는 중이에요. 잠시 후 다시 열어줘요</p><button class="btn big ghost" id="qClose">닫기</button></div>'
+            return
+          }
+          const s = st.s,
+            all = s.c.every(Boolean),
+            rows = st.l
+              .map((q, i) => {
+                const pr = Math.min(q.n, s.p[i]),
+                  ok = pr >= q.n,
+                  st2 = s.c[i] ? "done" : ok ? "ok" : ""
+                return `<div class="qr ${st2}"><div class="qic">${q.ic()}</div><div class="qi"><b>${q.t}</b><div class="qbar"><i style="width:${(pr / q.n) * 100}%"></i></div><small>${pr} / ${q.n} · +${q.r.toLocaleString()}G</small></div><button class="btn" data-q="${i}" ${ok && !s.c[i] ? "" : "disabled"}>${s.c[i] ? "완료" : ok ? "받기" : "진행 중"}</button></div>`
+              })
+              .join("")
+          qSheet.innerHTML = `<div class="qb"><h3>시간제 퀘스트</h3><p id="qTm"></p><p class="qtot">전부 클리어하면 <b>${QTOT.toLocaleString()}G</b></p>${rows}<div class="qr bonus ${s.b ? "done" : all ? "ok" : ""}"><div class="qic">${SVGI.chest()}</div><div class="qi"><b>올 클리어 보너스</b><em>+${st.bonus.toLocaleString()}G</em><small>3개를 모두 받으면 총 ${QTOT.toLocaleString()}G 달성</small></div><button class="btn" data-q="b" ${all && !s.b ? "" : "disabled"}>${s.b ? "완료" : all ? "받기" : "잠김"}</button></div><button class="btn big ghost" id="qClose">닫기</button></div>`
+          qTimeText()
+        }
+        function qGive(g, m) {
+          save.gold += g
+          save.earned = (save.earned || 0) + g
+          persist()
+          updateHud()
+          toast(m + " · " + g.toLocaleString() + "G", 2200)
+          sfx.coin && sfx.coin()
+          vib(20)
+          qUI()
+        }
+        function qClaim(i) {
+          const st = qState()
+          if (!st) return
+          const s = st.s
+          if (i === "b") {
+            if (s.b || !s.c.every(Boolean)) return
+            s.b = 1
+            qGive(st.bonus, "모든 퀘스트 완료!")
+          } else {
+            const q = st.l[i]
+            if (!q || s.c[i] || s.p[i] < q.n) return
+            s.c[i] = 1
+            qGive(q.r, "퀘스트 보상")
+          }
+        }
+        function questEvent(e) {
+          const st = qState()
+          if (!st) return
+          let ch = false
+          st.l.forEach((q, i) => {
+            if (st.s.c[i] || st.s.p[i] >= q.n || !q.ev(e)) return
+            st.s.p[i]++
+            ch = true
+            if (st.s.p[i] >= q.n) toast("퀘스트 완료! " + q.t, 2200)
+          })
+          if (ch) {
+            persist()
+            qUI()
+          }
+        }
+        let qSeenH = -2
+        function qTick() {
+          if (!save) return
+          const h = qHour()
+          if (h !== qSeenH) {
+            const prev = qSeenH
+            qSeenH = h
+            qUI()
+            if (typeof prev === "number" && prev >= 0 && h !== null) toast("새 퀘스트가 도착했어요", 2200)
+          }
+          if (!qSheet.hidden) qTimeText()
+        }
+        $("#qBtn").addEventListener("click", () => {
+          qSheet.hidden = false
+          qRender()
+          sfx.tick && sfx.tick()
+        })
+        qSheet.addEventListener("pointerdown", (e) => e.stopPropagation())
+        qSheet.addEventListener("click", (e) => {
+          if (e.target === qSheet || e.target.id === "qClose") {
+            qSheet.hidden = true
+            return
+          }
+          const b = e.target.closest("[data-q]")
+          if (b && !b.disabled) qClaim(b.dataset.q === "b" ? "b" : +b.dataset.q)
+        })
+        /* 상자: 시작점 → 플레이어로 끌려오는 위치 (보내는 쪽/보는 쪽이 같은 식으로 계산) */
+        const trDur = (d) => clamp(0.55 + 0.06 * d, 0.6, 1.3)
+        function trChestAt(sx, sy, px, py, t) {
+          const D = trDur(Math.hypot(px - sx, py - sy)),
+            f = clamp(t / D, 0, 1),
+            e = f * f * (3 - 2 * f) * 0.35 + f * f * 0.65
+          return {
+            x: lerp(sx, px, e),
+            y: lerp(sy, py - 0.15, e),
+            h: Math.sin(Math.PI * Math.min(1, f * 1.6)) * 0.35,
+            f,
+            D,
+          }
+        }
+        function chestBurst(x, y, gold) {
+          for (let i = 0; i < (gold ? 26 : 10); i++)
+            emit({
+              kind: "d",
+              x: x + rnd(-0.2, 0.2),
+              y,
+              z: 0.3,
+              vx: rnd(-1.6, 1.6),
+              vy: rnd(-0.9, 0.5),
+              vz: rnd(1.6, 3.4),
+              max: 0.9,
+              col: gold ? (i % 2 ? "#ffd34d" : "#fff4b0") : "#9a9a9a",
+              sz: rnd(3, 5.5),
+              g: 6,
+            })
+        }
+        function treasureStart() {
+          if (F.phase !== "tdig" || !F.sp) return
+          F.phase = "tpull"
+          F.t = 0
+          F.cx = F.sp.x
+          F.cy = F.sp.y
+          F.bx = F.sp.x
+          F.by = F.sp.y
+          sfx.hook && sfx.hook()
+          vib([20, 20, 30])
+          shake = Math.max(shake, 0.25)
+        }
+        function treasureOpen() {
+          const sp = F.sp
+          F.phase = "topen"
+          F.t = 0
+          if (!sp) return
+          save.trc = (save.trc || []).concat(sp.id)
+          questEvent({ k: "treasure" })
+          let r = Math.random() * TR_TABLE.reduce((a, b) => a + b[0], 0),
+            e = TR_TABLE[0]
+          for (const t of TR_TABLE) {
+            if ((r -= t[0]) < 0) {
+              e = t
+              break
+            }
+          }
+          let g = e[2] ? e[1] + Math.floor(Math.random() * ((e[2] - e[1]) / 100 + 1)) * 100 : 0
+          /* 보상 종류: 골드 / 물고기 / 장비 (단계가 높을수록 희귀 보상 확률 ↑) */
+          const tier = TR_TABLE.indexOf(e)
+          let kind = "gold"
+          if (g) {
+            const q = Math.random(),
+              pf = [0, 0.22, 0.28, 0.3][tier],
+              pg = [0, 0.08, 0.14, 0.25][tier],
+              pb = [0, 0.2, 0.2, 0.18][tier]
+            kind = q < pf ? "fish" : q < pf + pg ? "gear" : q < pf + pg + pb ? "buff" : "gold"
+          }
+          let msg = ""
+          if (kind === "fish") {
+            const wts = ["fresh", "sea"],
+              minRi = [0, 0, 1, 2][tier]
+            let pk = null
+            for (let i = 0; i < 12 && (!pk || pk.ri < minRi); i++)
+              pk = rollFish(2 + Math.random() * 6, wts[Math.floor(Math.random() * 2)], null)
+            if (pk && pk.f) {
+              const f = pk.f
+              let cd = save.codex[f.id]
+              if (!cd) cd = save.codex[f.id] = { n: 0, max: 0, seen: false }
+              cd.n++
+              cd.max = Math.max(cd.max, pk.size)
+              save.inv.push({ id: f.id, size: pk.size, price: pk.price })
+              msg = e[3] + "! " + f.n + " (" + pk.size + "cm) 획득"
+              g = 0
+              updateDexDot()
+            } else kind = "gold"
+          }
+          if (kind === "buff") {
+            const mins = [0, 3, 5, 8][tier],
+              BF = [
+                ["speed", "이동속도 +25%"],
+                ["bite", "입질 속도 +40%"],
+                ["luck", "희귀 어종 확률 UP"],
+                ["power", "릴링 힘 +25%"],
+                ["gold", "판매가 +15%"],
+              ],
+              b = BF[Math.floor(Math.random() * BF.length)]
+            save.bf = save.bf || {}
+            save.bf[b[0]] = Math.max(save.bf[b[0]] || 0, Date.now()) + mins * 60000
+            recalcGear()
+            msg = e[3] + "! " + b[1] + " (" + mins + "분)"
+            g = 0
+          }
+          if (kind === "gear") {
+            const slots = ["rod", "shoes", "hat", "pet"],
+              slot = slots[Math.floor(Math.random() * slots.length)],
+              ri = Math.min(4, Math.max(0, tier - 1 + (Math.random() < 0.25 ? 1 : 0)))
+            let pool = ITEMS.filter((x) => x.slot === slot && x.ri === ri)
+            if (!pool.length) pool = ITEMS.filter((x) => x.slot === slot)
+            const it = pool[Math.floor(Math.random() * pool.length)]
+            save.items = save.items || {}
+            save.equip = save.equip || {}
+            if (it && !save.items[it.id]) {
+              save.items[it.id] = 1
+              if (!save.equip[slot]) save.equip[slot] = it.id
+              recalcGear()
+              msg = e[3] + "! 장비 [" + it.n + "] 획득"
+              g = 0
+            } else if (it) {
+              g = g + DUPE[it.ri]
+              kind = "gold"
+              msg = ""
+            } else kind = "gold"
+          }
+          F.tg = kind !== "gold" || g > 0 ? 1 : 0
+          if (MP.on && MP.user) {
+            const rt = F.tg
+              ? e[3] + " · " + (msg ? msg.replace(/^[^!]*! /, "") : g.toLocaleString() + " 골드")
+              : "꽝!"
+            MP.trR = { tr: rt, tro: F.tg ? 1 : 0, trt: Date.now() }
+            MP.acc = 9
+            setTimeout(() => {
+              MP.trR = null
+            }, 6000)
+          }
+          chestBurst(P.x, P.y - 0.3, !!F.tg)
+          if (F.tg) {
+            if (g) {
+              save.gold += g
+              save.earned = (save.earned || 0) + g
+            }
+            sfx.coin()
+            vib([30, 30, 60])
+            shake = Math.max(shake, 0.5)
+            toast(msg || e[3] + "! " + g.toLocaleString() + " 골드 획득", 2800)
+          } else {
+            sfx.lost()
+            vib(40)
+            toast("꽝! 텅 빈 상자였어요… ㅠㅠ", 2500)
+          }
+          persist()
+          updateHud()
+          trAnnounce(tier)
+        }
+        /* 보물 발견을 채팅에 알림: 내 채팅엔 남은 개수, 다른 사람에겐 feed 로 전달 */
+        function trAnnounce(tier) {
+          const rem = trSpots().length
+          setTimeout(
+            () => toast(rem > 0 ? "남은 보물 " + rem + "개" : "이번 시간의 보물을 모두 찾았어요!", 2000),
+            2900,
+          )
+          if (MP.on && MP.user)
+            try {
+              MP.db
+                .ref("feed")
+                .push({
+                  u: MP.user.uid,
+                  n: dispName(),
+                  f: "__tr",
+                  r: tier,
+                  s: rem,
+                  t: firebase.database.ServerValue.TIMESTAMP,
+                })
+                .catch(() => {})
+            } catch (e) {}
+        }
+        function drawChest(x, y, sz, open, rot = 0) {
+          ctx.save()
+          ctx.translate(x, y)
+          ctx.rotate(rot)
+          const w = sz * 0.96,
+            bh = sz * 0.38,
+            lw = Math.max(1.5, sz * 0.05),
+            lh = sz * 0.34
+          ctx.lineJoin = "round"
+          ctx.lineCap = "round"
+          ctx.lineWidth = lw
+          ctx.strokeStyle = "#35200f"
+          // 그림자
+          ctx.fillStyle = "rgba(0,0,0,.22)"
+          ctx.beginPath()
+          ctx.ellipse(0, sz * 0.02, w * 0.56, sz * 0.09, 0, 0, 6.3)
+          ctx.fill()
+          if (open) {
+            const gl = ctx.createRadialGradient(0, -bh, 0, 0, -bh, sz * 0.8)
+            gl.addColorStop(0, "rgba(255,236,140,.75)")
+            gl.addColorStop(1, "rgba(255,236,140,0)")
+            ctx.fillStyle = gl
+            ctx.beginPath()
+            ctx.arc(0, -bh, sz * 0.8, 0, 6.3)
+            ctx.fill()
+          }
+          const wood = (y0, y1, a, b) => {
+            const g = ctx.createLinearGradient(0, y0, 0, y1)
+            g.addColorStop(0, a)
+            g.addColorStop(1, b)
+            return g
+          }
+          const band = (bx, y0, y1) => {
+            ctx.fillStyle = "#6c7b88"
+            ctx.fillRect(bx - sz * 0.055, y0, sz * 0.11, y1 - y0)
+            ctx.fillStyle = "rgba(255,255,255,.35)"
+            ctx.fillRect(bx - sz * 0.055, y0, sz * 0.025, y1 - y0)
+            ctx.strokeStyle = "#35200f"
+            ctx.lineWidth = lw * 0.6
+            ctx.strokeRect(bx - sz * 0.055, y0, sz * 0.11, y1 - y0)
+            ctx.fillStyle = "#e9d98f"
+            for (const ry of [y0 + (y1 - y0) * 0.22, y0 + (y1 - y0) * 0.78]) {
+              ctx.beginPath()
+              ctx.arc(bx, ry, sz * 0.016, 0, 6.3)
+              ctx.fill()
+            }
+            ctx.lineWidth = lw
+          }
+          // 열린 뚜껑(뒤쪽으로 젖혀짐)
+          if (open) {
+            ctx.fillStyle = wood(-bh - lh * 1.1, -bh, "#9a5f33", "#7a4824")
+            ctx.beginPath()
+            ctx.moveTo(-w * 0.5, -bh)
+            ctx.lineTo(-w * 0.44, -bh - lh * 1.1)
+            ctx.quadraticCurveTo(0, -bh - lh * 1.35, w * 0.44, -bh - lh * 1.1)
+            ctx.lineTo(w * 0.5, -bh)
+            ctx.closePath()
+            ctx.fill()
+            ctx.stroke()
+            ctx.fillStyle = "#4a2a14"
+            ctx.beginPath()
+            ctx.moveTo(-w * 0.44, -bh - lh * 0.05)
+            ctx.lineTo(-w * 0.39, -bh - lh * 1.0)
+            ctx.quadraticCurveTo(0, -bh - lh * 1.2, w * 0.39, -bh - lh * 1.0)
+            ctx.lineTo(w * 0.44, -bh - lh * 0.05)
+            ctx.closePath()
+            ctx.fill()
+          }
+          // 몸통
+          ctx.fillStyle = wood(-bh, 0, "#c4803f", "#8a5128")
+          ctx.beginPath()
+          ctx.roundRect(-w / 2, -bh, w, bh, sz * 0.05)
+          ctx.fill()
+          ctx.stroke()
+          ctx.strokeStyle = "rgba(53,32,15,.45)"
+          ctx.lineWidth = lw * 0.5
+          for (const f of [1 / 3, 2 / 3]) {
+            ctx.beginPath()
+            ctx.moveTo(-w / 2 + 2, -bh * f)
+            ctx.lineTo(w / 2 - 2, -bh * f)
+            ctx.stroke()
+          }
+          ctx.strokeStyle = "#35200f"
+          ctx.lineWidth = lw
+          band(-w * 0.32, -bh, 0)
+          band(w * 0.32, -bh, 0)
+          if (open) {
+            // 안쪽 + 금화
+            ctx.fillStyle = "#3a200e"
+            ctx.beginPath()
+            ctx.ellipse(0, -bh, w * 0.46, sz * 0.085, 0, 0, 6.3)
+            ctx.fill()
+            ctx.stroke()
+            const cg = ctx.createRadialGradient(0, -bh - sz * 0.03, 0, 0, -bh - sz * 0.03, w * 0.42)
+            cg.addColorStop(0, "#fff3a8")
+            cg.addColorStop(1, "#f0b631")
+            ctx.fillStyle = cg
+            ctx.beginPath()
+            ctx.ellipse(0, -bh - sz * 0.03, w * 0.4, sz * 0.07, 0, 0, 6.3)
+            ctx.fill()
+            ctx.lineWidth = lw * 0.6
+            ctx.fillStyle = "#ffd84a"
+            for (const [cx, cy] of [[-0.22, -0.07], [0.02, -0.12], [0.2, -0.06], [-0.05, -0.04]]) {
+              ctx.beginPath()
+              ctx.arc(cx * sz, -bh + cy * sz * 0.6, sz * 0.05, 0, 6.3)
+              ctx.fill()
+              ctx.stroke()
+            }
+          } else {
+            // 닫힌 뚜껑
+            const lid = new Path2D()
+            lid.moveTo(-w / 2, -bh)
+            lid.lineTo(-w / 2, -bh - lh * 0.35)
+            lid.quadraticCurveTo(0, -bh - lh * 1.55, w / 2, -bh - lh * 0.35)
+            lid.lineTo(w / 2, -bh)
+            lid.closePath()
+            ctx.fillStyle = wood(-bh - lh, -bh, "#d99350", "#a86a38")
+            ctx.fill(lid)
+            ctx.save()
+            ctx.clip(lid)
+            band(-w * 0.32, -bh - lh * 1.2, -bh)
+            band(w * 0.32, -bh - lh * 1.2, -bh)
+            ctx.restore()
+            ctx.strokeStyle = "#35200f"
+            ctx.lineWidth = lw
+            ctx.stroke(lid)
+            // 자물쇠
+            ctx.fillStyle = "#f2c94c"
+            ctx.beginPath()
+            ctx.roundRect(-sz * 0.075, -bh - sz * 0.075, sz * 0.15, sz * 0.17, sz * 0.03)
+            ctx.fill()
+            ctx.stroke()
+            ctx.fillStyle = "#35200f"
+            ctx.beginPath()
+            ctx.arc(0, -bh + sz * 0.005, sz * 0.025, 0, 6.3)
+            ctx.fill()
+            ctx.fillRect(-sz * 0.008, -bh + sz * 0.005, sz * 0.016, sz * 0.045)
+          }
+          ctx.restore()
+        }
+        /* 크레용으로 쓱쓱 그린 빨간 X (위치별로 한 번만 그려서 캐시) */
+        const trCrayon = new Map()
+        function crayonX(id) {
+          let c = trCrayon.get(id)
+          if (c) return c
+          const S = 128
+          c = document.createElement("canvas")
+          c.width = c.height = S
+          const g = c.getContext("2d"),
+            r = mulberry((id * 7919 + 5) >>> 0),
+            j = (a) => (r() - 0.5) * a
+          g.lineCap = "round"
+          g.lineJoin = "round"
+          const stroke = (x0, y0, x1, y1) => {
+            for (let pass = 0; pass < 3; pass++) {
+              const col = pass === 0 ? "rgba(190,28,24,.95)" : pass === 1 ? "rgba(232,52,40,.8)" : "rgba(255,110,90,.45)"
+              g.strokeStyle = col
+              g.lineWidth = pass === 0 ? 22 : pass === 1 ? 16 : 9
+              g.beginPath()
+              g.moveTo(x0 + j(6), y0 + j(6))
+              const n = 6
+              for (let i = 1; i <= n; i++) {
+                const t = i / n
+                g.lineTo(x0 + (x1 - x0) * t + j(7), y0 + (y1 - y0) * t + j(7))
+              }
+              g.stroke()
+            }
+            // 왁스 알갱이 질감
+            for (let i = 0; i < 70; i++) {
+              const t = r(),
+                px = x0 + (x1 - x0) * t + j(16),
+                py = y0 + (y1 - y0) * t + j(16)
+              g.fillStyle = r() < 0.5 ? "rgba(255,210,200,.55)" : "rgba(120,10,10,.35)"
+              g.fillRect(px, py, 1.6 + r() * 2, 1.6 + r() * 2)
+            }
+          }
+          const m = 24 + j(4)
+          stroke(m, m + j(8), S - m, S - m + j(8))
+          stroke(S - m + j(8), m, m, S - m + j(8))
+          trCrayon.set(id, c)
+          return c
+        }
+        /* 나무 캐노피 아래에 가려지는 보물인지 (정적 데코라 한 번만 계산) */
+        const TREEK = [1, 7, 8, 9, 10, 27, 29, 30]
+        function trHid(p) {
+          if (p.hid !== undefined) return p.hid
+          const tx = Math.floor(p.x),
+            ty = Math.floor(p.y)
+          let h = false
+          for (let dy = 0; dy <= 2 && !h; dy++)
+            for (let dx = -1; dx <= 1; dx++) {
+              const x = tx + dx,
+                y = ty + dy
+              if (x < 0 || y < 0 || x >= MW || y >= MH) continue
+              if (TREEK.includes(DEC[y * MW + x])) {
+                h = true
+                break
+              }
+            }
+          return (p.hid = h)
+        }
+        const TR_NEAR = 2.2
+        function drawTreasureX(it) {
+          const x = sxv(it.x),
+            y = syv(it.y)
+          if (x < -80 || x > W + 80 || y < -80 || y > H + 80) return
+          let al = 0.95,
+            em = 0
+          if (it.hid) {
+            /* 나무 뒤에 있어도 항상 보이되, 멀 땐 은은하게 / 가까워지면 또렷하게 + 반짝 링으로 강조 */
+            const d = Math.hypot(P.x - it.x, P.y - it.y)
+            em = clamp((TR_NEAR + 0.6 - d) / 0.8, 0, 1)
+            al = 0.5 + 0.45 * em
+          }
+          const sz = TS * 1.25 * (1 + 0.16 * em)
+          ctx.save()
+          ctx.globalAlpha = al
+          ctx.translate(x, y)
+          ctx.rotate(((it.id % 5) - 2) * 0.05)
+          ctx.scale(1, 0.58)
+          ctx.drawImage(crayonX(it.id), -sz / 2, -sz / 2, sz, sz)
+          ctx.restore()
+          if (em > 0) {
+            const pu = 0.5 + 0.5 * Math.sin(time * 4)
+            ctx.save()
+            ctx.globalAlpha = em * (0.5 + 0.35 * pu)
+            ctx.translate(x, y)
+            ctx.scale(1, 0.58)
+            ctx.strokeStyle = "#ffe27a"
+            ctx.lineWidth = Math.max(2, TS * 0.07)
+            ctx.beginPath()
+            ctx.arc(0, 0, sz * (0.62 + 0.06 * pu), 0, 6.283)
+            ctx.stroke()
+            ctx.restore()
+          }
+        }
         function landBobber() {
           F.bx = F.tx
           F.by = F.ty
@@ -10784,6 +11987,43 @@
             sfx.hook()
             vib(40)
             return
+          }
+          {
+            let T = null,
+              bd = 1.7
+            for (const p of trSpots()) {
+              if (trHid(p) && Math.hypot(P.x - p.x, P.y - p.y) > 3.2) continue
+              const d = Math.hypot(F.tx - p.x, F.ty - p.y)
+              if (d < bd) {
+                bd = d
+                T = p
+              }
+            }
+            if (T) {
+              F.phase = "tdig"
+              F.sp = T
+              F.t = 0
+              F.bx = T.x
+              F.by = T.y
+              F.lure = null
+              for (let i = 0; i < 10; i++)
+                emit({
+                  kind: "d",
+                  x: F.bx + rnd(-0.2, 0.2),
+                  y: F.by,
+                  z: 0.05,
+                  vx: rnd(-0.6, 0.6),
+                  vy: rnd(-0.3, 0.3),
+                  vz: rnd(0.4, 1.2),
+                  max: 0.6,
+                  col: "#e9dcb8",
+                  sz: rnd(2.5, 4),
+                  g: 3,
+                })
+              sfx.tick()
+              vib(20)
+              return
+            }
           }
           if (!isW(F.tx, F.ty) && save.gear.grap && (P.grCd || 0) <= 0) {
             const dx = F.tx - P.x,
@@ -11225,6 +12465,7 @@
           persist()
           updateHud()
           updateDexDot()
+          questEvent({ k: "fish", sea: !!F.wt, ri: p.ri })
           mpFeed(p)
           mpCatch(p)
           showCard(p, isNew)
@@ -11240,9 +12481,44 @@
           F.phase = "idle"
         }
         function updateFishing(dt) {
+          trTick(dt)
           if (P.grCd > 0) P.grCd -= dt
           F.dip = Math.max(0, F.dip - dt * 3.5)
           switch (F.phase) {
+            case "tdig":
+              F.t += dt
+              if (F.t > 20) {
+                F.phase = "idle"
+                toast("줄을 거뒀어요")
+              }
+              break
+            case "tpull": {
+              F.t += dt
+              const c = trChestAt(F.sp.x, F.sp.y, P.x, P.y, F.t)
+              F.cx = c.x
+              F.cy = c.y
+              F.ch2 = c.h
+              if (Math.random() < 0.5)
+                emit({
+                  kind: "d",
+                  x: c.x,
+                  y: c.y,
+                  z: 0.1,
+                  vx: rnd(-0.3, 0.3),
+                  vy: rnd(-0.2, 0.2),
+                  vz: rnd(0.2, 0.7),
+                  max: 0.4,
+                  col: "#e9dcb8",
+                  sz: rnd(2, 3.5),
+                  g: 2,
+                })
+              if (c.f >= 1) treasureOpen()
+              break
+            }
+            case "topen":
+              F.t += dt
+              if (F.t > 0.9) F.phase = "idle"
+              break
             case "windup":
               F.t += dt
               if (F.t >= 0.28) {
@@ -11573,9 +12849,13 @@
               (F.phase === "idle" ||
                 F.phase === "wait" ||
                 F.phase === "bite" ||
+                F.phase === "tdig" ||
                 F.phase === "drag") &&
               !tpA
-          if ((F.phase === "wait" || F.phase === "bite") && mag > 0.4)
+          if (
+            (F.phase === "wait" || F.phase === "bite" || F.phase === "tdig") &&
+            mag > 0.4
+          )
             cancelCast()
           const wasSw = P.sw
           P.sw = isW(P.x, P.y)
@@ -11673,6 +12953,8 @@
             gy = F.ty
           } else if (
             F.phase === "wait" ||
+            F.phase === "tdig" ||
+            F.phase === "tpull" ||
             F.phase === "bite" ||
             F.phase === "reel" ||
             F.phase === "pop"
@@ -13774,6 +15056,7 @@
           ctx.stroke()
         }
         function drawWaterItem(it) {
+          if (it.t === 3) return drawTreasureX(it)
           const s = TS / 48
           if (it.t === 0) {
             const f = it.f,
@@ -14305,6 +15588,30 @@
             drawArt(ctx, F.pick.f, x, y, sz, Math.sin(f * 12) * 0.35, rc)
             return
           }
+          if (ph === "tpull" || ph === "topen") {
+            const open = ph === "topen",
+              cxw = open ? P.x : F.cx,
+              cyw = open ? P.y - 0.2 : F.cy,
+              hh = open ? 0.5 + Math.sin(Math.min(1, F.t / 0.5) * Math.PI) * 0.5 : F.ch2 || 0,
+              x = sxv(cxw),
+              y = syv(cyw) - hh * TS
+            if (!open) {
+              ctx.strokeStyle = "rgba(255,255,255,.85)"
+              ctx.lineWidth = 1.4 * s
+              ctx.beginPath()
+              ctx.moveTo(tipX, tipY)
+              ctx.lineTo(x, y - 6 * s)
+              ctx.stroke()
+            }
+            drawChest(x, y, 38 * s, open, open ? 0 : Math.sin(time * 30) * 0.12)
+            if (open && F.tg) {
+              ctx.fillStyle = "rgba(255,230,120,.5)"
+              ctx.beginPath()
+              ctx.arc(x, y - 8 * s, (16 + F.t * 40) * s, 0, 6.3)
+              ctx.fill()
+            }
+            return
+          }
           const [bx, by, fly] = bobberScreen()
           const dip = F.dip * 9 * s,
             bob = fly ? 0 : Math.sin(time * 3) * 1.6 * s
@@ -14747,6 +16054,35 @@
             mc.arc(x, y, 4, 0, 6.3)
             mc.fill()
           }
+          /* 접속 중인 사람 이름 (포탈 지도처럼) */
+          if (MP.on && MP.user) {
+            const fs = Math.round(mmBig ? S * 0.036 : S * 0.1)
+            mc.font = '800 ' + fs + 'px "Chiron GoRound TC",sans-serif'
+            mc.textAlign = "center"
+            mc.textBaseline = "alphabetic"
+            mc.lineJoin = "round"
+            mc.lineWidth = Math.max(3, fs * 0.28)
+            const label = (nm, x, y, col) => {
+              let t = String(nm || "")
+              if (t.length > 7) t = t.slice(0, 6) + "…"
+              const hw = mc.measureText(t).width / 2 + 2,
+                tx = Math.min(S - hw, Math.max(hw, x)),
+                ty = y < fs + 10 ? y + fs + 6 : y - 8
+              mc.strokeStyle = "rgba(0,10,20,.8)"
+              mc.strokeText(t, tx, ty)
+              mc.fillStyle = col
+              mc.fillText(t, tx, ty)
+            }
+            for (const k in MP.others) {
+              const o = MP.others[k]
+              if (o.stale) continue
+              const x = X(o.x),
+                y = Y(o.y)
+              if (x < 0 || y < 0 || x > S || y > S) continue
+              label(o.n, x, y, "#fff")
+            }
+            label("나", X(P.x), Y(P.y), "#ffd9a0")
+          }
           const px = X(P.x),
             py = Y(P.y),
             a = Math.atan2(P.fy, P.fx)
@@ -15033,7 +16369,7 @@
               : zoneLand(P.x, P.y)
             if (z !== zoneNow) {
               zoneNow = z
-              if (z) toast(ZLAB[z], 1800)
+              if (z) showToast(ZLAB[z], 1800)
             }
           }
         }
@@ -15215,6 +16551,10 @@
             items.push({ k: "W", t: 0, f, x: f.x, y: f.y, key: f.y - 0.3 })
           for (const r of ripples)
             items.push({ k: "W", t: 1, r, x: r.x, y: r.y, key: r.y - 0.2 })
+          for (const T of trSpots()) {
+            const hid = trHid(T)
+            items.push({ k: "W", t: 3, id: T.id, x: T.x, y: T.y, hid, key: hid ? T.y + 3.5 : T.y - 0.6 })
+          }
           if (F.lure && F.phase === "wait")
             items.push({
               k: "W",
@@ -15362,9 +16702,17 @@
             case "windup":
             case "flight":
             case "ground":
+            case "tpull":
+            case "topen":
             case "pop":
               s = "busy"
               t = "…"
+              break
+            case "tdig":
+              s = "reel"
+              t = "당기기"
+              icn = ICON.rod
+              st = "보물이 걸렸어요! 탭해서 당겨요"
               break
             case "wait":
               s = "wait"
@@ -16983,6 +18331,13 @@
           g.big = Math.min(g.big, 0.3)
           g.guard = Math.min(g.guard, 0.5)
           g.coop = Math.min(g.coop, 0.2)
+          const nowT = Date.now(),
+            bf = save.bf || {}
+          if (bf.speed > nowT) g.speed *= 1.25
+          if (bf.bite > nowT) g.bite *= 1.4
+          if (bf.luck > nowT) g.luck += 0.35
+          if (bf.power > nowT) g.power *= 1.25
+          if (bf.gold > nowT) g.gold += 0.15
           save.gear = g
         }
         /* --- 아이콘 아트 --- */
@@ -18414,6 +19769,7 @@
           n: 1,
           best: 0,
           order: null,
+          tok: 0,
         }
         const gxAt = (ms, fn) => {
           GX.t.push(setTimeout(fn, ms))
@@ -18431,6 +19787,7 @@
           gxAt(420, () => o.classList.remove("shk"))
         }
         function gxClose(keep) {
+          GX.tok++
           GX.t.forEach(clearTimeout)
           GX.t = []
           GX.busy = false
@@ -18439,42 +19796,61 @@
         }
         const gxPips = (ri) =>
           Array.from({ length: ri + 1 }, () => "<i></i>").join("")
+        const gxPre = (src) => {
+          const im = new Image()
+          im.decoding = "async"
+          im.src = src
+          return im.decode ? im.decode().catch(() => {}) : Promise.resolve()
+        }
         function showPullResult(res, slot, n) {
           gxClose(true)
           const el = $("#grOv"),
             best = Math.max(...res.map((r) => r.it.ri)),
             br = res.find((r) => r.it.ri === best),
             bi = br.it,
-            rc = RAR[bi.r].c
-          Object.assign(GX, { res, slot, n, best, busy: true, phase: "cap" })
+            rc = RAR[bi.r].c,
+            tok = ++GX.tok
+          Object.assign(GX, { res, slot, n, best, busy: true, phase: "prep" })
           el.className = ""
           el.style.setProperty("--rc", rc)
           el.hidden = false
+          el.innerHTML = '<div class="gxdim"></div><div class="gxflash"></div>'
+          /* 무거운 아이콘 생성/디코딩은 연출 시작 전에 끝내서 애니메이션 중 끊김을 없앰 */
+          setTimeout(() => {
+            if (GX.tok !== tok) return
+            const jobs = []
+            jobs.push(gxPre(gearURL(bi.id, 128, true)), gxPre(gearURL(bi.id, 128)))
+            if (n !== 1) res.forEach((r) => jobs.push(gxPre(gearURL(r.it.id, 64))))
+            let go = false
+            const run = () => {
+              if (go || GX.tok !== tok) return
+              go = true
+              requestAnimationFrame(() => GX.tok === tok && gxStart(res, slot, n, best, br))
+            }
+            Promise.all(jobs).then(run)
+            setTimeout(run, 1200)
+          }, 30)
+        }
+        function gxStart(res, slot, n, best, br) {
+          const el = $("#grOv"),
+            bi = br.it
+          GX.phase = "cap"
           const info =
             n === 1
               ? `<div class="gxinfo" id="gxInfo"><div class="gxrl">${RAR[bi.r].n}</div><div class="gxnm">${bi.n}</div><div class="gxpp">${gxPips(bi.ri)}</div><span class="gt ${br.tag}">${br.tag === "new" ? "NEW" : "+" + br.gold}</span><div class="stls grs">${statLines(bi)}</div><button class="btn big" id="grOk">확인</button></div>`
               : ""
-          el.innerHTML = `<div class="gxdim"></div><div class="gxflash"></div><button class="gxskip" type="button">건너뛰기</button><div class="gxmain" id="gxMain"><div class="gxone"><div class="gxst" id="gxSt"><div class="gxd1"></div><div class="gxd2"></div><svg class="gxring" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="49"/><circle class="fg" id="gxFg" cx="50" cy="50" r="49" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg><div class="gxpulse"></div><div class="gxsw sw-${slot}" id="gxSw"><img class="s1" alt="" src="${gearURL(bi.id, 128, true)}"><img class="s2" alt="" src="${gearURL(bi.id, 128)}"></div></div>${info}</div></div>`
-          const T =
-              n === 10
-                ? Math.min(2300, 2300)
-                : best >= 4
-                  ? 3000
-                  : best >= 3
-                    ? 2500
-                    : best >= 2
-                      ? 1900
-                      : 1400,
+          el.innerHTML = `<div class="gxdim"></div><div class="gxflash"></div><button class="gxskip" type="button">건너뛰기</button><div class="gxmain" id="gxMain"><div class="gxone"><div class="gxst" id="gxSt"><div class="gxd1"></div><div class="gxd2"></div><svg class="gxring" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="49"/><circle class="fg" id="gxFg" cx="50" cy="50" r="49" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg><div class="gxpulse"></div><div class="gxsw sw-${slot}" id="gxSw"><div class="gxwb" id="gxWb"><img class="s1" alt="" src="${gearURL(bi.id, 128, true)}"><img class="s2" alt="" src="${gearURL(bi.id, 128)}"></div></div></div>${info}</div></div>`
+          const T = n === 10 ? 2300 : best >= 4 ? 3000 : best >= 3 ? 2500 : best >= 2 ? 1900 : 1400,
             st = $("#gxSt"),
-            sw = $("#gxSw"),
+            sw = $("#gxWb"),
             fg = $("#gxFg")
-          gxAt(40, () => {
+          gxAt(60, () => {
             fg.style.transition = `stroke-dashoffset ${(T - 500) / 1000}s cubic-bezier(.4,0,.3,1)`
             fg.style.strokeDashoffset = 0
             sfx.charge(0.2)
             vib(12)
           })
-          gxAt(1000, () => sw.classList.add("w1"))
+          gxAt(1050, () => sw.classList.add("w1"))
           gxAt(T * 0.62, () => {
             sw.classList.remove("w1")
             sw.classList.add("w2")
@@ -18492,9 +19868,7 @@
             sfx.chime(best)
             vib(best >= 3 ? [40, 40, 70] : best >= 2 ? [30, 30, 40] : 25)
           })
-          gxAt(T + (n === 1 ? 350 : 650), () =>
-            n === 1 ? gxOne(false) : gxTen(false),
-          )
+          gxAt(T + (n === 1 ? 400 : 650), () => (n === 1 ? gxOne(false) : gxTen(false)))
         }
         function gxOne(inst) {
           GX.phase = "done"
@@ -18564,7 +19938,7 @@
           gxAt(t + 200, fin)
         }
         function gxSkip() {
-          if (!GX.busy) return
+          if (!GX.busy || GX.phase === "prep") return
           GX.t.forEach(clearTimeout)
           GX.t = []
           const o = $("#grOv")
@@ -18927,6 +20301,96 @@
             return false
           }
         }
+        /* ================= 출석 보상 ================= */
+        const ATT_GOLD = [5000, 5000, 10000, 10000, 15000, 15000, 20000]
+        const attDay = () => {
+          // 한국시간(KST) 자정 기준 날짜 번호, 로그인 시 서버 시간 사용
+          const t = Date.now() + (MP.off || 0) + 9 * 3600000
+          return Math.floor(t / 86400000)
+        }
+        const attState = () => {
+          const a = (save.att = save.att || { last: -1, streak: 0, total: 0 })
+          const d = attDay()
+          const can = a.last !== d
+          // 어제 출석 안 했으면 연속 끊김 (표시용)
+          const streak = a.last === d || a.last === d - 1 ? a.streak : 0
+          return { a, d, can, streak }
+        }
+        const ATT_IC = [SVGI.coin, SVGI.coin, SVGI.bag, SVGI.bag, SVGI.gem, SVGI.gem, () => SVGI.chest()]
+        function attRender() {
+          const { a, can, streak } = attState()
+          const nextIdx = can ? streak % 7 : (streak - 1) % 7
+          const todayG = ATT_GOLD[can ? nextIdx : Math.max(0, nextIdx)]
+          const cells = ATT_GOLD.map((g, i) => {
+            const done = can ? i < nextIdx : i <= nextIdx
+            const now = can && i === nextIdx
+            return `<div class="atc${done ? " done" : ""}${now ? " now" : ""}${i === 6 ? " big" : ""}"><small>${i + 1}일차</small><div class="aic">${typeof ATT_IC[i] === "function" ? ATT_IC[i]() : ATT_IC[i]}</div><b>${g.toLocaleString()}</b>${done ? `<span class="stamp">${SVGI.check}</span>` : ""}</div>`
+          }).join("")
+          $("#attBody").innerHTML = `<div class="atph"><div class="atglow"></div><div class="atbadge">${SVGI.chest()}</div><h3>출석 보상</h3><p>연속 <b>${streak}</b>일 · 누적 ${a.total || 0}일</p></div>
+    <div class="attg">${cells}</div>
+    <div class="atnote">${can ? `오늘의 보상 <b>+${todayG.toLocaleString()}G</b>` : "내일 00시(KST)에 다시 받을 수 있어요"}</div>
+    <button class="btn big" id="attClaim" ${can ? "" : "disabled"}>${can ? "오늘 보상 받기" : "오늘은 이미 받았어요"}</button>
+    <button class="btn big sclose ghost" style="margin-top:8px">닫기</button>`
+        }
+        /* 보상 수령 연출: 가볍게 코인이 튀어 오르고, 오늘 칸에 도장이 찍힘 */
+        function attFx() {
+          const box = $("#attBody")
+          if (!box) return
+          for (let i = 0; i < 12; i++) {
+            const c = document.createElement("i")
+            c.className = "atcoin"
+            c.style.setProperty("--dx", Math.round((Math.random() - 0.5) * 220) + "px")
+            c.style.setProperty("--dy", -Math.round(70 + Math.random() * 110) + "px")
+            c.style.animationDelay = i * 25 + "ms"
+            c.innerHTML = SVGI.coin
+            box.appendChild(c)
+            setTimeout(() => c.remove(), 1100)
+          }
+        }
+        function attBadge() {
+          const b = $("#setBadge")
+          if (b) b.hidden = !attState().can
+        }
+        function attOpen() {
+          attRender()
+          $("#attSheet").hidden = false
+        }
+        let attShownDay = -1
+        function attAuto() {
+          if (!save) return
+          // 로그인 중이면 서버 시간/클라우드 로드가 끝난 뒤에만 판단
+          if (MP.user && !(MP.offKnown && MP.ready && MP.sUid === MP.user.uid))
+            return
+          attBadge()
+          const { d, can } = attState()
+          if (can && attShownDay !== d) {
+            attShownDay = d
+            attOpen()
+          }
+        }
+        $("#attOpen").addEventListener("click", attOpen)
+        $("#attSheet").addEventListener("click", (e) => {
+          if (e.target.closest(".sbk,.sclose")) $("#attSheet").hidden = true
+          if (e.target.closest("#attClaim")) {
+            const { a, d, can, streak } = attState()
+            if (!can) return
+            const g = ATT_GOLD[streak % 7]
+            a.streak = streak + 1
+            a.last = d
+            a.total = (a.total || 0) + 1
+            save.gold += g
+            save.earned = (save.earned || 0) + g
+            persist()
+            updateHud()
+            sfx.coin()
+            vib([20, 30, 20])
+            toast("출석 보상 " + g.toLocaleString() + "골드 획득!")
+            attRender()
+            attFx()
+            attBadge()
+            if (MP.user && MP.ready) try { cloudSaveNow() } catch (e) {}
+          }
+        })
         function applySaveUI() {
           updateHud()
           renderAv()
@@ -18936,6 +20400,9 @@
           sVibe.checked = save.settings.vibe
           $("#setDrag").checked = save.settings.drag !== false
           $("#nickIn").value = save.nick || ""
+          try {
+            attAuto()
+          } catch (e) {}
           try {
             renderQ()
           } catch (e) {}
@@ -19014,7 +20481,19 @@
             (s) => {
               if (first) return
               const v = s.val()
-              if (!v || v.u === u || !FBY[v.f]) return
+              if (!v || v.u === u) return
+              if (v.f === "__tr") {
+                const nm = ["", "작은 보물", "보물 상자", "큰 보물"][v.r | 0],
+                  rm = " (남은 보물 " + (v.s | 0) + "개)"
+                toast(
+                  v.r > 0
+                    ? `${v.n}님이 ${nm}을(를) 찾았어요!${rm}`
+                    : `${v.n}님이 보물을 열었는데 꽝이었어요…${rm}`,
+                  3400,
+                )
+                return
+              }
+              if (!FBY[v.f]) return
               toast(
                 `${v.n}님이 ${RAR[RORD[v.r]].n} ${FBY[v.f].n}을(를) 낚았어요!`,
                 3400,
@@ -19042,6 +20521,8 @@
             "value",
             (sn) => {
               MP.off = +sn.val() || 0
+              MP.offKnown = true
+              try { attAuto() } catch (e) {}
             },
           ])
           MP.refs.push([
@@ -19155,6 +20636,27 @@
           o.rt = now
           if ((o.f | 0) !== pf) {
             o.ft = now
+            if (o.f === 9) {
+              for (let i = 0; i < 10; i++)
+                emit({
+                  kind: "d",
+                  x: o.bx + rnd(-0.2, 0.2),
+                  y: o.by,
+                  z: 0.05,
+                  vx: rnd(-0.6, 0.6),
+                  vy: rnd(-0.3, 0.3),
+                  vz: rnd(0.4, 1.2),
+                  max: 0.6,
+                  col: "#e9dcb8",
+                  sz: rnd(2.5, 4),
+                  g: 3,
+                })
+            }
+            if (o.f === 7) o.cs = { x: o.bx, y: o.by }
+            if (o.f === 8) {
+              chestBurst(o.x, o.y - 0.3, true)
+              sfx.coin && Math.hypot(o.x - P.x, o.y - P.y) < 12 && sfx.coin()
+            }
             if (pf === 6 && o.f === 1) {
               splash(o.bx, o.by, 14, 1.1)
               ripple(o.bx, o.by, 0.8)
@@ -19167,6 +20669,8 @@
               o.bub = { t: String(v.s).slice(0, 50), until: now + 4800 }
               addLine(o.n || "낚시꾼", String(v.s).slice(0, 50))
             }
+            if (v.tr && v.trt !== o.trt)
+              o.trShow = { t: String(v.tr).slice(0, 40), ok: v.tro ? 1 : 0, t0: now, until: now + 4200 }
             if (v.c && v.ct !== o.ct && FBY[v.c])
               o.show = {
                 f: FBY[v.c],
@@ -19178,6 +20682,7 @@
           }
           o.st = v.st
           o.ct = v.ct
+          o.trt = v.trt
         }
         function mpLeave(o) {
           if (Math.abs(o.x - cam.x) > 34 || Math.abs(o.y - cam.y) > 34) return
@@ -19304,7 +20809,13 @@
                   ? 5
                   : F.phase === "flight"
                     ? 6
-                    : fish
+                    : F.phase === "tpull"
+                      ? 7
+                      : F.phase === "topen"
+                        ? 8
+                        : F.phase === "tdig"
+                          ? 9
+                          : fish
                       ? F.phase === "reel"
                         ? 3
                         : F.phase === "bite"
@@ -19314,13 +20825,13 @@
             bx:
               F.phase === "windup" || F.phase === "flight"
                 ? +F.tx.toFixed(1)
-                : fish
+                : fish || F.phase === "tpull" || F.phase === "topen" || F.phase === "tdig"
                   ? +F.bx.toFixed(1)
                   : 0,
             by:
               F.phase === "windup" || F.phase === "flight"
                 ? +F.ty.toFixed(1)
-                : fish
+                : fish || F.phase === "tpull" || F.phase === "topen" || F.phase === "tdig"
                   ? +F.by.toFixed(1)
                   : 0,
             n: dispName(),
@@ -19332,6 +20843,7 @@
             d.st = MP.say.ts
           }
           if (MP.catchC) Object.assign(d, MP.catchC)
+          if (MP.trR) Object.assign(d, MP.trR)
           const eq = save.equip || {}
           d.er = eq.rod || ""
           d.es = eq.shoes || ""
@@ -19381,7 +20893,7 @@
           if (P.sw) {
             for (const k in MP.others) {
               const o = MP.others[k]
-              if (o.stale || !o.f) continue
+              if (o.stale || !o.f || o.f >= 7) continue
               if (
                 Math.hypot(o.bx - P.x, o.by - P.y) < 1.1 &&
                 now - (o.cutT || 0) > 3500
@@ -19456,6 +20968,9 @@
             "bite",
             "reel",
             "ground",
+            "tdig",
+            "tpull",
+            "topen",
             "drag",
           ].includes(F.phase)
           if (v.type === "msg") {
@@ -19624,7 +21139,8 @@
             let w = 1,
               bx = sxv(o.bx),
               by = syv(o.by),
-              show = fp >= 1 && fp !== 4 && fp !== 5,
+              chestDraw = null,
+              show = (fp >= 1 && fp !== 4 && fp !== 5 && fp < 7) || fp === 9,
               fly = false
             if (fp === 4) {
               const ch = Math.min(1, tt / 1.5)
@@ -19657,6 +21173,23 @@
               )
               ctx.fill()
               ctx.stroke()
+              ctx.restore()
+            } else if (fp === 7 || fp === 8) {
+              w = 0.72 - 0.12 * Math.sin(time * 20)
+              const cs = o.cs || { x: o.bx, y: o.by },
+                c = trChestAt(cs.x, cs.y, o.x, o.y, tt),
+                open = fp === 8
+              bx = open ? sx : sxv(c.x)
+              by = open ? sy - 0.7 * TS : syv(c.y) - c.h * TS
+              chestDraw = { x: bx, y: by, open }
+              show = false
+            } else if (fp === 9) {
+              w = 1 - 0.3 * Math.abs(Math.sin(time * 7))
+              ctx.save()
+              ctx.globalAlpha = 0.95
+              ctx.translate(bx, by)
+              ctx.scale(1, 0.58)
+              ctx.drawImage(crayonX(0), -TS * 0.62, -TS * 0.62, TS * 1.25, TS * 1.25)
               ctx.restore()
             } else if (fp === 5) w = lerp(0.5, 0, eOut(Math.min(1, tt / 0.28)))
             else if (fp === 6) {
@@ -19701,6 +21234,39 @@
             )
             ctx.stroke()
             ctx.lineCap = "butt"
+            if (chestDraw) {
+              if (!chestDraw.open) {
+                ctx.strokeStyle = "rgba(255,255,255,.85)"
+                ctx.lineWidth = 1.4 * s
+                ctx.beginPath()
+                ctx.moveTo(tx, ty)
+                ctx.lineTo(chestDraw.x, chestDraw.y - 6 * s)
+                ctx.stroke()
+              }
+              drawChest(chestDraw.x, chestDraw.y, 38 * s, chestDraw.open)
+            }
+            if (o.trShow && fp === 8) {
+              const ts = o.trShow,
+                nowT = performance.now()
+              if (nowT > ts.until) o.trShow = null
+              else {
+                const k = Math.min(1, (nowT - ts.t0) / 250),
+                  fade = Math.min(1, (ts.until - nowT) / 400),
+                  ly = sy - 0.7 * TS - 30 * s - k * 10 * s
+                ctx.save()
+                ctx.globalAlpha = fade
+                ctx.font = `800 ${13 * s}px "Chiron GoRound TC",-apple-system,"Noto Sans KR",sans-serif`
+                ctx.textAlign = "center"
+                ctx.textBaseline = "middle"
+                const tw = ctx.measureText(ts.t).width + 20 * s
+                ctx.fillStyle = ts.ok ? "rgba(255,244,190,.96)" : "rgba(235,235,240,.95)"
+                rr(sx - tw / 2, ly - 11 * s, tw, 22 * s, 11 * s)
+                ctx.fill()
+                ctx.fillStyle = ts.ok ? "#7a4a00" : "#555"
+                ctx.fillText(ts.t, sx, ly + 0.5)
+                ctx.restore()
+              }
+            }
             if (show) {
               ctx.strokeStyle = "rgba(255,255,255,.85)"
               ctx.lineWidth = 1.4 * s
@@ -19876,7 +21442,7 @@
           }
         }
         /* 화살표 기준선: 코인 알약 아래 / 내비 위 (스테이지 기준 px). resize(초기 포함)에서만 측정 */
-        var arrowEdges
+        var arrowEdges = { top: 0, bottom: 640 }
         function measureArrowEdges() {
           const sr = stage.getBoundingClientRect(),
             hud = $("#hud"),
@@ -19887,6 +21453,7 @@
           }
         }
         function drawOtherArrows() {
+          if (!arrowEdges) measureArrowEdges()
           const s = TS / 48
           const reach = (15 + 8) * s, // 화살표 반지름 + 화살표 길이
             gap = 12, // 화살표 끝과 경계(알약/내비/화면 가장자리) 사이 간격
@@ -20142,6 +21709,7 @@
         $("#loSkip").addEventListener("click", () => {
           MP.skip = true
           $("#login").hidden = true
+          try { attAuto() } catch (e) {}
         })
         $("#acIn").addEventListener("click", () => {
           MP.skip = false
@@ -20560,7 +22128,10 @@
         })
         mpInit()
 
+        $("#mapCode").textContent = "맵 코드 " + MAPHASH
         window.__game = {
+          MAPHASH,
+          trSpots,
           showPullResult,
           DEC,
           SOLID,
