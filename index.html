@@ -4114,6 +4114,8 @@
           pity: { rod: 0, shoes: 0, hat: 0 },
           ptl: [],
         }) // 뽑기/강화가 이 값을 바꿀 예정
+        /* 저사양 모드: 기기별 설정이라 클라우드가 아닌 localStorage 에만 저장 */
+        let lowSpecOn = localStorage.getItem("pd-lowspec") === "1"
         let save = (() => {
           try {
             const s = JSON.parse(localStorage.getItem(SAVE_KEY))
@@ -10246,9 +10248,7 @@
           W = r.width
           H = r.height
           measureArrowEdges()
-          dpr = save.settings.lowSpec
-            ? 1
-            : Math.min(window.devicePixelRatio || 1, 2.5)
+          dpr = lowSpecOn ? 1 : Math.min(window.devicePixelRatio || 1, 2.5)
           cv.width = Math.round(W * dpr)
           cv.height = Math.round(H * dpr)
           baseTS = Math.round(clamp(Math.min(W, H * 0.56) / 7, 40, 72))
@@ -14577,9 +14577,7 @@
         const MMP = 3
         /* 캔버스 내부 해상도를 표시 크기 x 기기 배율에 맞춤 (확대해도 선명하게) */
         function sizeMini() {
-          const dpr = save.settings.lowSpec
-              ? 1
-              : Math.min(window.devicePixelRatio || 1, 3),
+          const dpr = lowSpecOn ? 1 : Math.min(window.devicePixelRatio || 1, 3),
             px = Math.round(mm.getBoundingClientRect().width * dpr)
           if (px > 0 && mm.width !== px) mm.width = mm.height = px
         }
@@ -18784,8 +18782,6 @@
             persist()
             updateHud()
             sSound.checked = sVibe.checked = true
-            sLow.checked = false
-            applyLowSpec()
             renderShop()
             toast("초기화했어요")
           }
@@ -18939,8 +18935,6 @@
           sSound.checked = save.settings.sound
           sVibe.checked = save.settings.vibe
           $("#setDrag").checked = save.settings.drag !== false
-          sLow.checked = !!save.settings.lowSpec
-          applyLowSpec()
           $("#nickIn").value = save.nick || ""
           try {
             renderQ()
@@ -20551,18 +20545,17 @@
         })
         /* 저사양 모드 적용: 블러 제거(CSS 속성), 캔버스 해상도 낮춤(resize) */
         const applyLowSpec = () => {
-          document.documentElement.toggleAttribute(
-            "data-lowspec",
-            !!save.settings.lowSpec,
-          )
+          document.documentElement.toggleAttribute("data-lowspec", lowSpecOn)
           resize()
         }
         const sLow = $("#setLow")
-        sLow.checked = !!save.settings.lowSpec
+        sLow.checked = lowSpecOn
         applyLowSpec()
         sLow.addEventListener("change", () => {
-          save.settings.lowSpec = sLow.checked
-          persist()
+          lowSpecOn = sLow.checked
+          try {
+            localStorage.setItem("pd-lowspec", lowSpecOn ? "1" : "0")
+          } catch (e) {}
           applyLowSpec()
         })
         mpInit()
