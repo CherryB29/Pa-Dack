@@ -669,6 +669,10 @@
         margin: 0;
         text-shadow: 0 2px 6px rgb(var(--blue-900-rgb) / 0.3);
       }
+      #loadMsg {
+        font-size: 14px;
+        opacity: var(--opacity-muted);
+      }
       .spin {
         width: 46px;
         height: 46px;
@@ -3632,6 +3636,7 @@
     <div id="loader">
       <div class="spin"></div>
       <p>Pa-Dack</p>
+      <p id="loadMsg">연결 중...</p>
     </div>
     <div id="login" hidden>
       <div class="lbox">
@@ -18792,6 +18797,7 @@
             return
           }
           let tries = 0
+          setTimeout(loaderHide, 15000) // 네트워크 문제로 응답이 없으면 로딩을 닫고 진행
           const iv = setInterval(() => {
             if (window.firebase && firebase.database && firebase.auth) {
               clearInterval(iv)
@@ -18801,6 +18807,7 @@
                 MP.db = firebase.database()
                 MP.on = true
                 MP.auth.getRedirectResult().catch(() => {})
+                setLoadMsg("로그인 상태 확인 중...")
                 MP.auth.onAuthStateChanged(onAuth)
               } catch (e) {
                 console.warn(e)
@@ -18855,14 +18862,17 @@
           MP.user = u
           $("#login").hidden = true
           MP.skip = false
+          setLoadMsg("데이터를 불러오는 중...")
           const ok = await loadCloud(u, seq)
           if (seq !== authSeq) return
-          if (ok) joinWorld()
-          else {
+          joinWorld() // 맵(월드) 연결은 저장 데이터 성공 여부와 무관하게 진행
+          if (!ok) {
+            setLoadMsg("연결이 불안정해요. 다시 시도하는 중...")
             toast("계정 정보를 불러오지 못했어요. 다시 시도해요")
             retryT = setTimeout(() => {
               if (seq === authSeq && MP.user === u) onAuth(u)
             }, 5000)
+            return
           }
           mpUI()
         }
@@ -18886,6 +18896,7 @@
                 } catch (e) {}
             } else {
               /* 새 계정: 오프라인으로 하던 진행을 한 번만 이어받고 오프라인 슬롯은 비운다 */
+              setLoadMsg("새 계정 준비 중...")
               save = readOffline()
               try {
                 localStorage.removeItem(SAVE_KEY)
@@ -18898,13 +18909,10 @@
                   ) +
                   (Math.floor(Math.random() * 90) + 10)
               }
-              try {
-                await MP.db
-                  .ref("users/" + u.uid + "/meta/created")
-                  .set(firebase.database.ServerValue.TIMESTAMP)
-              } catch (e) {
-                console.warn(e)
-              }
+              MP.db
+                .ref("users/" + u.uid + "/meta/created")
+                .set(firebase.database.ServerValue.TIMESTAMP)
+                .catch((e) => console.warn(e))
               if (seq !== authSeq) return false
             }
             MP.sUid = u.uid
@@ -18913,7 +18921,7 @@
               localStorage.setItem(ukey(u.uid), JSON.stringify(save))
             } catch (e) {}
             resetPlayState()
-            await cloudSaveNow()
+            cloudSaveNow() // 쓰기는 백그라운드로: 응답을 기다리면 새 계정에서 멈출 수 있음
             applySaveUI()
             return true
           } catch (e) {
@@ -20003,7 +20011,22 @@
           )
         }
         /* 계정 UI */
+        let loaderGone = false
+        function setLoadMsg(t) {
+          const m = document.getElementById("loadMsg")
+          if (m) m.textContent = t
+        }
+        function loaderHide() {
+          if (loaderGone) return
+          loaderGone = true
+          const l = document.getElementById("loader")
+          if (!l) return
+          l.style.transition = "opacity var(--dur-base) var(--ease-out)"
+          l.style.opacity = "0"
+          setTimeout(() => l.remove(), 300)
+        }
         function mpUI() {
+          loaderHide()
           const el = $("#acInfo"),
             on = MP.on,
             u = MP.user
@@ -20111,8 +20134,13 @@
         $("#loIn").addEventListener("click", () => MP.on && emailAuth(false))
         $("#loUp").addEventListener("click", () => MP.on && emailAuth(true))
         $("#loGuest").addEventListener("click", () => {
-          if (!MP.on) return
           loErr()
+          if (!MP.on || !MP.auth) {
+            loErr(
+              "서버에 연결하지 못했어요. 인터넷을 확인하고 다시 눌러 주세요",
+            )
+            return
+          }
           MP.auth.signInAnonymously().catch((e) => loErr(errMsg(e)))
         })
         $("#loSkip").addEventListener("click", () => {
@@ -20586,24 +20614,7 @@
           PIERS,
         }
         /* ================= 메인 루프 ================= */
-        /* 로딩 중 랜덤 메시지 */
-        const LOAD_TIPS = [
-          "낚싯대 준비하는 중...",
-          "준비 운동 하는 중...",
-          "물고기 먹이 준비하는 중...",
-          "주디 덕질 중...",
-          "찌 점검하는 중...",
-          "미끼 고르는 중...",
-          "바다 날씨 살피는 중...",
-        ]
-        {
-          const lp = document.querySelector("#loader p")
-          if (lp)
-            lp.textContent =
-              LOAD_TIPS[Math.floor(Math.random() * LOAD_TIPS.length)]
-        }
-        let last = performance.now(),
-          loaded = false
+        let last = performance.now()
         function loop(now) {
           const dt = Math.min(0.05, (now - last) / 1000)
           last = now
@@ -20611,11 +20622,6 @@
             update(dt)
             updateHud2()
             render()
-            if (!loaded) {
-              loaded = true
-              const l = document.getElementById("loader")
-              if (l) l.remove()
-            }
           }
           requestAnimationFrame(loop)
         }
