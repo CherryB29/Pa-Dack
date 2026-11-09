@@ -7,12 +7,7 @@
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
     />
     <meta name="theme-color" content="#2b8fb8" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@200..900&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/hada0127/hada-type-hada-round/css/hada-round.css">
     <title>Pa-Dack</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="icon" href="favicon.ico" sizes="any" />
@@ -135,14 +130,14 @@
         --gap-panel: 14px;
         --gap-tight: 10px;
         --gap-snug: 6px;
-        --gold-100: var(--gold-100);
-        --gold-200: var(--gold-200);
-        --gold-300: var(--gold-300);
-        --gold-400: var(--gold-400);
-        --gold-500: var(--gold-500);
-        --gold-600: var(--gold-600);
-        --gold-700: var(--gold-700);
-        --gold-900: var(--gold-900);
+        --gold-100: #fff3b0;
+        --gold-200: #ffe49a;
+        --gold-300: #ffe28a;
+        --gold-400: #ffd34d;
+        --gold-500: #ffc83d;
+        --gold-600: #f2a43a;
+        --gold-700: #ffb92e;
+        --gold-900: #5a3a00;
         --gold-400-rgb: 255 211 77;
         --gold-500-rgb: 255 200 61;
         --opacity-scrim: 0.2;
@@ -768,7 +763,7 @@
         background: var(--black);
         overscroll-behavior: none;
         font-family:
-          "Chiron GoRound TC",
+          "Hada Round",
           -apple-system,
           BlinkMacSystemFont,
           "Apple SD Gothic Neo",
@@ -3669,7 +3664,7 @@
       .atbar {
         height: 9px;
         border-radius: 99px;
-        background: rgb(var(--gold-500-rgb) / 0.18);
+        background: rgb(var(--white-rgb) / 0.1);
         overflow: hidden;
         box-shadow: 0 1px 3px rgb(var(--black-rgb) / 0.4) inset;
       }
@@ -3677,7 +3672,7 @@
         display: block;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, var(--green-500), var(--gold-400), var(--orange-500));
+        background: linear-gradient(90deg, var(--gold-300), var(--gold-500));
         box-shadow: 0 0 10px rgb(var(--gold-500-rgb) / 0.6);
         transition: width 0.7s cubic-bezier(0.2, 0.8, 0.3, 1);
       }
@@ -3917,7 +3912,8 @@
         flex-direction: column;
         gap: 6px;
       }
-      #qDaily p {
+      #qDaily p,
+      #trTm {
         display: inline-block;
         align-self: center;
         padding: 4px 12px;
@@ -4077,7 +4073,7 @@
         overflow-anchor: none; /* 스크롤 위치는 pushLine에서 직접 보정 (브라우저 앵커링과 이중 보정 방지) */
         scrollbar-width: none;
         pointer-events: none;
-        touch-action: none;
+        touch-action: pan-y;
         -webkit-mask-image: linear-gradient(
           to bottom,
           transparent 0,
@@ -4096,6 +4092,9 @@
       }
       #chatLogWrap.out {
         opacity: var(--opacity-dim);
+      }
+      #chatLog * {
+        touch-action: pan-y;
       }
       #chatLog::before {
         content: "";
@@ -4448,7 +4447,6 @@
             </div>
           </div>
         </div>
-
         <div id="dim"></div>
 
         <div class="panel" role="dialog" aria-modal="true" id="p-gacha">
@@ -4585,6 +4583,8 @@
               <b>맵 곳곳에 보물상자가 숨겨져 있어요</b>
               <p>낚싯대로 보물을 캐내세요!</p>
             </div>
+            <div class="box" id="trBuffs"></div>
+            <p id="trTm"></p>
             <div class="box" id="trHist"></div>
           </div>
         </div>
@@ -11616,6 +11616,13 @@
           const k = L[Math.floor(r() * L.length)]
           return { id, x: (k % MW) + 0.5, y: ((k / MW) | 0) + 0.5 }
         }
+        const BUFF_LIST = [
+          ["speed", "이동속도 +25%"],
+          ["bite", "입질 속도 +40%"],
+          ["luck", "희귀 어종 확률 UP"],
+          ["power", "릴링 힘 +25%"],
+          ["gold", "판매가 +15%"],
+        ]
         let trCache = { h: -1, a: [] }
         // 지금 떠 있는 보물 목록 (최근 3시간 × 2개, 내가 이미 연 것 제외)
         function trSpots() {
@@ -11642,6 +11649,10 @@
           if (trT > 0) return
           trT = 1
           qTick()
+          if (tab === "quest" && questView === "chest") {
+            trTmUI()
+            renderBuffs()
+          }
           if (save && !(MP.user && !MP.ready)) {
             if (P.sw) questEvent({ k: "swim" })
             if (trWk) {
@@ -11867,6 +11878,30 @@
           $("#q-daily").hidden = questView !== "daily"
           $("#q-chest").hidden = questView !== "chest"
         }
+        function trTmUI() {
+          const el = $("#trTm")
+          if (!el) return
+          const ms = Math.max(0, (trHour() + 1) * 3600000 - (Date.now() + (MP.off || 0))),
+            m = Math.floor(ms / 60000),
+            sc = Math.floor((ms % 60000) / 1000)
+          el.textContent = "다음 갱신까지 " + m + ":" + String(sc).padStart(2, "0")
+        }
+        function renderBuffs() {
+          const box = $("#trBuffs")
+          if (!box) return
+          const now = Date.now() + (MP.off || 0),
+            act = BUFF_LIST.filter(([k]) => (save.bf || {})[k] > now)
+          box.innerHTML =
+            "<h3>적용 중인 혜택</h3>" +
+            (act.length
+              ? act
+                  .map(([k, t]) => {
+                    const mins = Math.ceil((save.bf[k] - now) / 60000)
+                    return `<div class="trh ok"><b>${t}</b><small>${mins}분 남음</small></div>`
+                  })
+                  .join("")
+              : '<p class="trh-empty">지금 적용 중인 혜택이 없어요</p>')
+        }
         function renderTrHist() {
           const box = $("#trHist"),
             h = save.trH || []
@@ -11884,6 +11919,8 @@
           if (questView === "daily") qRender()
           if (questView === "chest") {
             $("#trGuideIc").innerHTML = SVGI.chest()
+            renderBuffs()
+            trTmUI()
             renderTrHist()
           }
         }
@@ -11897,6 +11934,34 @@
             total = TR_HOURS * TR_PER_HOUR
           if (n) n.textContent = total - trSpots().length + "/" + total
         }
+        bindDragPick(
+          $("#questSeg"),
+          $("#questSeg .ind"),
+          "[data-qv]",
+          (b) => {
+            questView = b.dataset.qv
+            questRender()
+          },
+          () => segSync($("#questSeg")),
+        )
+        bindDragPick(
+          $("#p-shop .seg"),
+          $("#p-shop .seg .ind"),
+          "[data-v]",
+          (b) => {
+            if (b.dataset.v !== shopView) setShopView(b.dataset.v)
+          },
+          () => segSync($("#p-shop .seg")),
+        )
+        bindDragPick(
+          $("#nav"),
+          $("#navPill"),
+          ".tab",
+          (b) => {
+            if (b.dataset.t !== tab) setTab(b.dataset.t)
+          },
+          () => moveNavPill(),
+        )
         $("#questSeg").addEventListener("click", (e) => {
           const b = e.target.closest("[data-qv]")
           if (!b) return
@@ -12016,13 +12081,7 @@
           }
           if (kind === "buff") {
             const mins = [0, 3, 5, 8][tier],
-              BF = [
-                ["speed", "이동속도 +25%"],
-                ["bite", "입질 속도 +40%"],
-                ["luck", "희귀 어종 확률 UP"],
-                ["power", "릴링 힘 +25%"],
-                ["gold", "판매가 +15%"],
-              ],
+              BF = BUFF_LIST,
               b = BF[Math.floor(r1 * BF.length) % BF.length]
             save.bf = save.bf || {}
             save.bf[b[0]] = Math.max(save.bf[b[0]] || 0, Date.now()) + mins * 60000
@@ -12767,7 +12826,7 @@
           ctx.lineJoin = "round"
           for (const t of r.texts) {
             ctx.globalAlpha = 1 - t.t / 0.7
-            ctx.font = `900 ${22 * s}px "Chiron GoRound TC",sans-serif`
+            ctx.font = `900 ${22 * s}px "Hada Round",sans-serif`
             const y = ty - hh - 26 * s - t.t * 30 * s
             ctx.lineWidth = 5
             ctx.strokeStyle = "rgba(20,40,60,.85)"
@@ -12778,7 +12837,7 @@
           ctx.globalAlpha = 1
           if (r.combo >= 2) {
             ctx.textAlign = "right"
-            ctx.font = `900 ${20 * s}px "Chiron GoRound TC",sans-serif`
+            ctx.font = `900 ${20 * s}px "Hada Round",sans-serif`
             ctx.lineWidth = 5
             ctx.strokeStyle = "rgba(20,40,60,.85)"
             const tx = `${r.combo} COMBO`
@@ -16106,7 +16165,7 @@
           ctx.closePath()
           ctx.fill()
           ctx.fillStyle = "#e8352f"
-          ctx.font = `900 ${26 * s}px "Chiron GoRound TC",sans-serif`
+          ctx.font = `900 ${26 * s}px "Hada Round",sans-serif`
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
           ctx.fillText("!", 0, 1 * s)
@@ -16223,7 +16282,7 @@
           ctx.beginPath()
           ctx.ellipse(x, y, 6 * s, 3.6 * s, 0, 0, 6.3)
           ctx.fill()
-          ctx.font = `800 ${12 * s}px "Chiron GoRound TC",sans-serif`
+          ctx.font = `800 ${12 * s}px "Hada Round",sans-serif`
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
           const zz = nw.land ? "" : zoneAt(nw.x, nw.y, nw.wt),
@@ -16437,7 +16496,7 @@
           /* 접속 중인 사람 이름 (포탈 지도처럼) */
           if (mmBig && MP.on && MP.user) {
             const fs = Math.max(8, Math.round(S * 0.022))
-            mc.font = '800 ' + fs + 'px "Chiron GoRound TC",sans-serif'
+            mc.font = '800 ' + fs + 'px "Hada Round",sans-serif'
             mc.textAlign = "center"
             mc.textBaseline = "alphabetic"
             mc.lineJoin = "round"
@@ -16592,7 +16651,7 @@
           }
           if (MP.on && MP.user) {
             g.textAlign = "center"
-            g.font = '700 11px "Chiron GoRound TC",sans-serif'
+            g.font = '700 11px "Hada Round",sans-serif'
             for (const kk in MP.others) {
               const o = MP.others[kk]
               if (o.stale) continue
@@ -16623,7 +16682,7 @@
           g.stroke()
           if (MP.on && MP.user) {
             g.textAlign = "center"
-            g.font = '700 11px "Chiron GoRound TC",sans-serif'
+            g.font = '700 11px "Hada Round",sans-serif'
             const x = P.x * k,
               tx = Math.min(S - 20, Math.max(20, x)),
               ty = P.y * k < 16 ? P.y * k + 14 : P.y * k - 8
@@ -17352,6 +17411,59 @@
             : "전부 팔기"
           updateDexDot()
           if (shopView === "dex") renderDex()
+        }
+        /* 드래그로 탭 전환: 인디케이터가 손가락을 따라가다 가장 가까운 항목에 붙음 */
+        function bindDragPick(group, ind, items, pick, snap) {
+          let d = null,
+            until = 0
+          group.addEventListener("pointerdown", (e) => {
+            if (!e.target.closest(items)) return
+            d = { x: e.clientX, id: e.pointerId, left: parseFloat(ind.style.left) || 0, moved: false }
+          })
+          group.addEventListener("pointermove", (e) => {
+            if (!d || e.pointerId !== d.id) return
+            const dx = e.clientX - d.x
+            if (!d.moved && Math.abs(dx) < 8) return
+            d.moved = true
+            try {
+              group.setPointerCapture(e.pointerId) // 드래그 중에는 요소 밖으로 나가도 추적
+            } catch (_) {}
+            ind.classList.add("instant")
+            const max = group.clientWidth - ind.offsetWidth
+            ind.style.left = Math.min(max, Math.max(0, d.left + dx)) + "px"
+          })
+          const end = (e) => {
+            if (!d || e.pointerId !== d.id) return
+            const was = d
+            d = null
+            if (!was.moved) return
+            until = Date.now() + 350 // 드래그 뒤 따라오는 click 은 무시
+            ind.classList.remove("instant")
+            const cx = ind.offsetLeft + ind.offsetWidth / 2
+            let best = null,
+              bd = Infinity
+            group.querySelectorAll(items).forEach((b) => {
+              const dd = Math.abs(b.offsetLeft + b.offsetWidth / 2 - cx)
+              if (dd < bd) {
+                bd = dd
+                best = b
+              }
+            })
+            if (best) pick(best)
+            snap()
+          }
+          group.addEventListener("pointerup", end)
+          group.addEventListener("pointercancel", end)
+          group.addEventListener(
+            "click",
+            (e) => {
+              if (Date.now() < until) {
+                e.stopPropagation()
+                e.preventDefault()
+              }
+            },
+            true,
+          )
         }
         /* 세그먼트 인디케이터를 선택된 버튼 위치로 */
         function segSync(seg, instant) {
@@ -21502,7 +21614,7 @@
         }
         /* 다른 플레이어 그리기 */
         function drawBubbleAt(x, y, txt, s) {
-          ctx.font = `800 ${12 * s}px "Chiron GoRound TC",sans-serif`
+          ctx.font = `800 ${12 * s}px "Hada Round",sans-serif`
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
           const maxW = 150 * s,
@@ -21682,7 +21794,7 @@
                   ly = sy - 0.7 * TS - 30 * s - k * 10 * s
                 ctx.save()
                 ctx.globalAlpha = fade
-                ctx.font = `800 ${13 * s}px "Chiron GoRound TC",-apple-system,"Noto Sans KR",sans-serif`
+                ctx.font = `800 ${13 * s}px "Hada Round",-apple-system,"Noto Sans KR",sans-serif`
                 ctx.textAlign = "center"
                 ctx.textBaseline = "middle"
                 const tw = ctx.measureText(ts.t).width + 20 * s
@@ -21794,7 +21906,7 @@
           ctx.restore()
           if (osw) swimOverlay(sx, cy, R, s)
           drawHat(o.eh, sx, cy, R)
-          ctx.font = `700 ${12 * s}px "Chiron GoRound TC",-apple-system,"Pretendard","Noto Sans KR",sans-serif`
+          ctx.font = `700 ${12 * s}px "Hada Round",-apple-system,"Pretendard","Noto Sans KR",sans-serif`
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
           const w = ctx.measureText(o.n).width + 18 * s
@@ -21826,7 +21938,7 @@
                 txt = e.f.n + (e.size ? " " + e.size + "cm" : "")
               ctx.save()
               ctx.globalAlpha = fade
-              ctx.font = `800 ${12 * s}px "Chiron GoRound TC",sans-serif`
+              ctx.font = `800 ${12 * s}px "Hada Round",sans-serif`
               const tw = ctx.measureText(txt).width,
                 cw = tw + 58 * s,
                 cx = sx,
@@ -21888,7 +22000,7 @@
               top: arrowEdges.top + gap + reach,
               bottom: arrowEdges.bottom - gap - reach,
             }
-          ctx.font = `800 ${12 * s}px "Chiron GoRound TC",-apple-system,"Noto Sans KR",sans-serif`
+          ctx.font = `800 ${12 * s}px "Hada Round",-apple-system,"Noto Sans KR",sans-serif`
           ctx.textAlign = "center"
           ctx.textBaseline = "middle"
           for (const k in MP.others) {
@@ -22009,6 +22121,10 @@
         function loaderHide() {
           if (loaderGone) return
           loaderGone = true
+          try {
+            qUI()
+            trPillUI()
+          } catch (e) {}
           const l = document.getElementById("loader")
           if (!l) return
           l.style.transition = "opacity var(--dur-base) var(--ease-out)"
@@ -22437,9 +22553,7 @@
           }
         })
         /* 로그를 누르면 입력창을 포커스 없이 펼침 (페이드 중이어도 정상 투명도로 복귀) */
-        /* 모바일/데스크톱 공통: 드래그로 로그 스크롤 (브라우저 기본 스크롤은 touch-action:none으로 끔) */
-        let clDrag = null
-        chatLogEl.addEventListener("scroll", () => {
+          chatLogEl.addEventListener("scroll", () => {
           if (nearBottom(chatLogEl)) clearUnread()
         })
         const chatNewBtn = document.getElementById("chatNew")
@@ -22451,22 +22565,8 @@
         })
         chatLogEl.addEventListener("pointerdown", (e) => {
           e.stopPropagation()
-          clDrag = { id: e.pointerId, y: e.clientY }
-          try {
-            chatLogEl.setPointerCapture(e.pointerId)
-          } catch (_) {}
           if (!isChatOpen()) openChat(false, true)
         })
-        chatLogEl.addEventListener("pointermove", (e) => {
-          if (!clDrag || e.pointerId !== clDrag.id) return
-          chatLogEl.scrollTop -= e.clientY - clDrag.y
-          clDrag.y = e.clientY
-        })
-        const endLogDrag = (e) => {
-          if (clDrag && e.pointerId === clDrag.id) clDrag = null
-        }
-        chatLogEl.addEventListener("pointerup", endLogDrag)
-        chatLogEl.addEventListener("pointercancel", endLogDrag)
         /* 펼쳐진 상태에서 입력창 밖을 누르면 외부 행동으로 보고 접음 */
         addEventListener(
           "pointerdown",
@@ -22567,6 +22667,16 @@
           get MP() {
             return MP
           },
+          get save() {
+            return save
+          },
+          persist,
+          updateHud,
+          renderBuffs,
+          renderTrHist,
+          trPillUI,
+          trTmUI,
+          BUFF_LIST,
           fullMapCanvas,
           CHK,
           get HT() {
