@@ -11649,6 +11649,8 @@
           if (trT > 0) return
           trT = 1
           qTick()
+          qPillUI()
+          trPillUI()
           if (tab === "quest" && questView === "chest") {
             trTmUI()
             renderBuffs()
@@ -11782,7 +11784,8 @@
             sc = Math.floor((ms % 60000) / 1000)
           el.textContent = "다음 갱신까지 " + m + ":" + String(sc).padStart(2, "0")
         }
-        function qUI() {
+        /* 퀘스트 pill 만 갱신 (가볍기 때문에 매초 호출해도 됨) */
+        function qPillUI() {
           const st = qState(),
             b = $("#qBtn")
           if (!b) return
@@ -11795,6 +11798,9 @@
             $("#qBtnN").textContent = claimed + "/3"
             b.querySelector(".dot").hidden = !can
           }
+        }
+        function qUI() {
+          qPillUI()
           if (tab === "quest" && questView === "daily") qRender()
         }
         function qRender() {
@@ -20683,7 +20689,7 @@
             return
           }
           let tries = 0
-          setTimeout(loaderHide, 15000) // 네트워크 문제로 응답이 없으면 로딩을 닫고 진행
+          setTimeout(() => loaderHide(true), 15000) // 네트워크 문제로 응답이 없으면 로딩을 강제로 닫고 진행
           const iv = setInterval(() => {
             if (window.firebase && firebase.database && firebase.auth) {
               clearInterval(iv)
@@ -21062,6 +21068,7 @@
               MP.off = +sn.val() || 0
               MP.offKnown = true
               try { attAuto() } catch (e) {}
+              try { qUI(); trPillUI() } catch (e) {}
             },
           ])
           MP.refs.push([
@@ -22118,8 +22125,13 @@
           const m = document.getElementById("loadMsg")
           if (m) m.textContent = t
         }
-        function loaderHide() {
+        function loaderHide(force) {
           if (loaderGone) return
+          // 서버 시간 정보(offKnown)를 받아야 퀘스트/보물상자 현황을 계산할 수 있으므로 잠시 기다림
+          if (!force && MP.user && !MP.offKnown) {
+            setTimeout(() => loaderHide(), 150)
+            return
+          }
           loaderGone = true
           try {
             qUI()
