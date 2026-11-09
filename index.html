@@ -17422,6 +17422,9 @@
         function bindDragPick(group, ind, items, pick, snap) {
           let d = null,
             until = 0
+          group.style.touchAction = "none"
+          group.style.userSelect = "none"
+          group.querySelectorAll("*").forEach((el) => (el.style.touchAction = "none"))
           group.addEventListener("pointerdown", (e) => {
             if (!e.target.closest(items)) return
             d = { x: e.clientX, id: e.pointerId, left: parseFloat(ind.style.left) || 0, moved: false }
@@ -20841,8 +20844,8 @@
           return out + "</svg>"
         }
         const attDay = () => {
-          // 한국시간(KST) 자정 기준 날짜 번호, 로그인 시 서버 시간 사용
-          const t = Date.now() + (MP.off || 0) + 9 * 3600000
+          // KST 09:00 기준 날짜 번호 (KST 09:00 = UTC 00:00), 로그인 시 서버 시간 사용
+          const t = Date.now() + (MP.off || 0)
           return Math.floor(t / 86400000)
         }
         const attState = () => {
@@ -20866,7 +20869,7 @@
           $("#attBody").innerHTML = `<div class="atph"><div class="atglow"></div><div class="atbadge">${SVGI.chest()}</div><h3>출석 보상</h3><p>연속 <b>${streak}</b>일 · 누적 ${a.total || 0}일</p></div>
     <div class="atstreak"><div class="atbar"><i style="width:${(Math.max(0, dayN) / 7) * 100}%"></i></div><div class="atbl"><span>${Math.max(0, dayN)} / 7일</span><span>7일차 보너스 ${ATT_GOLD[6].toLocaleString()}G</span></div></div>
     <div class="attg">${cells}</div>
-    <div class="atnote">${can ? `오늘의 보상 <b>+${todayG.toLocaleString()}G</b>` : "내일 00시(KST)에 다시 받을 수 있어요"}</div>
+    <div class="atnote">${can ? `오늘의 보상 <b>+${todayG.toLocaleString()}G</b>` : "내일 09시(KST)에 다시 받을 수 있어요"}</div>
     <button class="btn big" id="attClaim" ${can ? "" : "disabled"}>${can ? "오늘 보상 받기" : "오늘은 이미 받았어요"}</button>
     <button class="btn big sclose ghost" style="margin-top:8px">닫기</button>`
         }
@@ -21672,6 +21675,7 @@
   "병신": "쩝쩝",
   "병맛": "쩝쩝",
   "좆": "거기",
+  "ᄌ같": "거기같",
   "보지": "거기",
   "찌질이": "귀염둥이",
   "또라이": "한심이",
@@ -21694,7 +21698,9 @@
   "새끼": "강냉이",
   "새기": "강냉이",
   "아가리": "입",
-  "애자": "쫄쫄이",
+  "애자": "아잉",
+  "장애": "아잉",
+  "자폐": "아잉",
   "자지": "저기",
   "조개": "어패류",
   "좆밥": "만만",
