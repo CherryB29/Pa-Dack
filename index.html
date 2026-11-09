@@ -3514,6 +3514,14 @@
         display: block;
         margin: 0 auto 2px;
       }
+      #attSheet .atc .aic svg.cstk {
+        width: 46px;
+        height: 36px;
+      }
+      #attSheet .atc.big .aic svg.cstk {
+        width: 58px;
+        height: 45px;
+      }
       #attSheet .atc.big .aic svg {
         width: 38px;
         height: 38px;
@@ -11343,12 +11351,26 @@
           return trCache.a.filter((p) => !done.includes(p.id))
         }
         let trSeenH = -1,
-          trT = 0
+          trT = 0,
+          trWk = null,
+          trWd = 0
         function trTick(dt) {
           trT -= dt
           if (trT > 0) return
           trT = 1
           qTick()
+          if (save && !(MP.user && !MP.ready)) {
+            if (P.sw) questEvent({ k: "swim" })
+            if (trWk) {
+              const d = Math.hypot(P.x - trWk.x, P.y - trWk.y)
+              trWd += d < 12 ? d : 0
+              if (trWd >= 5) {
+                questEvent({ k: "walk", n: Math.floor(trWd) })
+                trWd -= Math.floor(trWd)
+              }
+            }
+            trWk = { x: P.x, y: P.y }
+          }
           if (save && save.bf) {
             const nt = Date.now()
             let ch = false
@@ -11380,7 +11402,7 @@
           }
         }
 
-        /* ================= 시간제 퀘스트 (매 정각 갱신, 3개 / 전부 받으면 총 10,000G) ================= */
+        /* ================= 시간제 퀘스트 (매 정각 갱신, 3개 / 전부 받으면 총 4,000G) ================= */
 
         /* 퀘스트/출석 공용 SVG 아이콘 (그라디언트 id가 겹치지 않도록 호출할 때마다 새로 생성) */
         let svgUid = 0
@@ -11388,6 +11410,9 @@
           coin: '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="#ffc83d" stroke="#d98f1e" stroke-width="2"/><circle cx="16" cy="16" r="6.5" fill="none" stroke="#e6a52a" stroke-width="2"/><path d="M10.5 11.5c2-2.2 5.5-2.6 8.5-1" stroke="#fff6b0" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".85"/></svg>',
           bag: '<svg viewBox="0 0 32 32"><path d="M11 8h10l-2 4c4 2 7 6 7 10 0 3-2 5-5 5H11c-3 0-5-2-5-5 0-4 3-8 7-10z" fill="#d9a35f" stroke="#8a5a26" stroke-width="2" stroke-linejoin="round"/><path d="M12 8l1.5-3.5h5L20 8" fill="#c28a45" stroke="#8a5a26" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="21" r="4" fill="#ffc83d" stroke="#d98f1e" stroke-width="1.6"/></svg>',
           gem: '<svg viewBox="0 0 32 32"><path d="M9 6h14l5 7-12 14L4 13z" fill="#5fd3ff" stroke="#1d7fb0" stroke-width="2" stroke-linejoin="round"/><path d="M4 13h24M13 6l-3 7 6 14M19 6l3 7-6 14" fill="none" stroke="#1d7fb0" stroke-width="1.5" stroke-linejoin="round" opacity=".7"/></svg>',
+          boot: '<svg viewBox="0 0 32 32"><path d="M11 4h8v11l7 3c2 1 3 2.500 3 5v3H9c-2 0-3-1.500-3-3V4z" fill="#d98d3c" stroke="#7a4518" stroke-width="2" stroke-linejoin="round"/><path d="M11 9h8" stroke="#7a4518" stroke-width="2" stroke-linecap="round"/><path d="M6 24h23v3H6z" fill="#7a4518"/><path d="M13 5.500v7" stroke="#fff" stroke-width="1.600" stroke-linecap="round" opacity=".45"/></svg>',
+          hook: '<svg viewBox="0 0 32 32" fill="none" stroke="#5c6f7d" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="6" r="2.600" fill="#fff"/><path d="M16 9v13c0 3-2 4.500-4.500 4.500S7 25 7 22.500M7 22.500l-2.500-3M7 22.500l3-2"/><path d="M20 4c4 0 7 3 7 7" stroke="#4aaeea"/></svg>',
+          book: '<svg viewBox="0 0 32 32"><path d="M5 7c4-2 8-2 11 1 3-3 7-3 11-1v18c-4-2-8-2-11 1-3-3-7-3-11-1z" fill="#8fd0ff" stroke="#2a6aa6" stroke-width="2" stroke-linejoin="round"/><path d="M16 8v18" stroke="#2a6aa6" stroke-width="2"/><path d="M20 12h4M20 16h4" stroke="#fff" stroke-width="1.800" stroke-linecap="round" opacity=".8"/></svg>',
           check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
           /* 보물상자 */
           chest: () => {
@@ -11410,16 +11435,23 @@
             return `<svg viewBox="0 0 48 48"><defs><linearGradient id="${u}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient></defs><path d="M33 24L45 13c-1.700 6.500-1.700 14.500 0 22z" fill="url(#${u}b)" stroke="${line}" stroke-width="1.800" stroke-linejoin="round"/><path d="M15 14.500C18 8 25 8 29 15.500c-4.500-1.800-9.500-1.800-14-1z" fill="${bot}" stroke="${line}" stroke-width="1.600" stroke-linejoin="round"/><path d="M19 33c1.800 5 6 5.500 9 2.500z" fill="${bot}" stroke="${line}" stroke-width="1.600" stroke-linejoin="round"/><path d="M3.500 24C8.500 12.500 24 9.500 34.500 19.500L35.500 24 34.500 28.500C24 38.500 8.500 35.500 3.500 24z" fill="url(#${u}b)" stroke="${line}" stroke-width="1.800" stroke-linejoin="round"/><path d="M8 26.500C16 32.500 26 32.500 33 27c-6 7.500-19 7.500-25 -.5z" fill="#fff" opacity=".28"/><path d="M13.500 17.500c-2.200 4.200-2.200 8.800 0 13" stroke="${line}" stroke-width="1.600" fill="none" stroke-linecap="round" opacity=".6"/><path d="M20 19.500q2.500 2 0 4.500M26 19.500q2.500 2 0 4.500M23 25q2.500 2 0 4.500" stroke="#fff" stroke-width="1.300" fill="none" stroke-linecap="round" opacity=".4"/><circle cx="9.500" cy="21.500" r="2.800" fill="#fff" stroke="${line}" stroke-width="1.200"/><circle cx="9.100" cy="21.500" r="1.400" fill="#1d2530"/><circle cx="8.500" cy="20.800" r=".6" fill="#fff"/>${star ? '<path d="M38 5l1.600 3.600L43.200 10l-3.600 1.600L38 15.200l-1.600-3.600L32.800 10l3.600-1.400z" fill="#fff" opacity=".95"/>' : ""}</svg>`
           },
         }
-        const QTOT = 10000
+        const QTOT = 4000
         const QPOOL = [
-          { t: "민물에서 낚시 3번", n: 3, r: 1200, ic: () => SVGI.fresh(), ev: (e) => e.k === "fish" && !e.sea },
-          { t: "바다에서 낚시 3번", n: 3, r: 1200, ic: () => SVGI.sea(), ev: (e) => e.k === "fish" && e.sea },
-          { t: "보라색(영웅) 등급 이상 물고기 1회 낚기", n: 1, r: 2000, ic: () => SVGI.fish("#c98bff", "#8a45d6", "#4f2290", 1), ev: (e) => e.k === "fish" && e.ri >= 3 },
-          { t: "일반 등급 물고기 7회 낚기", n: 7, r: 1300, ic: () => SVGI.fish("#b9c8d2", "#7f93a1", "#4a5a66"), ev: (e) => e.k === "fish" && e.ri === 0 },
-          { t: "초록(고급) 등급 이상 물고기 3회 낚기", n: 3, r: 1400, ic: () => SVGI.fish("#6fe0a0", "#2fa468", "#1a6a42"), ev: (e) => e.k === "fish" && e.ri >= 1 },
-          { t: "파랑(희귀) 등급 이상 물고기 2회 낚기", n: 2, r: 1700, ic: () => SVGI.fish("#7cc0ff", "#3a82e0", "#1d4f9a"), ev: (e) => e.k === "fish" && e.ri >= 2 },
-          { t: "물고기 8마리 낚기", n: 8, r: 1300, ic: () => SVGI.fish("#ffc27a", "#f0892e", "#a8541a"), ev: (e) => e.k === "fish" },
-          { t: "보물 1개 찾아 열기", n: 1, r: 1500, ic: () => SVGI.chest(), ev: (e) => e.k === "treasure" },
+          { t: "민물에서 낚시 3번", n: 3, r: 500, ic: () => SVGI.fresh(), ev: (e) => e.k === "fish" && !e.sea },
+          { t: "바다에서 낚시 3번", n: 3, r: 500, ic: () => SVGI.sea(), ev: (e) => e.k === "fish" && e.sea },
+          { t: "보라색(영웅) 등급 이상 물고기 1회 낚기", n: 1, r: 800, ic: () => SVGI.fish("#c98bff", "#8a45d6", "#4f2290", 1), ev: (e) => e.k === "fish" && e.ri >= 3 },
+          { t: "일반 등급 물고기 7회 낚기", n: 7, r: 500, ic: () => SVGI.fish("#b9c8d2", "#7f93a1", "#4a5a66"), ev: (e) => e.k === "fish" && e.ri === 0 },
+          { t: "초록(고급) 등급 이상 물고기 3회 낚기", n: 3, r: 600, ic: () => SVGI.fish("#6fe0a0", "#2fa468", "#1a6a42"), ev: (e) => e.k === "fish" && e.ri >= 1 },
+          { t: "파랑(희귀) 등급 이상 물고기 2회 낚기", n: 2, r: 700, ic: () => SVGI.fish("#7cc0ff", "#3a82e0", "#1d4f9a"), ev: (e) => e.k === "fish" && e.ri >= 2 },
+          { t: "물고기 8마리 낚기", n: 8, r: 500, ic: () => SVGI.fish("#ffc27a", "#f0892e", "#a8541a"), ev: (e) => e.k === "fish" },
+          { t: "보물 1개 찾아 열기", n: 1, r: 600, ic: () => SVGI.chest(), ev: (e) => e.k === "treasure" },
+          { t: "대물(큰 크기) 물고기 1마리 낚기", n: 1, r: 700, ic: () => SVGI.fish("#ffe27a", "#f2b01e", "#9a6a0a", 1), ev: (e) => e.k === "fish" && e.big },
+          { t: "특수 구역(심해·갯벌·늪·동굴)에서 3마리 낚기", n: 3, r: 700, ic: () => SVGI.sea(), ev: (e) => e.k === "fish" && !!e.z },
+          { t: "낚싯대 10번 던지기", n: 10, r: 400, ic: () => SVGI.hook, ev: (e) => e.k === "cast" },
+          { t: "400칸 걸어서 이동하기", n: 400, r: 500, ic: () => SVGI.boot, ev: (e) => e.k === "walk" },
+          { t: "물속에서 30초 헤엄치기", n: 30, r: 500, ic: () => SVGI.sea(), ev: (e) => e.k === "swim" },
+          { t: "물고기 5마리 팔기", n: 5, r: 500, ic: () => SVGI.coin, ev: (e) => e.k === "sell" },
+          { t: "장비 뽑기 1회", n: 1, r: 500, ic: () => SVGI.bag, ev: (e) => e.k === "pull" },
         ]
         let qCache = { h: -1, l: [], bonus: 0 }
         const qHour = () => (MP.user && !MP.offKnown ? null : trHour())
@@ -11483,7 +11515,7 @@
             all = s.c.every(Boolean),
             rows = st.l
               .map((q, i) => {
-                const pr = Math.min(q.n, s.p[i]),
+                const pr = Math.min(q.n, Math.floor(s.p[i])),
                   ok = pr >= q.n,
                   st2 = s.c[i] ? "done" : ok ? "ok" : ""
                 return `<div class="qr ${st2}"><div class="qic">${q.ic()}</div><div class="qi"><b>${q.t}</b><div class="qbar"><i style="width:${(pr / q.n) * 100}%"></i></div><small>${pr} / ${q.n} · +${q.r.toLocaleString()}G</small></div><button class="btn" data-q="${i}" ${ok && !s.c[i] ? "" : "disabled"}>${s.c[i] ? "완료" : ok ? "받기" : "진행 중"}</button></div>`
@@ -11523,7 +11555,7 @@
           let ch = false
           st.l.forEach((q, i) => {
             if (st.s.c[i] || st.s.p[i] >= q.n || !q.ev(e)) return
-            st.s.p[i]++
+            st.s.p[i] = Math.min(q.n, st.s.p[i] + (e.n || 1))
             ch = true
             if (st.s.p[i] >= q.n) toast("퀘스트 완료! " + q.t, 2200)
           })
@@ -11607,7 +11639,11 @@
           if (!sp) return
           save.trc = (save.trc || []).concat(sp.id)
           questEvent({ k: "treasure" })
-          let r = Math.random() * TR_TABLE.reduce((a, b) => a + b[0], 0),
+          /* 같은 보물(id)은 누가 열어도 결과가 같도록 id로 시드한 난수만 사용 */
+          const rn = mulberry((sp.id * 2246822519 + 977) >>> 0)
+          rn()
+          rn()
+          let r = rn() * TR_TABLE.reduce((a, b) => a + b[0], 0),
             e = TR_TABLE[0]
           for (const t of TR_TABLE) {
             if ((r -= t[0]) < 0) {
@@ -11615,35 +11651,46 @@
               break
             }
           }
-          let g = e[2] ? e[1] + Math.floor(Math.random() * ((e[2] - e[1]) / 100 + 1)) * 100 : 0
-          /* 보상 종류: 골드 / 물고기 / 장비 (단계가 높을수록 희귀 보상 확률 ↑) */
+          let g = e[2] ? e[1] + Math.floor(rn() * ((e[2] - e[1]) / 100 + 1)) * 100 : 0
+          /* 보상 종류: 골드 / 물고기 / 장비 / 버프 (단계가 높을수록 희귀 보상 확률 ↑) */
           const tier = TR_TABLE.indexOf(e)
           let kind = "gold"
-          if (g) {
-            const q = Math.random(),
-              pf = [0, 0.22, 0.28, 0.3][tier],
-              pg = [0, 0.08, 0.14, 0.25][tier],
-              pb = [0, 0.2, 0.2, 0.18][tier]
-            kind = q < pf ? "fish" : q < pf + pg ? "gear" : q < pf + pg + pb ? "buff" : "gold"
-          }
-          let msg = ""
+          const q = rn(),
+            pf = [0, 0.22, 0.28, 0.3][tier],
+            pg = [0, 0.08, 0.14, 0.25][tier],
+            pb = [0, 0.2, 0.2, 0.18][tier]
+          if (g) kind = q < pf ? "fish" : q < pf + pg ? "gear" : q < pf + pg + pb ? "buff" : "gold"
+          const r1 = rn(),
+            r2 = rn(),
+            r3 = rn(),
+            r4 = rn()
+          let msg = "",
+            fishP = null
           if (kind === "fish") {
-            const wts = ["fresh", "sea"],
-              minRi = [0, 0, 1, 2][tier]
-            let pk = null
-            for (let i = 0; i < 12 && (!pk || pk.ri < minRi); i++)
-              pk = rollFish(2 + Math.random() * 6, wts[Math.floor(Math.random() * 2)], null)
-            if (pk && pk.f) {
-              const f = pk.f
-              let cd = save.codex[f.id]
-              if (!cd) cd = save.codex[f.id] = { n: 0, max: 0, seen: false }
-              cd.n++
-              cd.max = Math.max(cd.max, pk.size)
-              save.inv.push({ id: f.id, size: pk.size, price: pk.price })
-              msg = e[3] + "! " + f.n + " (" + pk.size + "cm) 획득"
-              g = 0
-              updateDexDot()
-            } else kind = "gold"
+            const RW = [[0.55, 0.3, 0.15, 0, 0], [0.2, 0.35, 0.3, 0.15, 0], [0, 0.2, 0.35, 0.3, 0.15]][tier - 1]
+            let x = r1,
+              ri = 0
+            for (; ri < 4; ri++) {
+              if (x < RW[ri]) break
+              x -= RW[ri]
+            }
+            let pool = FISH.filter((f) => f.ri === ri && !f.z)
+            if (!pool.length) pool = FISH.filter((f) => f.ri === ri)
+            if (!pool.length) pool = FISH
+            const f = pool[Math.floor(r2 * pool.length) % pool.length],
+              t = Math.pow(r3, 1.5),
+              size = Math.round((f.min + (f.max - f.min) * t) * 10) / 10,
+              price = Math.round(f.p * (0.75 + 0.7 * t))
+            fishP = { f, size, price, ri: f.ri }
+            let cd = save.codex[f.id]
+            if (!cd) cd = save.codex[f.id] = { n: 0, max: 0, seen: false }
+            fishP.isNew = cd.n === 0
+            cd.n++
+            cd.max = Math.max(cd.max, size)
+            save.inv.push({ id: f.id, size, price })
+            msg = e[3] + "! " + f.n + " (" + size + "cm) 획득"
+            g = 0
+            updateDexDot()
           }
           if (kind === "buff") {
             const mins = [0, 3, 5, 8][tier],
@@ -11654,7 +11701,7 @@
                 ["power", "릴링 힘 +25%"],
                 ["gold", "판매가 +15%"],
               ],
-              b = BF[Math.floor(Math.random() * BF.length)]
+              b = BF[Math.floor(r1 * BF.length) % BF.length]
             save.bf = save.bf || {}
             save.bf[b[0]] = Math.max(save.bf[b[0]] || 0, Date.now()) + mins * 60000
             recalcGear()
@@ -11663,11 +11710,11 @@
           }
           if (kind === "gear") {
             const slots = ["rod", "shoes", "hat", "pet"],
-              slot = slots[Math.floor(Math.random() * slots.length)],
-              ri = Math.min(4, Math.max(0, tier - 1 + (Math.random() < 0.25 ? 1 : 0)))
+              slot = slots[Math.floor(r1 * 4) % 4],
+              ri = Math.min(4, Math.max(0, tier - 1 + (r2 < 0.25 ? 1 : 0)))
             let pool = ITEMS.filter((x) => x.slot === slot && x.ri === ri)
             if (!pool.length) pool = ITEMS.filter((x) => x.slot === slot)
-            const it = pool[Math.floor(Math.random() * pool.length)]
+            const it = pool[Math.floor(r3 * pool.length) % pool.length]
             save.items = save.items || {}
             save.equip = save.equip || {}
             if (it && !save.items[it.id]) {
@@ -11677,9 +11724,8 @@
               msg = e[3] + "! 장비 [" + it.n + "] 획득"
               g = 0
             } else if (it) {
+              msg = e[3] + "! 장비 [" + it.n + "] (이미 보유, " + DUPE[it.ri] + " 골드로 교환)"
               g = g + DUPE[it.ri]
-              kind = "gold"
-              msg = ""
             } else kind = "gold"
           }
           F.tg = kind !== "gold" || g > 0 ? 1 : 0
@@ -11694,6 +11740,11 @@
             }, 6000)
           }
           chestBurst(P.x, P.y - 0.3, !!F.tg)
+          if (fishP) {
+            mpCatch(fishP)
+            showCard(fishP, fishP.isNew)
+            sparkBurst(P.x, P.y, fishP.ri)
+          }
           if (F.tg) {
             if (g) {
               save.gold += g
@@ -11971,6 +12022,7 @@
           }
         }
         function landBobber() {
+          questEvent({ k: "cast" })
           F.bx = F.tx
           F.by = F.ty
           const hk = MP.on && MP.user ? hookTarget() : null
@@ -12465,7 +12517,14 @@
           persist()
           updateHud()
           updateDexDot()
-          questEvent({ k: "fish", sea: !!F.wt, ri: p.ri })
+          questEvent({
+            k: "fish",
+            sea: !!F.wt,
+            ri: p.ri,
+            isNew,
+            z: f.z || "",
+            big: p.size >= f.min + (f.max - f.min) * 0.6,
+          })
           mpFeed(p)
           mpCatch(p)
           showCard(p, isNew)
@@ -16055,8 +16114,8 @@
             mc.fill()
           }
           /* 접속 중인 사람 이름 (포탈 지도처럼) */
-          if (MP.on && MP.user) {
-            const fs = Math.round(mmBig ? S * 0.036 : S * 0.1)
+          if (mmBig && MP.on && MP.user) {
+            const fs = Math.max(8, Math.round(S * 0.022))
             mc.font = '800 ' + fs + 'px "Chiron GoRound TC",sans-serif'
             mc.textAlign = "center"
             mc.textBaseline = "alphabetic"
@@ -16212,14 +16271,14 @@
           }
           if (MP.on && MP.user) {
             g.textAlign = "center"
-            g.font = '800 19px "Chiron GoRound TC",sans-serif'
+            g.font = '700 11px "Chiron GoRound TC",sans-serif'
             for (const kk in MP.others) {
               const o = MP.others[kk]
               if (o.stale) continue
               const x = o.x * k,
                 y = o.y * k,
                 tx = Math.min(S - 36, Math.max(36, x)),
-                ty = y < 26 ? y + 24 : y - 11
+                ty = y < 16 ? y + 14 : y - 8
               g.fillStyle = ringCol(o)
               g.strokeStyle = "#fff"
               g.lineWidth = 2.6
@@ -16227,7 +16286,7 @@
               g.arc(x, y, 5.4, 0, 6.3)
               g.fill()
               g.stroke()
-              g.lineWidth = 4.5
+              g.lineWidth = 3
               g.strokeStyle = "rgba(0,10,20,.75)"
               g.strokeText(o.n, tx, ty)
               g.fillStyle = "#fff"
@@ -16243,11 +16302,11 @@
           g.stroke()
           if (MP.on && MP.user) {
             g.textAlign = "center"
-            g.font = '800 19px "Chiron GoRound TC",sans-serif'
+            g.font = '700 11px "Chiron GoRound TC",sans-serif'
             const x = P.x * k,
               tx = Math.min(S - 20, Math.max(20, x)),
-              ty = P.y * k < 26 ? P.y * k + 24 : P.y * k - 11
-            g.lineWidth = 4.5
+              ty = P.y * k < 16 ? P.y * k + 14 : P.y * k - 8
+            g.lineWidth = 3
             g.strokeStyle = "rgba(0,10,20,.75)"
             g.strokeText("나", tx, ty)
             g.fillStyle = "#ffd9a0"
@@ -17103,9 +17162,11 @@
           const b = e.target.closest("[data-sell]")
           if (!b) return
           const id = b.dataset.sell
-          let sum = 0
+          let sum = 0,
+            sold = 0
           save.inv = save.inv.filter((i) => {
             if (i.id === id) {
+              sold++
               sum += i.price
               return false
             }
@@ -17118,13 +17179,16 @@
           sfx.coin()
           vib(20)
           renderShop()
+          if (sold) questEvent({ k: "sell", n: sold })
         })
         $("#sellAll").addEventListener("click", () => {
           const sum = save.inv.reduce((a, i) => a + i.price, 0)
           if (!sum) return
+          const soldN = save.inv.length
           save.gold += sum
           save.earned = (save.earned || 0) + sum
           save.inv = []
+          questEvent({ k: "sell", n: soldN })
           persist()
           updateHud()
           sfx.coin()
@@ -19725,6 +19789,7 @@
             return
           }
           save.gold -= cost
+          questEvent({ k: "pull" })
           save.items = save.items || {}
           save.pity = save.pity || {}
           save.equip = save.equip || {}
@@ -20302,7 +20367,24 @@
           }
         }
         /* ================= 출석 보상 ================= */
-        const ATT_GOLD = [5000, 5000, 10000, 10000, 15000, 15000, 20000]
+        const ATT_GOLD = [2000, 2000, 4000, 4000, 6000, 8000, 10000]
+        /* 금액에 따라 동전 개수가 달라지는 동전 더미 아이콘 */
+        function coinStackSVG(g) {
+          const n = g <= 2000 ? 2 : g <= 4000 ? 4 : g <= 6000 ? 6 : g <= 8000 ? 8 : 10
+          const stacks = n <= 3 ? [n] : [Math.ceil(n / 2), Math.floor(n / 2)]
+          let out = '<svg class="cstk" viewBox="0 0 44 36">'
+          stacks.forEach((c, si) => {
+            const cx = stacks.length === 1 ? 22 : si === 0 ? 14 : 30,
+              base = stacks.length === 1 ? 31 : si === 0 ? 31 : 27
+            for (let i = 0; i < c; i++) {
+              const y = base - i * 3.4
+              out += `<ellipse cx="${cx}" cy="${y + 2.6}" rx="10" ry="4" fill="#c9861c" stroke="#8a560f" stroke-width="1"/><rect x="${cx - 10}" y="${y}" width="20" height="2.6" fill="#e0a02a"/><ellipse cx="${cx}" cy="${y}" rx="10" ry="4" fill="#ffd24a" stroke="#b97a14" stroke-width="1"/>`
+            }
+            const ty = base - (c - 1) * 3.4
+            out += `<ellipse cx="${cx}" cy="${ty}" rx="5.4" ry="2" fill="none" stroke="#e3a92c" stroke-width="1"/>`
+          })
+          return out + "</svg>"
+        }
         const attDay = () => {
           // 한국시간(KST) 자정 기준 날짜 번호, 로그인 시 서버 시간 사용
           const t = Date.now() + (MP.off || 0) + 9 * 3600000
@@ -20316,15 +20398,14 @@
           const streak = a.last === d || a.last === d - 1 ? a.streak : 0
           return { a, d, can, streak }
         }
-        const ATT_IC = [SVGI.coin, SVGI.coin, SVGI.bag, SVGI.bag, SVGI.gem, SVGI.gem, () => SVGI.chest()]
-        function attRender() {
+                function attRender() {
           const { a, can, streak } = attState()
           const nextIdx = can ? streak % 7 : (streak - 1) % 7
           const todayG = ATT_GOLD[can ? nextIdx : Math.max(0, nextIdx)]
           const cells = ATT_GOLD.map((g, i) => {
             const done = can ? i < nextIdx : i <= nextIdx
             const now = can && i === nextIdx
-            return `<div class="atc${done ? " done" : ""}${now ? " now" : ""}${i === 6 ? " big" : ""}"><small>${i + 1}일차</small><div class="aic">${typeof ATT_IC[i] === "function" ? ATT_IC[i]() : ATT_IC[i]}</div><b>${g.toLocaleString()}</b>${done ? `<span class="stamp">${SVGI.check}</span>` : ""}</div>`
+            return `<div class="atc${done ? " done" : ""}${now ? " now" : ""}${i === 6 ? " big" : ""}"><small>${i + 1}일차</small><div class="aic">${coinStackSVG(g)}</div><b>${g.toLocaleString()}</b>${done ? `<span class="stamp">${SVGI.check}</span>` : ""}</div>`
           }).join("")
           $("#attBody").innerHTML = `<div class="atph"><div class="atglow"></div><div class="atbadge">${SVGI.chest()}</div><h3>출석 보상</h3><p>연속 <b>${streak}</b>일 · 누적 ${a.total || 0}일</p></div>
     <div class="attg">${cells}</div>
