@@ -432,6 +432,16 @@
       #actT {
         text-shadow: 0 1px 2px rgb(var(--orange-900-rgb) / 0.6);
       }
+      #sledBtn {
+        position: absolute;
+        right: 40px;
+        bottom: calc(110px + 96px + 14px);
+        font-family: inherit;
+        cursor: pointer;
+      }
+      #sledBtn:disabled {
+        opacity: var(--opacity-muted);
+      }
 
       #card.show {
         transform: translate(-50%, 0);
@@ -4430,6 +4440,7 @@
           <button id="act" data-s="off">
             <span class="ai" id="actI"></span><span id="actT">던지기</span>
           </button>
+          <button id="sledBtn" class="pill" type="button" hidden></button>
           <div id="card">
             <div id="cEmoji"><img id="cImg" alt="" /></div>
             <div>
@@ -11079,6 +11090,10 @@
           dustT: 0,
           fx: 0,
           fy: 1,
+          sl: 0, // 타고 있는 썰매 번호 (0 = 안 탐)
+          ss: 0, // 좌석 (0 운전석, 1 조수석, 2·3 뒷좌석)
+          drv: false,
+          wat: false,
         }
         const cam = { x: P.x, y: P.y }
         let time = 0,
@@ -11276,7 +11291,7 @@
           joyEl.className = ""
         }
         fv.addEventListener("pointerdown", (e) => {
-          if (e.target.closest("#act,#card,#mm,#qPills,#hud")) return
+          if (e.target.closest("#act,#sledBtn,#card,#mm,#qPills,#hud")) return
           unlock()
           if (mmBig) {
             mmBig = false
@@ -11362,6 +11377,10 @@
           if (k === " " || k === "enter") {
             if (!e.repeat) actionDown("kbd")
             e.preventDefault()
+            return
+          }
+          if (k === "e") {
+            if (!e.repeat) sledToggle()
             return
           }
           keys.add(k)
@@ -11687,7 +11706,7 @@
             if (P.sw) questEvent({ k: "swim" })
             if (trWk) {
               const d = Math.hypot(P.x - trWk.x, P.y - trWk.y)
-              trWd += d < 12 ? d : 0
+              trWd += d < 12 && !P.sl ? d : 0 // 썰매는 걷기 퀘스트에서 제외
               if (trWd >= 5) {
                 questEvent({ k: "walk", n: Math.floor(trWd) })
                 trWd -= Math.floor(trWd)
@@ -11710,6 +11729,8 @@
             }
           }
           if (!save || (MP.user && !(MP.offKnown && MP.ready))) return
+          // 로그인 확인 전에는 오프라인 기록(상자 0개 연 상태)으로 개수를 세므로 기다림
+          if (FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL && !MP.err && !MP.user && !MP.skip) return
           const h = trHour()
           if (h !== trSeenH) {
             const first = trSeenH === -1
@@ -13221,6 +13242,574 @@
           if (dy) P.vy = 0
         }
 
+        /* ================= 썰매 (맵 곳곳, 4인승) =================
+   좌석 0=운전석 1=조수석 2,3=뒷좌석. 탑승자는 각자 좌석 위치로 움직이고,
+   썰매 중심은 "가장 앞 좌석 탑승자" 위치에서 계산해요. 서버에는 sl/ss 만 올려요. */
+        const SLED_N = 12,
+          SLED_SEATS = [
+            [0.5, 0.26],
+            [0.5, -0.26],
+            [-0.5, 0.26],
+            [-0.5, -0.26],
+          ],
+          SLED_HL = 1.14, // 썰매 반길이 (그림과 충돌 범위가 같다)
+          SLED_HW = 0.5, // 썰매 반폭
+          SLED_KID = 0.62,
+          SLED_LAND = 1.5,
+          SLED_WATER = 0.5,
+          SLED_REACH = 1.9,
+          SLED_EXIT = [
+            [0, 1.15],
+            [0, -1.15],
+            [1.5, 0],
+            [-1.5, 0],
+            [1.3, 1],
+            [-1.3, 1],
+            [1.3, -1],
+            [-1.3, -1],
+          ]
+        const sledBtn = $("#sledBtn"),
+          sledRest = {},
+          SLED_UI = { near: null, key: "" }
+        let sledArr = null,
+          sledOccMap = {}
+        const sledSelf = () => (MP.user ? MP.user.uid : "")
+        const sledOcc = (id) => sledOccMap[id] || []
+        // 시작 지점 근처 1대: 고정된 순서로 훑어서 모든 기기가 같은 자리를 고른다
+        function sledNearSpawn(ok) {
+          for (let dy = -11; dy <= 11; dy++)
+            for (let dx = -11; dx <= 11; dx++) {
+              const d = dx * dx + dy * dy
+              if (d < 25 || d >= 144) continue
+              const x = SPX + dx + 0.5,
+                y = SPY + dy + 0.5
+              if (ok(x, y) && ok(x + 1, y) && ok(x - 1, y) && ok(x, y + 1) && ok(x, y - 1))
+                return [x, y]
+            }
+          return null
+        }
+        function sledList() {
+          if (sledArr) return sledArr
+          const L = trTiles(),
+            out = [],
+            ok = (x, y) => !isW(x, y) && !solidPt(x, y),
+            add = (x, y) => {
+              const id = out.length + 1,
+                r = sledRest[id]
+              out.push({
+                id,
+                hx: x,
+                hy: y,
+                x: r ? r.x : x,
+                y: r ? r.y : y,
+                h: r ? r.h : 0, // 바라보는 각도 (0 = 오른쪽)
+              })
+            }
+          const n0 = sledNearSpawn(ok)
+          if (n0) add(n0[0], n0[1])
+          const rn = mulberry(2610)
+          for (let n = 0; n < 600 && out.length < SLED_N && L.length; n++) {
+            const k = L[Math.floor(rn() * L.length)],
+              x = (k % MW) + 0.5,
+              y = ((k / MW) | 0) + 0.5
+            if (out.every((s) => Math.hypot(s.hx - x, s.hy - y) > 18)) add(x, y)
+          }
+          return (sledArr = out)
+        }
+        // 탑승자를 썰매별로 한 번만 모아 둔다 (좌석 순, 같으면 uid 순)
+        function sledBuild() {
+          const m = {},
+            add = (id, e) => {
+              if (id) (m[id] || (m[id] = [])).push(e)
+            }
+          add(P.sl, { me: true, ss: P.ss, uid: sledSelf() })
+          for (const k in MP.others) {
+            const o = MP.others[k]
+            if (!o.stale) add(o.sl, { me: false, ss: o.ss, uid: k, o })
+          }
+          for (const id in m)
+            m[id].sort((a, b) => a.ss - b.ss || (a.uid < b.uid ? -1 : 1))
+          sledOccMap = m
+        }
+        // 썰매 기준 좌표(앞=+x, 오른쪽=+y)를 월드 좌표 차이로 바꾼다
+        const sledRot = (h, f) => {
+          const c = Math.cos(h),
+            n = Math.sin(h)
+          return [f[0] * c - f[1] * n, f[0] * n + f[1] * c]
+        }
+        function sledCenter(s) {
+          const d = sledOcc(s.id)[0]
+          if (d) {
+            const p = d.me ? P : d.o,
+              r = sledRot(s.h, SLED_SEATS[d.ss] || SLED_SEATS[0])
+            s.x = p.x - r[0]
+            s.y = p.y - r[1]
+          }
+          return s
+        }
+        // 썰매가 서 있을 수 없는 자리인지: 보이는 직사각형(회전 포함) 전체로 검사
+        function sledHit(cx, cy, h) {
+          const c = Math.cos(h),
+            n = Math.sin(h),
+            ex = Math.abs(c) * SLED_HL + Math.abs(n) * SLED_HW,
+            ey = Math.abs(n) * SLED_HL + Math.abs(c) * SLED_HW
+          if (cx - ex < 0.2 || cy - ey < 0.2 || cx + ex > MW - 0.2 || cy + ey > MH - 0.2)
+            return true
+          const inside = (px, py, r) => {
+            const dx = px - cx,
+              dy = py - cy
+            return (
+              Math.abs(dx * c + dy * n) <= SLED_HL + r &&
+              Math.abs(-dx * n + dy * c) <= SLED_HW + r
+            )
+          }
+          for (let y = Math.floor(cy - ey); y <= Math.floor(cy + ey); y++)
+            for (let x = Math.floor(cx - ex); x <= Math.floor(cx + ex); x++) {
+              const k = y * MW + x
+              if (SOL[k])
+                for (const [a, b] of [[0.5, 0.5], [0.05, 0.05], [0.95, 0.05], [0.05, 0.95], [0.95, 0.95]])
+                  if (inside(x + a, y + b, 0)) return true
+              const d = DEC[k]
+              if (SOLID[d] && inside(x + 0.5, y + 0.78, SRAD[d] || 0.16)) return true
+            }
+          // 썰매 가장자리 점이 막힌 타일 안에 있는지
+          for (const lx of [-1, -0.5, 0, 0.5, 1])
+            for (const ly of [-1, 0, 1]) {
+              const px = cx + lx * SLED_HL * c - ly * SLED_HW * n,
+                py = cy + lx * SLED_HL * n + ly * SLED_HW * c
+              if (SOL[Math.floor(py) * MW + Math.floor(px)]) return true
+            }
+          return false
+        }
+        // 운전자 이동: 내 좌석이 아니라 썰매 전체가 부딪히는지로 판단
+        function sledMoveAxis(dx, dy) {
+          const s = sledList()[P.sl - 1]
+          if (!s) return moveAxis(dx, dy)
+          const r = sledRot(s.h, SLED_SEATS[P.ss] || SLED_SEATS[0]),
+            cx = P.x - r[0],
+            cy = P.y - r[1]
+          if (!sledHit(cx + dx, cy + dy, s.h) || sledHit(cx, cy, s.h)) {
+            P.x += dx
+            P.y += dy
+          } else {
+            if (dx) P.vx = 0
+            if (dy) P.vy = 0
+          }
+        }
+        /* 범퍼카 충돌: 내가 운전하는 썰매가 다른 썰매와 겹치면 크게 튕겨 나가요 */
+        const SLED_CAP = 3.3 * 2.3, // 썰매 최고 속도 (기본 이동속도의 2.3배)
+          SLED_BOUNCE = 1.45, // 반발 계수 (1보다 크면 더 튕김)
+          SLED_KICK = 3.4 // 부딪히면 최소한 이만큼은 튕겨 나감
+        let sledBumpCd = 0
+        function sledBump(dt) {
+          sledBumpCd -= dt
+          P.bumpT = (P.bumpT || 0) - dt
+          const L = sledList(),
+            me = L[P.sl - 1]
+          if (!me || !P.drv) return
+          const r = sledRot(me.h, SLED_SEATS[P.ss] || SLED_SEATS[0]),
+            cx = P.x - r[0],
+            cy = P.y - r[1],
+            a1 = [Math.cos(me.h), Math.sin(me.h)]
+          for (const o of L) {
+            if (o === me) continue
+            const dx = cx - o.x,
+              dy = cy - o.y
+            if (dx * dx + dy * dy > 2.7 * 2.7) continue
+            const b1 = [Math.cos(o.h), Math.sin(o.h)],
+              A = [a1, [-a1[1], a1[0]]],
+              B = [b1, [-b1[1], b1[0]]]
+            let ov = 1e9,
+              nx = 0,
+              ny = 0
+            for (const u of [A[0], A[1], B[0], B[1]]) {
+              const ra = SLED_HL * Math.abs(u[0] * A[0][0] + u[1] * A[0][1]) + SLED_HW * Math.abs(u[0] * A[1][0] + u[1] * A[1][1]),
+                rb = SLED_HL * Math.abs(u[0] * B[0][0] + u[1] * B[0][1]) + SLED_HW * Math.abs(u[0] * B[1][0] + u[1] * B[1][1]),
+                d = dx * u[0] + dy * u[1],
+                e = ra + rb - Math.abs(d)
+              if (e <= 0) {
+                ov = -1
+                break
+              }
+              if (e < ov) {
+                ov = e
+                nx = d < 0 ? -u[0] : u[0]
+                ny = d < 0 ? -u[1] : u[1]
+              }
+            }
+            if (ov <= 0) continue
+            // 상대가 타고 있으면 서로 절반씩, 빈 썰매면 내가 전부 튕겨 나온다
+            const od = sledOcc(o.id)[0],
+              share = od ? 0.5 : 1,
+              ovx = od && !od.me && od.o ? od.o.dvx || 0 : 0,
+              ovy = od && !od.me && od.o ? od.o.dvy || 0 : 0
+            // 겹친 만큼 밀어내기 (벽이 막으면 그쪽은 포기)
+            const push = ov * share + 0.03
+            for (const [mx, my] of [[nx * push, ny * push], [nx * push, 0], [0, ny * push]]) {
+              if (!sledHit(cx + mx, cy + my, me.h)) {
+                P.x += mx
+                P.y += my
+                break
+              }
+            }
+            const vn = (P.vx - ovx) * nx + (P.vy - ovy) * ny
+            if (vn < 0) {
+              const j = -(1 + SLED_BOUNCE) * vn * share
+              P.vx += j * nx
+              P.vy += j * ny
+              const after = P.vx * nx + P.vy * ny
+              if (after < SLED_KICK) {
+                P.vx += (SLED_KICK - after) * nx
+                P.vy += (SLED_KICK - after) * ny
+              }
+              P.bumpT = 0.4 // 잠깐 동안은 조작이 둔해져서 통통 튕기는 느낌
+              if (sledBumpCd <= 0) {
+                sledBumpCd = 0.25
+                sledSnow((cx + o.x) / 2, (cy + o.y) / 2, 8)
+                vib(14)
+              }
+            }
+          }
+          const sp = Math.hypot(P.vx, P.vy)
+          if (sp > SLED_CAP) {
+            P.vx *= SLED_CAP / sp
+            P.vy *= SLED_CAP / sp
+          }
+        }
+        function sledRestSet(key, v) {
+          const id = +key
+          if (!v || !isFinite(v.x) || !isFinite(v.y) || !(id >= 1 && id <= SLED_N)) return
+          sledRest[id] = {
+            x: clamp(+v.x, 0, MW),
+            y: clamp(+v.y, 0, MH),
+            h: isFinite(v.h) ? +v.h : 0,
+          }
+          const s = sledArr && sledArr[id - 1]
+          if (s && !sledOcc(id).length) {
+            s.x = sledRest[id].x
+            s.y = sledRest[id].y
+            s.h = sledRest[id].h
+          }
+        }
+        function sledStep(dt = 0) {
+          const L = sledList()
+          sledBuild()
+          for (const s of L) {
+            // 운전자가 바라보는 쪽으로 썰매도 부드럽게 돌아간다
+            const d = sledOcc(s.id)[0],
+              p = d && (d.me ? P : d.o)
+            if (p && !(d.me ? F.phase !== "idle" : p.f) && Math.hypot(p.fx, p.fy) > 0.1) {
+              const da = Math.atan2(
+                Math.sin(Math.atan2(p.fy, p.fx) - s.h),
+                Math.cos(Math.atan2(p.fy, p.fx) - s.h),
+              )
+              let nh = s.h + da * (1 - Math.exp(-9 * dt))
+              if (d.me) {
+                // 돌았더니 벽에 겹치면 그 방향으로는 돌지 않는다 (옆으로 빠지면 다시 돈다)
+                const f = SLED_SEATS[d.ss] || SLED_SEATS[0],
+                  r0 = sledRot(s.h, f),
+                  r1 = sledRot(nh, f)
+                if (
+                  sledHit(P.x - r1[0], P.y - r1[1], nh) &&
+                  !sledHit(P.x - r0[0], P.y - r0[1], s.h)
+                )
+                  nh = s.h
+              }
+              s.h = nh
+            }
+            sledCenter(s)
+          }
+          if (P.sl && !L[P.sl - 1]) P.sl = 0
+          if (P.sl) {
+            // 같은 자리를 동시에 잡으면 uid 가 작은 쪽이 우선, 나머지는 빈 자리로 이동
+            const occ = sledOcc(P.sl),
+              dup = occ.find((e) => !e.me && e.ss === P.ss && e.uid < sledSelf())
+            if (dup) {
+              const used = occ.map((e) => e.ss),
+                seat = SLED_SEATS.findIndex((_, i) => !used.includes(i))
+              if (seat < 0) {
+                sledDismount()
+                toast("썰매가 가득 차서 내렸어요", 1800)
+              } else P.ss = seat
+              sledBuild()
+            }
+          }
+          const d0 = sledOcc(P.sl)[0]
+          P.drv = !!(P.sl && d0 && d0.me)
+          // 탑승/하차 버튼 갱신
+          let near = null,
+            key = ""
+          if (P.sl) key = "out"
+          else if (F.phase === "idle" && !tpA) {
+            let bd = SLED_REACH
+            for (const s of L) {
+              const d = Math.hypot(P.x - s.x, P.y - s.y)
+              if (d < bd) {
+                bd = d
+                near = s
+              }
+            }
+            if (near) {
+              const n = sledOcc(near.id).length
+              key = n >= SLED_SEATS.length ? "full" : n ? "join" + n : "new"
+            }
+          }
+          SLED_UI.near = near
+          if (key !== SLED_UI.key) {
+            SLED_UI.key = key
+            sledBtn.hidden = !key
+            sledBtn.disabled = key === "full"
+            sledBtn.textContent =
+              key === "out"
+                ? "썰매 내리기"
+                : key === "new"
+                  ? "썰매 운전하기"
+                  : key === "full"
+                    ? "자리가 없어요 (4/4)"
+                    : "같이 타기 (" + key.slice(4) + "/4)"
+          }
+        }
+        // 동승자: 운전자 위치에서 계산한 내 좌석으로 따라가요
+        function sledSeat() {
+          const s = sledList()[P.sl - 1],
+            d = sledOcc(P.sl)[0]
+          if (!s || !d || d.me) return
+          const f = sledRot(s.h, SLED_SEATS[P.ss] || SLED_SEATS[0])
+          P.x = s.x + f[0]
+          P.y = s.y + f[1]
+          P.vx = d.o.dvx || 0
+          P.vy = d.o.dvy || 0
+          P.fx = d.o.fx || P.fx
+          P.fy = d.o.fy || P.fy
+          if (Math.abs(P.fx) > 0.25) P.side = P.fx > 0 ? 1 : -1
+        }
+        function sledSnow(x, y, n) {
+          for (let i = 0; i < n; i++)
+            emit({
+              kind: "d",
+              x: x + rnd(-0.5, 0.5),
+              y: y + rnd(-0.2, 0.2),
+              z: 0.1,
+              vz: rnd(0.4, 1.2),
+              vx: rnd(-0.6, 0.6),
+              vy: rnd(-0.3, 0.3),
+              max: 0.6,
+              col: "#ffffff",
+              sz: rnd(2.5, 4.5),
+              g: 3,
+            })
+        }
+        function sledMount() {
+          const s = SLED_UI.near
+          if (!s || P.sl || F.phase !== "idle" || tpA) return
+          const used = sledOcc(s.id).map((e) => e.ss),
+            seat = SLED_SEATS.findIndex((_, i) => !used.includes(i))
+          if (seat < 0) {
+            toast("썰매가 가득 찼어요 (4/4)", 1600)
+            return
+          }
+          sledCenter(s)
+          const f = sledRot(s.h, SLED_SEATS[seat])
+          P.sl = s.id
+          P.ss = seat
+          P.vx = P.vy = 0
+          P.x = s.x + f[0]
+          P.y = s.y + f[1]
+          if (!used.length) {
+            // 처음 타면 썰매가 보던 방향 그대로 출발
+            P.fx = Math.cos(s.h)
+            P.fy = Math.sin(s.h)
+          }
+          sledBuild()
+          SLED_UI.key = ""
+          sledSnow(P.x, P.y, 10)
+          sfx.tick && sfx.tick()
+          vib(15)
+          MP.acc = 9
+          toast(
+            seat === 0
+              ? "썰매를 운전해요! 땅에서 1.5배 빨라요"
+              : "썰매에 같이 탔어요 (" + (used.length + 1) + "/4)",
+            2200,
+          )
+        }
+        function sledSaveRest(s) {
+          if (MP.on && MP.user && MP.db)
+            MP.db
+              .ref("world/main/sleds/" + s.id)
+              .set({ x: +s.x.toFixed(2), y: +s.y.toFixed(2), h: +s.h.toFixed(2) })
+              .catch(() => {})
+        }
+        function sledDismount() {
+          const s = sledList()[P.sl - 1]
+          if (!s) {
+            P.sl = 0
+            return
+          }
+          sledCenter(s)
+          const last = !sledOcc(s.id).some((e) => !e.me)
+          // 썰매 옆에서 걸을 수 있는 자리를 고정된 순서로 찾는다 (없으면 물 위)
+          let land = null,
+            wet = null
+          for (const e of SLED_EXIT) {
+            const r = sledRot(s.h, e),
+              x = s.x + r[0],
+              y = s.y + r[1]
+            if (blocked(x, y)) continue
+            if (isW(x, y)) wet = wet || [x, y]
+            else {
+              land = [x, y]
+              break
+            }
+          }
+          const to = land || wet
+          if (to) {
+            P.x = to[0]
+            P.y = to[1]
+          }
+          P.sl = 0
+          P.ss = 0
+          P.vx = P.vy = 0
+          sledBuild()
+          SLED_UI.key = ""
+          if (last) sledSaveRest(s)
+          sledSnow(P.x, P.y, 8)
+          sfx.tick && sfx.tick()
+          MP.acc = 9
+        }
+        const sledToggle = () => {
+          if (P.sl && F.phase !== "idle") {
+            if (F.phase === "wait" || F.phase === "bite" || F.phase === "tdig") cancelCast()
+            else return toast("낚시 중에는 내릴 수 없어요", 1400)
+          }
+          return P.sl ? sledDismount() : sledMount()
+        }
+        function drawSled(s) {
+          const T = TS,
+            u = TS / 48,
+            sx = sxv(s.x),
+            sy = syv(s.y)
+          if (sx < -2 * T || sx > W + 2 * T || sy < -2 * T || sy > H + 2 * T) return
+          const wet = isW(s.x, s.y),
+            bob = wet ? Math.sin(time * 2.6 + s.id) * 1.8 * u : 0,
+            hint = SLED_UI.near === s && !P.sl,
+            HL = SLED_HL * T,
+            HW = SLED_HW * T
+          // 바라보는 방향으로 회전한 뒤, 아래로 밀어서 두께를 표현
+          const part = (dy, fn) => {
+            ctx.save()
+            ctx.translate(0, dy)
+            ctx.rotate(s.h)
+            fn()
+            ctx.restore()
+          }
+          ctx.save()
+          ctx.translate(sx, sy + bob)
+          if (wet) {
+            ctx.strokeStyle = "rgba(255,255,255,.55)"
+            ctx.lineWidth = 2 * u
+            ctx.beginPath()
+            ctx.ellipse(0, 0.2 * T, HL + 0.15 * T + Math.sin(time * 2 + s.id) * 3 * u, HW + 0.25 * T, s.h, 0, 6.3)
+            ctx.stroke()
+          } else {
+            ctx.fillStyle = "rgba(0,40,30,.25)"
+            ctx.beginPath()
+            ctx.ellipse(0, 0.3 * T, HL + 0.1 * T, HW + 0.12 * T, s.h, 0, 6.3)
+            ctx.fill()
+          }
+          // 날(러너): 몸체 아래로 길게 뻗은 은색 레일 2개
+          part(0.24 * T, () => {
+            ctx.lineCap = "round"
+            for (const ly of [-0.34 * T, 0.34 * T]) {
+              ctx.strokeStyle = "#5d6e7a"
+              ctx.lineWidth = 6.4 * u
+              ctx.beginPath()
+              ctx.moveTo(-HL, ly)
+              ctx.lineTo(HL + 0.14 * T, ly)
+              ctx.stroke()
+              ctx.strokeStyle = "#e3eaee"
+              ctx.lineWidth = 3.6 * u
+              ctx.stroke()
+            }
+          })
+          // 옆면(두께)
+          part(0.14 * T, () => {
+            ctx.fillStyle = "#9c2a22"
+            rr(-HL, -HW, 2 * HL, 2 * HW, 0.28 * T)
+            ctx.fill()
+          })
+          // 윗면 + 금색 테두리 + 방석
+          part(0, () => {
+            ctx.fillStyle = "#d63c30"
+            rr(-HL, -HW, 2 * HL, 2 * HW, 0.28 * T)
+            ctx.fill()
+            ctx.strokeStyle = "#ffd34d"
+            ctx.lineWidth = 2.4 * u
+            ctx.stroke()
+            ctx.fillStyle = "#f6f1e3"
+            rr(-HL + 0.16 * T, -HW + 0.12 * T, 2 * HL - 0.32 * T, 2 * HW - 0.24 * T, 0.22 * T)
+            ctx.fill()
+            // 앞쪽 표시: 말려 올라간 금색 장식 + 방울
+            ctx.lineCap = "round"
+            ctx.strokeStyle = "#ffd34d"
+            ctx.lineWidth = 3.2 * u
+            ctx.beginPath()
+            ctx.arc(HL - 0.04 * T, 0, HW * 0.62, -1.25, 1.25)
+            ctx.stroke()
+            ctx.fillStyle = "#ffd34d"
+            ctx.strokeStyle = "#b9851a"
+            ctx.lineWidth = 1.6 * u
+            ctx.beginPath()
+            ctx.arc(HL + 0.06 * T, 0, 0.09 * T, 0, 6.3)
+            ctx.fill()
+            ctx.stroke()
+            // 뒤쪽: 눈 쌓인 가장자리
+            ctx.fillStyle = "rgba(255,255,255,.95)"
+            rr(-HL + 0.02 * T, -HW * 0.55, 0.12 * T, HW * 1.1, 0.06 * T)
+            ctx.fill()
+          })
+          if (hint) {
+            ctx.strokeStyle = "rgba(255,255,255,.85)"
+            ctx.lineWidth = 2.4 * u
+            ctx.setLineDash([5 * u, 7 * u])
+            ctx.lineDashOffset = -time * 20
+            ctx.beginPath()
+            ctx.ellipse(0, 0.1 * T, HL + 0.4 * T, HL * 0.8, 0, 0, 6.3)
+            ctx.stroke()
+            ctx.setLineDash([])
+          }
+          ctx.restore()
+        }
+        // 탑승자는 썰매 위에서 조금 작게 그린다 (발 위치 기준)
+        function drawKid(x, y, fn) {
+          const sx = sxv(x),
+            sy = syv(y)
+          ctx.save()
+          ctx.translate(sx, sy)
+          ctx.scale(SLED_KID, SLED_KID)
+          ctx.translate(-sx, -sy)
+          fn()
+          ctx.restore()
+        }
+        const drawPlayerX = () => {
+          if (!P.sl) return drawPlayer()
+          drawKid(P.x, P.y, drawPlayer)
+          if (F.phase !== "idle" && P.tipX != null) {
+            // 축소해서 그린 만큼 낚싯대 끝(줄 시작점)도 같이 줄인다
+            const bx = sxv(P.x),
+              by = syv(P.y)
+            P.tipX = bx + (P.tipX - bx) * SLED_KID
+            P.tipY = by + (P.tipY - by) * SLED_KID
+          }
+        }
+        sledBtn.addEventListener("pointerdown", (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          unlock()
+        })
+        sledBtn.addEventListener("mousedown", (e) => e.preventDefault())
+        sledBtn.addEventListener("click", sledToggle)
+
         /* --- 펫: 뒤에서 졸졸 따라와요 --- */
         const PET = { x: 0, y: 0, hop: 0, vh: 0, ph: 0, init: false, last: "" }
         function petFollow(pt, tx, ty, dt, moving) {
@@ -13309,6 +13898,7 @@
           ctx.restore()
         }
         function update(dt) {
+          sledStep(dt)
           updatePet(dt)
           time += dt
           let ix = joy.x,
@@ -13326,6 +13916,10 @@
               iy = ky / l
             }
           }
+          if (P.sl && !P.drv) {
+            ix = 0
+            iy = 0
+          }
           const mag = Math.min(1, Math.hypot(ix, iy)),
             canMove =
               (F.phase === "idle" ||
@@ -13340,7 +13934,8 @@
           )
             cancelCast()
           const wasSw = P.sw
-          P.sw = isW(P.x, P.y)
+          P.wat = isW(P.x, P.y)
+          P.sw = P.wat && !P.sl // 썰매 위에서는 헤엄치지 않아요
           if (P.sw && !wasSw) {
             splash(P.x, P.y, 12, 0.9)
             sfx.splash(0.6)
@@ -13349,14 +13944,14 @@
             splash(P.x, P.y, 6, 0.6)
           }
           if (
-            P.sw &&
+            (P.sw || (P.sl && P.wat)) &&
             Math.hypot(P.vx, P.vy) > 0.5 &&
             (P.rpT = (P.rpT || 0) - dt) <= 0
           ) {
             P.rpT = 0.4
             ripple(P.x, P.y, 0.5)
           }
-          const pa = !!(P.pull && performance.now() < P.pull.until)
+          const pa = !P.sl && !!(P.pull && performance.now() < P.pull.until)
           let pgx = 0,
             pgy = 0
           if (pa) {
@@ -13370,11 +13965,21 @@
             ? Math.min(1, (P.pr || 0) + dt * 4.5)
             : Math.max(0, (P.pr || 0) - dt * 10)
           P.runT = mag > 0.2 && canMove && !P.sw ? (P.runT || 0) + dt : 0
-          const sp =
-            3.3 *
-            save.gear.speed *
-            (P.sw ? 0.6 * save.gear.swim : 1) *
-            (1 + save.gear.sprint * clamp(P.runT / 1.4, 0, 1))
+          const sp = P.sl
+            ? // 신발·버프·질주 영향은 35%만 받고, 어떤 경우에도 기본 속도의 2.3배를 넘지 않아요
+              Math.min(
+                SLED_CAP,
+                3.3 *
+                  (1 + (save.gear.speed - 1) * 0.35) *
+                  (P.wat
+                    ? SLED_WATER
+                    : SLED_LAND *
+                      (1 + save.gear.sprint * 0.35 * clamp(P.runT / 1.4, 0, 1))),
+              )
+            : 3.3 *
+              save.gear.speed *
+              (P.sw ? 0.6 * save.gear.swim : 1) *
+              (1 + save.gear.sprint * clamp(P.runT / 1.4, 0, 1))
           let tvx = canMove ? ix * sp : 0,
             tvy = canMove ? iy * sp : 0
           if (pl) {
@@ -13385,11 +13990,20 @@
             tvx = (dx / l) * 4.6 * e
             tvy = (dy / l) * 4.6 * e
           }
-          const k = Math.min(1, dt * (pl ? 9 : mag > 0 ? 11 : 14))
+          // 썰매는 눈길처럼 살짝 미끄러져요
+          const k = Math.min(
+            1,
+            dt * (pl ? 9 : P.sl ? (P.bumpT > 0 ? 0.8 : mag > 0 ? 5 : 2.2) : mag > 0 ? 11 : 14),
+          )
           P.vx += (tvx - P.vx) * k
           P.vy += (tvy - P.vy) * k
-          moveAxis(P.vx * dt, 0)
-          moveAxis(0, P.vy * dt)
+          if (P.sl && !P.drv) sledSeat()
+          else {
+            const mv = P.sl ? sledMoveAxis : moveAxis
+            mv(P.vx * dt, 0)
+            mv(0, P.vy * dt)
+            if (P.sl) sledBump(dt)
+          }
           const spd = Math.hypot(P.vx, P.vy)
           if (canMove && F.phase === "idle" && mag > 0.1) {
             P.fx = ix / mag
@@ -13414,7 +14028,7 @@
                 vx: rnd(-0.05, 0.05),
                 vy: rnd(-0.03, 0.03),
                 max: 0.5,
-                col: "#e9dcb8",
+                col: P.sl ? "#ffffff" : "#e9dcb8",
                 sz: rnd(2.5, 4),
                 g: 0,
               })
@@ -15957,7 +16571,11 @@
         function drawItem(it) {
           if (it.k === "G") return drawGrass(it)
           if (it.k === "W") return drawWaterItem(it)
-          if (it.k === "O") return drawOther(it.o)
+          if (it.k === "L") return drawSled(it.s)
+          if (it.k === "O")
+            return it.o.sl
+              ? drawKid(it.o.x, it.o.y, () => drawOther(it.o))
+              : drawOther(it.o)
           if (it.k === "T")
             return drawPetAt(it.id, it.x, it.y, it.hop, it.ph, it.mv)
           if (it.k === "S") return drawStruct(it.s)
@@ -16289,7 +16907,7 @@
             sx = sxv(P.x),
             sy = syv(P.y),
             spd = Math.hypot(P.vx, P.vy),
-            mv = Math.min(1, spd / 1.5),
+            mv = P.sl ? 0 : Math.min(1, spd / 1.5),
             fishing = F.phase !== "idle"
           const bob = fishing
             ? Math.sin(time * 2) * 0.8 * s
@@ -16300,7 +16918,7 @@
             R = 21 * s,
             cy = sy - R - (sw ? -3 : 6) * s - bob * (sw ? 0.3 : 1),
             lean = clamp(P.vx * 0.05, -0.18, 0.18)
-          if (!sw) {
+          if (!sw && !P.sl) {
             ctx.fillStyle = "rgba(0,40,30,.25)"
             ctx.beginPath()
             ctx.ellipse(
@@ -16926,6 +17544,15 @@
             mc.arc(x, y, mmBig ? 4.4 : 5, 0, 6.3)
             mc.fill()
           }
+          for (const s of sledList()) {
+            const x = X(s.x),
+              y = Y(s.y)
+            if (x < 0 || y < 0 || x > S || y > S) continue
+            mc.fillStyle = "#fff"
+            mc.fillRect(x - 5.5, y - 4.5, 11, 9)
+            mc.fillStyle = "#d63c30"
+            mc.fillRect(x - 4, y - 3, 8, 6)
+          }
           for (const k in MP.others) {
             const o = MP.others[k]
             if (o.stale) continue
@@ -17408,9 +18035,9 @@
           if (o > 0.4) {
             ctx.save()
             ctx.translate(0, -o)
-            it.k === 0 ? drawPlayer() : drawItem(it)
+            it.k === 0 ? drawPlayerX() : drawItem(it)
             ctx.restore()
-          } else it.k === 0 ? drawPlayer() : drawItem(it)
+          } else it.k === 0 ? drawPlayerX() : drawItem(it)
         }
         function render() {
           const x0 = Math.floor(cam.x - W / 2 / TS) - 1,
@@ -17482,7 +18109,27 @@
                 key: o.pp.y,
               })
           }
+          for (const s of sledList())
+            items.push({
+              k: "L",
+              s,
+              x: s.x,
+              y: s.y,
+              key: s.y - Math.abs(Math.sin(s.h)) * 0.5 - Math.abs(Math.cos(s.h)) * 0.26 - 0.05,
+            })
           items.push({ k: 0, key: P.y })
+          // 플레이어(탑승자 포함)는 겹치는 썰매보다 항상 위에 그린다
+          {
+            const SLs = items.filter((i) => i.k === "L")
+            for (const it of items) {
+              if (it.k !== 0 && it.k !== "O") continue
+              const p = it.k === 0 ? P : it.o,
+                sid = p.sl
+              for (const L of SLs)
+                if (L.s.id === sid || Math.hypot(p.x - L.s.x, p.y - L.s.y) < SLED_HL + 0.9)
+                  it.key = Math.max(it.key, L.key + 0.001)
+            }
+          }
           items.sort((a, b) => a.key - b.key)
           ctx.fillStyle = "rgb(10,28,86)"
           ctx.fillRect(0, 0, W, H)
@@ -21166,6 +21813,8 @@
             F.t = 0
             R = null
             chargeId = null
+            P.sl = 0
+            P.ss = 0
           } catch (e) {}
         }
         async function onAuth(u) {
@@ -21258,6 +21907,7 @@
               localStorage.setItem(ukey(u.uid), JSON.stringify(save))
             } catch (e) {}
             resetPlayState()
+            trSeenH = -1 // 계정 데이터가 바뀌었으니 보물 안내를 다시 계산
             cloudSaveNow() // 쓰기는 백그라운드로: 응답을 기다리면 새 계정에서 멈출 수 있음
             applySaveUI()
             return true
@@ -21505,6 +22155,10 @@
               )
             },
           ])
+          // 썰매가 서 있는 자리 (빈 썰매는 마지막에 내린 곳에 남아요)
+          const sd = MP.db.ref("world/main/sleds"),
+            onSled = (s) => sledRestSet(s.key, s.val())
+          MP.refs.push([sd, "child_added", onSled], [sd, "child_changed", onSled])
           MP.refs.push([MP.db.ref("events/" + u), "child_added", onEvent])
           MP.refs.push([
             MP.db.ref(".info/connected"),
@@ -21635,6 +22289,8 @@
           o.n = String(v.n || "낚시꾼").slice(0, 10)
           o.a = v.a | 0
           o.pl = v.pl === 0 ? 0 : 1
+          o.sl = v.sl > 0 ? v.sl | 0 : 0
+          o.ss = clamp(v.ss | 0, 0, 3)
           o.eh = typeof v.eh === "string" ? v.eh : ""
           o.es = typeof v.es === "string" ? v.es : ""
           o.er = typeof v.er === "string" ? v.er : ""
@@ -21843,6 +22499,8 @@
             n: dispName(),
             a: save.avatar | 0,
             pl: save.settings.drag === false ? 0 : 1,
+            sl: P.sl | 0,
+            ss: P.ss | 0,
           }
           if (MP.say) {
             d.s = MP.say.t
@@ -21867,6 +22525,8 @@
               d.n,
               d.a,
               d.pl,
+              d.sl,
+              d.ss,
               d.s,
               d.st,
               d.ct,
@@ -21921,6 +22581,8 @@
             c.by = 0
           }
           delete c.ep
+          delete c.sl
+          delete c.ss
           return c
         }
         let mpErrT = 0
@@ -22233,9 +22895,9 @@
             sx = sxv(o.x),
             sy = syv(o.y)
           if (sx < -90 || sx > W + 90 || sy < -90 || sy > H + 150) return
-          const osw = isW(o.x, o.y),
+          const osw = isW(o.x, o.y) && !o.sl,
             R = 20 * s,
-            mv = o.mv || 0,
+            mv = o.sl ? 0 : o.mv || 0,
             fishing = !!o.f,
             wk = o.walk || 0
           const bob = fishing
@@ -22412,7 +23074,7 @@
             }
           }
           if (!osw) {
-            ctx.fillStyle = "rgba(0,40,30,.25)"
+            ctx.fillStyle = o.sl ? "rgba(0,0,0,0)" : "rgba(0,40,30,.25)"
             ctx.beginPath()
             ctx.ellipse(
               sx,
