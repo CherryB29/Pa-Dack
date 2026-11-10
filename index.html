@@ -20848,13 +20848,18 @@
           const t = Date.now() + (MP.off || 0)
           return Math.floor(t / 86400000)
         }
+        attDay.at = (t) => Math.floor(t / 86400000)
+        // 예전 기준(KST 00:00) 날짜 번호: 받은 시각이 없는 예전 기록 판단용
+        const attDayOld = () => Math.floor((Date.now() + (MP.off || 0) + 9 * 3600000) / 86400000)
         const attState = () => {
           const a = (save.att = save.att || { last: -1, streak: 0, total: 0 })
-          const d = attDay()
-          const can = a.last !== d
+          const legacy = a.lastT === undefined
+          const cur = legacy ? attDayOld() : attDay()
+          const last = legacy ? a.last : attDay.at(a.lastT)
+          const can = last !== cur
           // 어제 출석 안 했으면 연속 끊김 (표시용)
-          const streak = a.last === d || a.last === d - 1 ? a.streak : 0
-          return { a, d, can, streak }
+          const streak = last === cur || last === cur - 1 ? a.streak : 0
+          return { a, d: cur, can, streak }
         }
                 function attRender() {
           const { a, can, streak } = attState()
@@ -20924,7 +20929,7 @@
             if (!can) return
             const g = ATT_GOLD[streak % 7]
             a.streak = streak + 1
-            a.last = d
+            a.lastT = Date.now() + (MP.off || 0) // 받은 시각 저장 (날짜는 attDay 로 계산)
             a.total = (a.total || 0) + 1
             save.gold += g
             save.earned = (save.earned || 0) + g
@@ -21676,6 +21681,7 @@
   "병맛": "쩝쩝",
   "좆": "거기",
   "ᄌ같": "거기같",
+  "ㅈ같": "거기같",
   "보지": "거기",
   "찌질이": "귀염둥이",
   "또라이": "한심이",
@@ -21685,10 +21691,10 @@
   "지랄": "어우",
   "ㅈㄹ": "어우",
   "남창": "허허",
-  "애미": "엄마",
-  "에미": "엄마",
-  "애비": "아빠",
-  "에비": "아빠",
+  "애미": "어머니",
+  "에미": "어머니",
+  "애비": "아버지",
+  "에비": "아버지",
   "닥쳐": "살살해",
   "좆까": "살살해",
   "대가리": "머리",
