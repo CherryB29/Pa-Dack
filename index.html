@@ -4838,6 +4838,8 @@
           err: "",
         }
         /* ================= 저장 / 상태 ================= */
+        /* 크리스마스 테마: false 로 바꾸면 눈/전구/장식이 전부 꺼져요 */
+        const XMAS = true
         const SAVE_KEY = "healing-fishing-v3"
         const defaultSave = () => ({
           gold: 0,
@@ -9877,6 +9879,24 @@
                 r = lerp(lr, sr, sa)
                 g = lerp(lg, sg, sa)
                 b = lerp(lb, sb, sa)
+                if (XMAS) {
+                  // 눈 쌓인 땅: 잔디가 군데군데 비쳐 보이고 해변/동굴은 덜 덮여요
+                  const sk =
+                      sm(
+                        0.3,
+                        0.52,
+                        vnoise(gx * 0.2, gy * 0.2, 41) +
+                          (vnoise(gx * 1.3, gy * 1.3, 43) - 0.5) * 0.3,
+                      ) *
+                      (1 - zc) *
+                      (1 - zs * 0.6) *
+                      (1 - sa * 0.7) *
+                      0.94,
+                    sv = 232 + sp * 1.5
+                  r = lerp(r, sv, sk)
+                  g = lerp(g, sv + 6, sk)
+                  b = lerp(b, sv + 14, sk)
+                }
                 const k = 1 + sh * (1 - sa * 0.6) * 0.9
                 r *= k
                 g *= k
@@ -11154,17 +11174,19 @@
           sp: rnd(0.25, 0.5),
         }))
         // 낙엽: 월드에 고정된 좌표. 카메라가 움직여도 땅에 대해 가만히 떠다니고, 화면 밖으로 나가면 반대편에서 다시 생겨요.
-        const leaves = Array.from({ length: 30 }, () => ({
+        const leaves = Array.from({ length: XMAS ? 120 : 30 }, () => ({
           x: 0,
           y: 0,
           z: rnd(0.3, 1.4),
           ph: rnd(0, 6),
           rot: rnd(0, 6),
           vr: rnd(-1.6, 1.6),
-          sz: rnd(3, 5.5),
+          sz: XMAS ? rnd(1.6, 3.6) : rnd(3, 5.5),
           init: false,
-          col: ["#f4a340", "#f07a4a", "#ffd166", "#f2a1b5", "#e8c14a"][
-            Math.floor(Math.random() * 5)
+          col: (XMAS
+            ? ["#ffffff", "#f1f8ff", "#dcefff"]
+            : ["#f4a340", "#f07a4a", "#ffd166", "#f2a1b5", "#e8c14a"])[
+            Math.floor(Math.random() * (XMAS ? 3 : 5))
           ],
         }))
         const afish = []
@@ -11203,8 +11225,14 @@
               l.y = cam.y + rnd(-hh, hh)
               l.init = true
             }
-            l.x += (0.28 + Math.sin(time * 0.7 + l.ph) * 0.22) * dt
-            l.y += (0.1 + Math.cos(time * 0.9 + l.ph) * 0.08) * dt
+            if (XMAS) {
+              // 눈: 천천히 흔들리며 아래로 내려와요
+              l.x += (0.1 + Math.sin(time * 0.8 + l.ph) * 0.25) * dt
+              l.y += (0.5 + l.sz * 0.07) * dt
+            } else {
+              l.x += (0.28 + Math.sin(time * 0.7 + l.ph) * 0.22) * dt
+              l.y += (0.1 + Math.cos(time * 0.9 + l.ph) * 0.08) * dt
+            }
             l.rot += l.vr * dt
             if (l.x > cam.x + hw) l.x -= 2 * hw
             else if (l.x < cam.x - hw) l.x += 2 * hw
@@ -12120,9 +12148,14 @@
             resMsg = F.tg ? msg || e[3] + "! " + g.toLocaleString() + " 골드 획득" : "꽝"
           save.trH = [{ t: Date.now(), m: resMsg, ok: !!F.tg }].concat(save.trH || []).slice(0, 20)
           if (MP.on && MP.user) {
-            const rt = F.tg
-              ? e[3] + " · " + (msg ? msg.replace(/^[^!]*! /, "") : g.toLocaleString() + " 골드")
-              : "꽝!"
+            // 서버 규칙: 40자 이하여야 해서 길면 줄여서 보냄 (넘으면 위치 전송 전체가 거부됨)
+            const rt = (
+              F.tg
+                ? e[3] + " · " + (msg ? msg.replace(/^[^!]*! /, "") : g.toLocaleString() + " 골드")
+                : "꽝!"
+            )
+              .replace(/\(이미 보유, ([\d,]+) 골드로 교환\)/, "(+$1G)")
+              .slice(0, 40)
             MP.trR = { tr: rt, tro: F.tg ? 1 : 0, trt: Date.now() }
             MP.acc = 9
             setTimeout(() => {
@@ -12150,12 +12183,16 @@
             toast("꽝이에요 (남은 상자 " + rem + "개)", 2500)
           }
           persist()
+          if (MP.user && MP.ready)
+            try {
+              cloudSaveNow()
+            } catch (e) {}
           updateHud()
           trPillUI()
-          trAnnounce(tier)
+          trAnnounce(tier, rem)
         }
         /* 보물 발견을 채팅에 알림: 내 채팅엔 남은 개수, 다른 사람에겐 feed 로 전달 */
-        function trAnnounce(tier) {
+        function trAnnounce(tier, rem) {
           if (MP.on && MP.user)
             try {
               MP.db
@@ -13796,6 +13833,341 @@
                 items.push({ k: dc, x, y, key: y + (KEYY[dc] || 0.6) })
             }
         }
+        /* ================= 크리스마스 장식 (XMAS=false 면 호출되지 않음) ================= */
+        const XBULB = ["#ff4d5e", "#ffd34d", "#4fc3ff", "#6dff8a", "#ff8ad8"],
+          XBALL = ["#e8453c", "#ffd34d", "#4aa3ff", "#b86cff", "#ff9a3a"]
+        /* 직렬 전구: 줄을 처지게 걸고 전구가 차례로 반짝여요 */
+        function xLights(ax, ay, bx, by, sag, n, ph, r) {
+          ph |= 0
+          ctx.strokeStyle = "#16301f"
+          ctx.lineWidth = Math.max(1, r * 0.4)
+          ctx.beginPath()
+          ctx.moveTo(ax, ay)
+          ctx.quadraticCurveTo((ax + bx) / 2, (ay + by) / 2 + sag * 2, bx, by)
+          ctx.stroke()
+          for (let i = 0; i < n; i++) {
+            const t = (i + 0.5) / n,
+              x = lerp(ax, bx, t),
+              y = lerp(ay, by, t) + sag * 4 * t * (1 - t),
+              c = XBULB[(i + ph) % 5],
+              lit = 0.5 + 0.5 * Math.sin(time * 3.2 - i * 0.8 + ph)
+            ctx.fillStyle = c
+            if (!lowSpecOn) {
+              ctx.globalAlpha = 0.28 * lit
+              ctx.beginPath()
+              ctx.arc(x, y, r * 2.6, 0, 6.3)
+              ctx.fill()
+            }
+            ctx.globalAlpha = 0.55 + 0.45 * lit
+            ctx.beginPath()
+            ctx.arc(x, y, r, 0, 6.3)
+            ctx.fill()
+          }
+          ctx.globalAlpha = 1
+        }
+        function xStar(x, y, r) {
+          if (!lowSpecOn) {
+            ctx.globalAlpha = 0.3 * (0.75 + 0.25 * Math.sin(time * 3))
+            ctx.fillStyle = "#fff0a0"
+            ctx.beginPath()
+            ctx.arc(x, y, r * 2.2, 0, 6.3)
+            ctx.fill()
+            ctx.globalAlpha = 1
+          }
+          ctx.fillStyle = "#ffd34d"
+          ctx.strokeStyle = "#e0a020"
+          ctx.lineWidth = Math.max(1, r * 0.18)
+          ctx.beginPath()
+          for (let k = 0; k < 10; k++) {
+            const a = -1.5708 + k * 0.6283,
+              d = k % 2 ? r * 0.45 : r
+            ctx.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d)
+          }
+          ctx.closePath()
+          ctx.fill()
+          ctx.stroke()
+        }
+        function xBall(x, y, r, c) {
+          ctx.fillStyle = "#e6b422"
+          ctx.fillRect(x - r * 0.28, y - r * 1.3, r * 0.56, r * 0.45)
+          ctx.fillStyle = c
+          ctx.beginPath()
+          ctx.arc(x, y, r, 0, 6.3)
+          ctx.fill()
+          ctx.fillStyle = "rgba(255,255,255,.55)"
+          ctx.beginPath()
+          ctx.arc(x - r * 0.35, y - r * 0.35, r * 0.3, 0, 6.3)
+          ctx.fill()
+        }
+        function xBow(x, y, r, c = "#e8453c") {
+          ctx.fillStyle = c
+          for (const d of [-1, 1]) {
+            ctx.beginPath()
+            ctx.ellipse(x + d * r * 0.7, y, r * 0.75, r * 0.45, d * 0.4, 0, 6.3)
+            ctx.fill()
+          }
+          ctx.fillStyle = "rgba(0,0,0,.25)"
+          ctx.beginPath()
+          ctx.arc(x, y, r * 0.3, 0, 6.3)
+          ctx.fill()
+        }
+        function xWreath(x, y, r) {
+          ctx.strokeStyle = "#2c7a4a"
+          ctx.lineWidth = r * 0.55
+          ctx.beginPath()
+          ctx.arc(x, y, r, 0, 6.3)
+          ctx.stroke()
+          ctx.fillStyle = "#e8453c"
+          for (let k = 0; k < 4; k++) {
+            const a = k * 1.57 + 0.6
+            ctx.beginPath()
+            ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r, r * 0.17, 0, 6.3)
+            ctx.fill()
+          }
+          xBow(x, y + r * 0.95, r * 0.42)
+        }
+        /* 눈 덩이 (바위/지붕 위) */
+        function xCap(x, y, rx, ry) {
+          ctx.fillStyle = "#c9deef"
+          ctx.beginPath()
+          ctx.ellipse(x, y + ry * 0.25, rx, ry, 0, 0, 6.3)
+          ctx.fill()
+          ctx.fillStyle = "#f6fbff"
+          ctx.beginPath()
+          ctx.ellipse(x, y, rx * 0.96, ry * 0.88, 0, 0, 6.3)
+          ctx.fill()
+        }
+        /* 삼각 지붕 윗부분을 눈으로 덮기: (a 꼭대기, r 오른쪽 아래, l 왼쪽 아래), f 덮는 비율 */
+        function xRoofSnow(ax, ay, rx, ry, lx, ly, f, n) {
+          const x1 = lerp(ax, rx, f),
+            y1 = lerp(ay, ry, f),
+            x2 = lerp(ax, lx, f),
+            y2 = lerp(ay, ly, f)
+          for (let p = 0; p < 2; p++) {
+            const o = p ? 0 : TS * 0.03
+            ctx.fillStyle = p ? "#f6fbff" : "#c4daec"
+            ctx.beginPath()
+            ctx.moveTo(ax, ay)
+            ctx.lineTo(x1, y1 + o)
+            for (let i = 1; i <= n; i++) {
+              const py = lerp(y1, y2, i / n) + o
+              ctx.quadraticCurveTo(
+                lerp(x1, x2, (i - 0.5) / n),
+                py + TS * 0.07,
+                lerp(x1, x2, i / n),
+                py,
+              )
+            }
+            ctx.closePath()
+            ctx.fill()
+          }
+        }
+        /* 둥근 나무: 꼭대기 눈 + (선택) 전구줄과 오너먼트. cr = [[dx, dy, 반지름]] (TS 비율, 첫 번째가 맨 위) */
+        function xCrown(bx, by, sw, hv, cr, lights) {
+          const u = TS,
+            s = TS / 48
+          for (const [dx, dy, r] of cr)
+            xCap(bx + dx * u + sw, by + (dy - r * 0.55) * u, r * u * 0.72, r * u * 0.4)
+          if (!lights) return
+          let x0 = 9,
+            x1 = -9,
+            my = 0
+          for (const [dx, dy, r] of cr) {
+            x0 = Math.min(x0, dx - r)
+            x1 = Math.max(x1, dx + r)
+            my += dy
+          }
+          my /= cr.length
+          const hw = ((x1 - x0) / 2) * u,
+            cx = bx + ((x0 + x1) / 2) * u + sw,
+            cy = by + my * u,
+            ph = (hv * 5) | 0
+          xLights(cx - hw * 0.85, cy - 0.02 * u, cx + hw * 0.85, cy + 0.04 * u, 0.14 * u, 7, ph, 2.1 * s)
+          xLights(cx - hw * 0.5, cy - 0.28 * u, cx + hw * 0.5, cy - 0.26 * u, 0.1 * u, 4, ph + 2, 2 * s)
+          ;[
+            [-0.5, 0.2],
+            [0.46, 0.26],
+            [0.05, -0.12],
+          ].forEach(([ox, oy], i) =>
+            xBall(cx + ox * hw, cy + oy * u, 3.2 * s, XBALL[(((hv * 7) | 0) + i) % 5]),
+          )
+        }
+        /* 소나무 한 단: 눈 + 전구줄 + 모서리 오너먼트 */
+        function xTier(k, ax, ay, bx, w, y0, hv) {
+          const s = TS / 48,
+            ph = (hv * 5) | 0
+          xRoofSnow(ax, ay, bx + w, y0, bx - w, y0, 0.5 - k * 0.04, 3)
+          xLights(
+            lerp(ax, bx - w, 0.8),
+            lerp(ay, y0, 0.8),
+            lerp(ax, bx + w, 0.8),
+            lerp(ay, y0, 0.8),
+            TS * 0.06,
+            5 - k,
+            ph + k,
+            2.1 * s,
+          )
+          const r = 3.4 * s * (1 - k * 0.1)
+          xBall(bx - w * 0.68, y0 - TS * 0.02, r, XBALL[(ph + k * 2) % 5])
+          xBall(bx + w * 0.6, y0 - TS * 0.03, r, XBALL[(ph + k * 2 + 1) % 5])
+        }
+        function xPalm(tx, ty, hv) {
+          const s = TS / 48,
+            ph = (hv * 5) | 0
+          xLights(tx - 0.42 * TS, ty + 0.1 * TS, tx + 0.42 * TS, ty + 0.14 * TS, 0.13 * TS, 6, ph, 2 * s)
+          xBall(tx - 3 * s, ty + 3 * s, 3.6 * s, XBALL[ph % 5])
+          xBall(tx + 3 * s, ty + 4 * s, 3.6 * s, XBALL[(ph + 2) % 5])
+          xCap(tx, ty - 0.02 * TS, 0.12 * TS, 0.04 * TS)
+        }
+        function xSnowman(bx, by, hv) {
+          const s = TS / 48,
+            u = TS
+          ctx.fillStyle = "rgba(0,50,30,.2)"
+          ctx.beginPath()
+          ctx.ellipse(bx + 2 * s, by + 1 * s, 0.24 * u, 0.07 * u, 0, 0, 6.3)
+          ctx.fill()
+          ctx.strokeStyle = "#6a4a2a"
+          ctx.lineWidth = 1.6 * s
+          ctx.lineCap = "round"
+          ctx.beginPath()
+          ctx.moveTo(bx - 0.12 * u, by - 0.36 * u)
+          ctx.lineTo(bx - 0.3 * u, by - 0.5 * u)
+          ctx.moveTo(bx + 0.12 * u, by - 0.36 * u)
+          ctx.lineTo(bx + 0.3 * u, by - 0.46 * u)
+          ctx.stroke()
+          ctx.lineCap = "butt"
+          ;[
+            [-0.14, 0.17],
+            [-0.36, 0.13],
+            [-0.55, 0.1],
+          ].forEach(([dy, r]) => {
+            ctx.fillStyle = "#cfe0ee"
+            ctx.beginPath()
+            ctx.arc(bx, by + dy * u + r * u * 0.12, r * u, 0, 6.3)
+            ctx.fill()
+            ctx.fillStyle = "#f8fcff"
+            ctx.beginPath()
+            ctx.arc(bx - r * u * 0.1, by + dy * u, r * u * 0.92, 0, 6.3)
+            ctx.fill()
+          })
+          ctx.fillStyle = hv > 0.5 ? "#e8453c" : "#2f9a5a"
+          rr(bx - 0.11 * u, by - 0.47 * u, 0.22 * u, 0.05 * u, 2 * s)
+          ctx.fill()
+          rr(bx + 0.04 * u, by - 0.44 * u, 0.05 * u, 0.13 * u, 2 * s)
+          ctx.fill()
+          ctx.fillStyle = "#2d2d3a"
+          ctx.beginPath()
+          ctx.arc(bx - 0.035 * u, by - 0.57 * u, 1.2 * s, 0, 6.3)
+          ctx.arc(bx + 0.035 * u, by - 0.57 * u, 1.2 * s, 0, 6.3)
+          ctx.arc(bx, by - 0.38 * u, 1.1 * s, 0, 6.3)
+          ctx.arc(bx, by - 0.3 * u, 1.1 * s, 0, 6.3)
+          ctx.fill()
+          ctx.fillStyle = "#ff8a2a"
+          ctx.beginPath()
+          ctx.moveTo(bx, by - 0.55 * u)
+          ctx.lineTo(bx + 0.1 * u, by - 0.52 * u)
+          ctx.lineTo(bx, by - 0.5 * u)
+          ctx.fill()
+          ctx.fillStyle = "#2d2d3a"
+          rr(bx - 0.075 * u, by - 0.76 * u, 0.15 * u, 0.12 * u, 2 * s)
+          ctx.fill()
+          rr(bx - 0.12 * u, by - 0.65 * u, 0.24 * u, 0.035 * u, 1.5 * s)
+          ctx.fill()
+          ctx.fillStyle = "#e8453c"
+          ctx.fillRect(bx - 0.075 * u, by - 0.675 * u, 0.15 * u, 0.025 * u)
+        }
+        /* 상자/통은 선물 포장으로 */
+        function xGift(x, y, w, h, hv) {
+          const q = (hv * 13) % 1,
+            c = q > 0.66 ? "#e8453c" : q > 0.33 ? "#2f9a5a" : "#ffd34d"
+          ctx.fillStyle = c
+          ctx.fillRect(x + w * 0.43, y, w * 0.14, h)
+          ctx.fillRect(x, y + h * 0.38, w, h * 0.14)
+          xBow(x + w * 0.5, y - TS * 0.01, TS * 0.07, c)
+        }
+        /* 구조물 장식 */
+        function xStruct(S, X, Y, u, s) {
+          const ph = S.seed | 0
+          switch (S.t) {
+            case "cabin": {
+              const w = S.w * u,
+                ax = X + w * 0.5,
+                ay = Y - 2.3 * u,
+                lx = X - 0.12 * u,
+                rx = X + w + 0.12 * u,
+                ey = Y - 1.02 * u
+              xRoofSnow(ax, ay, rx, ey, lx, ey, 0.88, 4)
+              xLights(lx + 0.02 * u, ey, ax, ay + 0.03 * u, 0, 6, ph, 2.2 * s)
+              xLights(ax, ay + 0.03 * u, rx - 0.02 * u, ey, 0, 6, ph + 3, 2.2 * s)
+              xLights(X + 0.14 * u, ey + 0.05 * u, X + w - 0.14 * u, ey + 0.05 * u, 0.12 * u, 8, ph + 2, 2 * s)
+              xWreath(ax, Y - 0.55 * u, 0.11 * u)
+              break
+            }
+            case "tent": {
+              const w = S.w * u,
+                ax = X + w / 2,
+                ay = Y - 1.45 * u,
+                lx = X + 0.05 * u,
+                rx = X + w - 0.05 * u,
+                by = Y - 0.05 * u
+              xRoofSnow(ax, ay, rx, by, lx, by, 0.4, 3)
+              xLights(lx, by, ax, ay + 0.04 * u, 0, 5, ph, 2 * s)
+              xLights(ax, ay + 0.04 * u, rx, by, 0, 5, ph + 2, 2 * s)
+              break
+            }
+            case "lighthouse": {
+              const cx = X + (S.w * u) / 2,
+                ty = Y - 3.5 * u
+              xRoofSnow(cx, ty - 1.0 * u, cx + 0.4 * u, ty - 0.55 * u, cx - 0.4 * u, ty - 0.55 * u, 0.6, 3)
+              xStar(cx, ty - 1.12 * u, 0.12 * u)
+              for (const h of [1.0, 1.9, 2.8]) {
+                const hw = (0.55 - 0.05 * ((h - 0.35) / 0.78)) * u
+                xLights(cx - hw, Y - h * u, cx + hw, Y - h * u + 0.06 * u, 0.12 * u, 7, ph + h * 3, 2 * s)
+              }
+              break
+            }
+            case "windmill": {
+              const cx = X + (S.w * u) / 2
+              xRoofSnow(cx, Y - 2.5 * u, cx + 0.62 * u, Y - 1.78 * u, cx - 0.62 * u, Y - 1.78 * u, 0.6, 3)
+              for (const h of [0.85, 1.4]) {
+                const hw = (0.78 - (0.28 * (h - 0.05)) / 1.75) * u
+                xLights(cx - hw, Y - h * u, cx + hw, Y - h * u + 0.05 * u, 0.1 * u, 7, ph + h * 3, 2 * s)
+              }
+              break
+            }
+            case "well": {
+              const cx = X + u / 2
+              xRoofSnow(cx, Y - 1.4 * u, cx + 0.46 * u, Y - 0.98 * u, cx - 0.46 * u, Y - 0.98 * u, 0.7, 3)
+              xLights(cx - 0.4 * u, Y - 0.97 * u, cx + 0.4 * u, Y - 0.97 * u, 0.08 * u, 5, ph, 1.9 * s)
+              break
+            }
+            case "scare": {
+              const cx = sxv(S.cx),
+                cy = syv(S.cy) + 0.35 * u
+              ctx.fillStyle = "#e8453c"
+              rr(cx - 0.14 * u, cy - 0.8 * u, 0.28 * u, 0.05 * u, 2 * s)
+              ctx.fill()
+              ctx.beginPath()
+              ctx.moveTo(cx - 0.14 * u, cy - 1.0 * u)
+              ctx.quadraticCurveTo(cx - 0.02 * u, cy - 1.42 * u, cx + 0.16 * u, cy - 1.2 * u)
+              ctx.lineTo(cx + 0.14 * u, cy - 1.0 * u)
+              ctx.closePath()
+              ctx.fillStyle = "#d8392f"
+              ctx.fill()
+              ctx.fillStyle = "#fff"
+              rr(cx - 0.16 * u, cy - 1.04 * u, 0.32 * u, 0.06 * u, 3 * s)
+              ctx.fill()
+              ctx.beginPath()
+              ctx.arc(cx + 0.16 * u, cy - 1.2 * u, 0.045 * u, 0, 6.3)
+              ctx.fill()
+              break
+            }
+            case "parasol": {
+              xCap(X + u / 2, Y - 1.14 * u, 0.4 * u, 0.08 * u)
+              break
+            }
+          }
+        }
         /* ---- 확장 데코 (7~26) ---- */
         function drawDec2(it) {
           const s = TS / 48,
@@ -13835,6 +14207,7 @@
                 ctx.lineTo(bx - w, y0)
                 ctx.closePath()
                 ctx.fill()
+                if (XMAS) xTier(k, bx + sw * (k + 1) * 0.6, y0 - h, bx, w, y0, hv)
               }
               ctx.fillStyle = "rgba(255,255,255,.14)"
               ctx.beginPath()
@@ -13843,6 +14216,7 @@
               ctx.lineTo(bx - TS * 0.2, by - TS * 0.74)
               ctx.closePath()
               ctx.fill()
+              if (XMAS) xStar(bx + sw * 1.8, by - 1.42 * TS, 0.1 * TS)
               break
             }
             case 8: {
@@ -13871,6 +14245,8 @@
                   k === 3 ? "#a8dd7a" : "#8fcf6a",
                 ),
               )
+              if (XMAS)
+                xCrown(bx, by, sw, hv, [[0.04, -1.1, 0.24], [-0.22, -0.68, 0.27], [0.22, -0.7, 0.27]], hv > 0.4)
               break
             }
             case 9: {
@@ -13878,9 +14254,24 @@
               ctx.fillStyle = "#7a5030"
               rr(bx - TS * 0.07, by - TS * 0.42, TS * 0.14, TS * 0.44, 3 * s)
               ctx.fill()
-              const c1 =
-                  hv > 0.6 ? "#e8892f" : hv > 0.3 ? "#d9583a" : "#f0b43a",
-                c2 = hv > 0.6 ? "#f4aa55" : hv > 0.3 ? "#ee7a58" : "#f8d070"
+              const c1 = XMAS
+                  ? hv > 0.5
+                    ? "#2c7d52"
+                    : "#35905e"
+                  : hv > 0.6
+                    ? "#e8892f"
+                    : hv > 0.3
+                      ? "#d9583a"
+                      : "#f0b43a",
+                c2 = XMAS
+                  ? hv > 0.5
+                    ? "#46a874"
+                    : "#52b882"
+                  : hv > 0.6
+                    ? "#f4aa55"
+                    : hv > 0.3
+                      ? "#ee7a58"
+                      : "#f8d070"
               ;[
                 [0, -0.78, 0.5],
                 [-0.3, -0.52, 0.38],
@@ -13889,6 +14280,8 @@
                 circ(bx + o[0] * TS + sw, by + o[1] * TS, o[2] * TS, c1),
               )
               circ(bx - 0.12 * TS + sw, by - 0.9 * TS, 0.25 * TS, c2)
+              if (XMAS)
+                xCrown(bx, by, sw, hv, [[0, -0.78, 0.5], [-0.3, -0.52, 0.38], [0.3, -0.52, 0.38]], hv > 0.3)
               break
             }
             case 10: {
@@ -13901,14 +14294,16 @@
                 [-0.32, -0.5, 0.4],
                 [0.32, -0.5, 0.4],
               ].forEach((o) =>
-                circ(bx + o[0] * TS + sw, by + o[1] * TS, o[2] * TS, "#f6a2bd"),
+                circ(bx + o[0] * TS + sw, by + o[1] * TS, o[2] * TS, XMAS ? "#dde9f5" : "#f6a2bd"),
               )
               ;[
                 [-0.14, -0.9, 0.26],
                 [0.2, -0.7, 0.2],
               ].forEach((o) =>
-                circ(bx + o[0] * TS + sw, by + o[1] * TS, o[2] * TS, "#fcd0de"),
+                circ(bx + o[0] * TS + sw, by + o[1] * TS, o[2] * TS, XMAS ? "#f7fbff" : "#fcd0de"),
               )
+              if (XMAS)
+                xCrown(bx, by, sw, hv, [[0, -0.78, 0.52], [-0.32, -0.5, 0.4], [0.32, -0.5, 0.4]], hv > 0.4)
               ctx.fillStyle = "#fff"
               for (let k = 0; k < 3; k++) {
                 const ph = (time * 0.25 + hash(it.x, it.y, 50 + k)) % 1
@@ -13970,6 +14365,7 @@
               }
               circ(tx - 3 * s, ty + 3 * s, 3.5 * s, "#8a5a30")
               circ(tx + 3 * s, ty + 4 * s, 3.5 * s, "#8a5a30")
+              if (XMAS) xPalm(tx, ty, hv)
               ctx.lineCap = "butt"
               break
             }
@@ -14036,6 +14432,7 @@
                 6.3,
               )
               ctx.fill()
+              if (XMAS) xCap(bx - TS * 0.02, by - TS * 0.29, TS * 0.26, TS * 0.055)
               break
             }
             case 14: {
@@ -14060,6 +14457,7 @@
               ctx.moveTo(bx + TS * 0.12, by - TS * 0.4)
               ctx.lineTo(bx + TS * 0.12, by)
               ctx.stroke()
+              if (XMAS) xCap(bx, by - TS * 0.4, TS * 0.28, TS * 0.07)
               break
             }
             case 15: {
@@ -14092,6 +14490,7 @@
                 6.3,
               )
               ctx.fill()
+              if (XMAS) xCap(bx - TS * 0.05, by - TS * 0.5, TS * 0.3, TS * 0.12)
               break
             }
             case 16: {
@@ -14169,6 +14568,10 @@
                 ctx.ellipse(bx, by - TS * 0.5, TS * 0.2, TS * 0.07, 0, 0, 6.3)
                 ctx.fill()
               }
+              if (XMAS) {
+                if (hv > 0.5) xGift(bx - TS * 0.24, by - TS * 0.44, TS * 0.48, TS * 0.46, hv)
+                else xGift(bx - TS * 0.2, by - TS * 0.5, TS * 0.4, TS * 0.52, hv)
+              }
               break
             }
             case 19: {
@@ -14192,6 +14595,10 @@
               break
             }
             case 20: {
+              if (XMAS) {
+                xSnowman(bx, by, hv)
+                break
+              }
               sh(TS * 0.26, TS * 0.08)
               ctx.fillStyle = "#ee8a2a"
               ctx.beginPath()
@@ -14216,7 +14623,7 @@
               ctx.stroke()
               const hx = bx + sw,
                 hy = by - TS * 0.86
-              ctx.fillStyle = "#ffc83d"
+              ctx.fillStyle = XMAS ? "#e23a45" : "#ffc83d"
               for (let k = 0; k < 10; k++) {
                 const a = k * 0.628
                 ctx.beginPath()
@@ -14231,7 +14638,7 @@
                 )
                 ctx.fill()
               }
-              circ(hx, hy, TS * 0.08, "#7a4a20")
+              circ(hx, hy, TS * 0.08, XMAS ? "#ffd34d" : "#7a4a20")
               break
             }
             case 22: {
@@ -14268,6 +14675,10 @@
                 by - h * 0.7,
               )
               ctx.stroke()
+              if (XMAS) {
+                xWreath(bx, by - h * 0.5, TS * 0.1)
+                xCap(bx, by - h - TS * 0.07, TS * 0.17, TS * 0.045)
+              }
               break
             }
             case 24: {
@@ -14294,6 +14705,13 @@
               ctx.arc(bx, by - TS * 0.8, TS * 1.1, 0, 6.3)
               ctx.fill()
               circ(bx, by - TS * 0.82, TS * 0.075, "#fff0b0")
+              if (XMAS) {
+                // 사탕 지팡이 무늬 + 리본
+                ctx.fillStyle = "#e8453c"
+                for (let k = 0; k < 5; k++)
+                  ctx.fillRect(bx - 2 * s, by - TS * (0.12 + k * 0.17), 4 * s, TS * 0.07)
+                xBow(bx, by - TS * 0.7, TS * 0.075)
+              }
               break
             }
             case 25: {
@@ -14319,6 +14737,10 @@
                 3 * s,
                 TS * 0.24,
               )
+              if (XMAS) {
+                xCap(bx, by - TS * 0.5, TS * 0.34, TS * 0.045)
+                xCap(bx, by - TS * 0.28, TS * 0.3, TS * 0.04)
+              }
               break
             }
             case 26: {
@@ -14340,6 +14762,7 @@
               ctx.moveTo(bx - TS * 0.18, by - TS * 0.64)
               ctx.lineTo(bx + TS * 0.14, by - TS * 0.64)
               ctx.stroke()
+              if (XMAS) xCap(bx - TS * 0.04, by - TS * 0.75, TS * 0.22, TS * 0.045)
               break
             }
             case 27: {
@@ -15125,6 +15548,7 @@
               break
             }
           }
+          if (XMAS) xStruct(S, X, Y, u, s)
         }
         /* ---- 바닥 구조물 (부두 / 밭 / 폐허 바닥 / 보트) ---- */
         function drawFlat(x0, y0, x1, y1, row) {
@@ -15577,7 +16001,7 @@
                       : hv > 0.4
                         ? "#69c773"
                         : "#5ab868"
-              ctx.fillStyle = c1
+              ctx.fillStyle = XMAS ? (bl ? "#dfeaf5" : "#2f8a58") : c1
               ;[
                 [0, -0.78, 0.52],
                 [-0.3, -0.52, 0.4],
@@ -15587,10 +16011,12 @@
                 ctx.arc(bx + o[0] * TS + sw, by + o[1] * TS, o[2] * TS, 0, 6.3)
                 ctx.fill()
               })
-              ctx.fillStyle = c2
+              ctx.fillStyle = XMAS ? (bl ? "#f6fbff" : "#4db27a") : c2
               ctx.beginPath()
               ctx.arc(bx - 0.13 * TS + sw, by - 0.9 * TS, 0.26 * TS, 0, 6.3)
               ctx.fill()
+              if (XMAS)
+                xCrown(bx, by, sw, hv, [[0, -0.78, 0.52], [-0.3, -0.52, 0.4], [0.3, -0.52, 0.4]], hv > 0.35)
               if (bl) {
                 for (let k = 0; k < 3; k++) {
                   const ph = (time * 0.28 + hv * 3 + k / 3) % 1
@@ -15629,6 +16055,8 @@
                 ctx.arc(bx + o[0] * TS, by + o[1] * TS, o[2] * TS, 0, 6.3)
                 ctx.fill()
               })
+              if (XMAS)
+                xCrown(bx, by, 0, hv, [[-0.15, -0.18, 0.22], [0.15, -0.15, 0.2], [0, -0.3, 0.24]], false)
               if (hv > 0.5) {
                 ctx.fillStyle = "#ff5a6a"
                 ;[
@@ -15674,6 +16102,7 @@
                 6.3,
               )
               ctx.fill()
+              if (XMAS) xCap(bx - TS * 0.02, by - TS * 0.34, TS * 0.22, TS * 0.1)
               break
             }
             case 4: {
@@ -16201,6 +16630,14 @@
             const px = sxv(l.x),
               py = syv(l.y) - (l.z + Math.sin(time * 1.5 + l.ph) * 0.05) * TS
             if (px < -20 || px > W + 20 || py < -20 || py > H + 20) continue
+            if (XMAS) {
+              ctx.globalAlpha = 0.9
+              ctx.fillStyle = l.col
+              ctx.beginPath()
+              ctx.arc(px, py, ((l.sz * TS) / 48) * 0.75, 0, 6.3)
+              ctx.fill()
+              continue
+            }
             ctx.save()
             ctx.translate(px, py)
             ctx.rotate(l.rot)
@@ -16365,6 +16802,11 @@
                 r = bc[0] * 0.82
                 gg = bc[1] * 0.85
                 b = bc[2] * 0.8
+                if (XMAS) {
+                  r = lerp(r, 236, 0.55)
+                  gg = lerp(gg, 242, 0.55)
+                  b = lerp(b, 250, 0.55)
+                }
                 if (hh > 0.44) {
                   const q = clamp((hh - 0.44) * 3, 0, 1)
                   r = lerp(r, 120, q)
@@ -16384,8 +16826,8 @@
                     1: [44, 140, 70],
                     7: [30, 110, 80],
                     8: [110, 170, 80],
-                    9: [220, 120, 50],
-                    10: [240, 150, 180],
+                    9: XMAS ? [44, 120, 80] : [220, 120, 50],
+                    10: XMAS ? [225, 236, 246] : [240, 150, 180],
                     11: [60, 150, 80],
                   }[dc]
                   r = lerp(r, cc[0], 0.7)
@@ -20960,7 +21402,8 @@
             renderQ()
           } catch (e) {}
         }
-        let cloudT = 0
+        let cloudT = 0,
+          saveErrT = -1e9
         function cloudDirty() {
           if (!MP.on || !MP.user || !MP.ready) return
           clearTimeout(cloudT)
@@ -20973,7 +21416,16 @@
           const pr = MP.db
             .ref("users/" + u + "/save")
             .set(JSON.parse(JSON.stringify(save)))
-            .catch((e) => console.warn(e))
+            .catch((e) => {
+              console.warn(e)
+              if (
+                /permission/i.test(String((e && (e.code || e.message)) || "")) &&
+                performance.now() - saveErrT > 30000
+              ) {
+                saveErrT = performance.now()
+                toast("서버 규칙 때문에 저장되지 않아요 · 규칙을 갱신해 주세요", 3200)
+              }
+            })
           MP.db
             .ref("profiles/" + u)
             .set({ nick: dispName(), avatar: save.avatar || 0 })
@@ -21476,6 +21928,13 @@
           const code = String((e && (e.code || e.message)) || "")
           if (/permission/i.test(code)) {
             MP.err = "서버 규칙이 거부했어요"
+            if (MP.trR) {
+              // 보물 문구 때문에 거부됐을 수 있어요: 문구만 빼고 다시 보내요
+              MP.trR = null
+              MP.ls = null
+              MP.acc = 9
+              return
+            }
             if (!MP.compat) {
               MP.compat = 1
               MP.ls = null
