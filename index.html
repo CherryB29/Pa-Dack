@@ -11189,14 +11189,14 @@
           sp: rnd(0.25, 0.5),
         }))
         // 낙엽: 월드에 고정된 좌표. 카메라가 움직여도 땅에 대해 가만히 떠다니고, 화면 밖으로 나가면 반대편에서 다시 생겨요.
-        const leaves = Array.from({ length: XMAS ? 120 : 30 }, () => ({
+        const leaves = Array.from({ length: XMAS ? (lowSpecOn ? 110 : 190) : 30 }, () => ({
           x: 0,
           y: 0,
           z: rnd(0.3, 1.4),
           ph: rnd(0, 6),
           rot: rnd(0, 6),
           vr: rnd(-1.6, 1.6),
-          sz: XMAS ? rnd(1.6, 3.6) : rnd(3, 5.5),
+          sz: XMAS ? rnd(1.4, 4.2) : rnd(3, 5.5),
           init: false,
           col: (XMAS
             ? ["#ffffff", "#f1f8ff", "#dcefff"]
@@ -11242,8 +11242,10 @@
             }
             if (XMAS) {
               // 눈: 천천히 흔들리며 아래로 내려와요
-              l.x += (0.1 + Math.sin(time * 0.8 + l.ph) * 0.25) * dt
-              l.y += (0.5 + l.sz * 0.07) * dt
+              // 가끔 세게 부는 바람(돌풍) + 큰 눈송이일수록 빨리, 천천히 흔들리며 내려와요
+              const gust = Math.pow(Math.max(0, Math.sin(time * 0.21)), 3) * (0.5 + l.sz * 0.12)
+              l.x += (0.08 + Math.sin(time * 0.8 + l.ph) * 0.22 + gust) * dt
+              l.y += (0.34 + l.sz * 0.1 + Math.sin(time * 1.3 + l.ph * 2) * 0.05) * dt
             } else {
               l.x += (0.28 + Math.sin(time * 0.7 + l.ph) * 0.22) * dt
               l.y += (0.1 + Math.cos(time * 0.9 + l.ph) * 0.08) * dt
@@ -13476,6 +13478,37 @@
             P.vy *= SLED_CAP / sp
           }
         }
+        /* 빠른 썰매로 걸어 다니는 사람을 치면 그 사람이 날아가요 */
+        const SLED_HITV = 4.4,
+          sledHitCd = {}
+        function sledRam() {
+          if (!P.drv) return
+          const sp = Math.hypot(P.vx, P.vy),
+            me = sledList()[P.sl - 1]
+          if (sp < SLED_HITV || !me) return
+          const c = Math.cos(me.h),
+            n = Math.sin(me.h),
+            now = performance.now()
+          for (const k in MP.others) {
+            const o = MP.others[k]
+            if (o.stale || o.sl || o.pl === 0 || now - (sledHitCd[k] || 0) < 1500) continue
+            const dx = o.x - me.x,
+              dy = o.y - me.y
+            if (Math.abs(dx * c + dy * n) > SLED_HL + 0.3 || Math.abs(-dx * n + dy * c) > SLED_HW + 0.3) continue
+            sledHitCd[k] = now
+            const al = Math.hypot(dx, dy) || 1
+            let ux = (P.vx / sp) * 0.75 + (dx / al) * 0.25,
+              uy = (P.vy / sp) * 0.75 + (dy / al) * 0.25
+            const ul = Math.hypot(ux, uy) || 1,
+              pw = 10 + sp * 0.9
+            sendEvent(k, "launch", { vx: +((ux / ul) * pw).toFixed(2), vy: +((uy / ul) * pw).toFixed(2) })
+            P.vx *= 0.82
+            P.vy *= 0.82
+            sledSnow(o.x, o.y, 10)
+            shake = Math.max(shake, 0.3)
+            vib(25)
+          }
+        }
         function sledRestSet(key, v) {
           const id = +key
           if (!v || !isFinite(v.x) || !isFinite(v.y) || !(id >= 1 && id <= SLED_N)) return
@@ -13626,12 +13659,6 @@
           sfx.tick && sfx.tick()
           vib(15)
           MP.acc = 9
-          toast(
-            seat === 0
-              ? "썰매를 운전해요! 땅에서 1.5배 빨라요"
-              : "썰매에 같이 탔어요 (" + (used.length + 1) + "/4)",
-            2200,
-          )
         }
         function sledSaveRest(s) {
           if (MP.on && MP.user && MP.db)
@@ -13767,6 +13794,40 @@
             ctx.fillStyle = "rgba(255,255,255,.95)"
             rr(-HL + 0.02 * T, -HW * 0.55, 0.12 * T, HW * 1.1, 0.06 * T)
             ctx.fill()
+            if (XMAS) {
+              // 테두리를 따라 반짝이는 전구
+              const n = 14
+              for (let i = 0; i < n; i++) {
+                const t = i / n,
+                  px = -HL + 0.1 * T + (t < 0.5 ? t * 2 : 2 - t * 2) * (2 * HL - 0.2 * T),
+                  py = t < 0.5 ? -HW + 0.03 * T : HW - 0.03 * T,
+                  lit = 0.5 + 0.5 * Math.sin(time * 3.4 - i * 0.9 + s.id)
+                ctx.globalAlpha = 0.35 * lit
+                ctx.fillStyle = XBULB[i % 5]
+                ctx.beginPath()
+                ctx.arc(px, py, 0.075 * T, 0, 6.3)
+                ctx.fill()
+                ctx.globalAlpha = 0.6 + 0.4 * lit
+                ctx.beginPath()
+                ctx.arc(px, py, 0.036 * T, 0, 6.3)
+                ctx.fill()
+              }
+              ctx.globalAlpha = 1
+              // 뒷좌석 쪽 호랑가시나무와 리본
+              const hx = -HL + 0.32 * T
+              ctx.fillStyle = "#2f8a58"
+              for (const a of [-0.9, 0.2, 1.4]) {
+                ctx.beginPath()
+                ctx.ellipse(hx + Math.cos(a) * 0.1 * T, Math.sin(a) * 0.1 * T, 0.11 * T, 0.045 * T, a, 0, 6.3)
+                ctx.fill()
+              }
+              ctx.fillStyle = "#e8272f"
+              for (const [bx2, by2] of [[0, -0.02], [0.05, 0.05], [-0.04, 0.05]]) {
+                ctx.beginPath()
+                ctx.arc(hx + bx2 * T, by2 * T, 0.03 * T, 0, 6.3)
+                ctx.fill()
+              }
+            }
           })
           if (hint) {
             ctx.strokeStyle = "rgba(255,255,255,.85)"
@@ -13791,7 +13852,22 @@
           fn()
           ctx.restore()
         }
+        const xAirShadow = (x, y, lf) => {
+          const u = TS / 48
+          ctx.fillStyle = "rgba(0,40,30,.25)"
+          ctx.beginPath()
+          ctx.ellipse(sxv(x), syv(y), Math.max(6, 13 * u * (1 - lf / TS / 3)), 5 * u * (1 - lf / TS / 4), 0, 0, 6.283)
+          ctx.fill()
+        }
         const drawPlayerX = () => {
+          if (!P.sl && P.lf > 1) {
+            xAirShadow(P.x, P.y, P.lf)
+            ctx.save()
+            ctx.translate(0, -P.lf)
+            drawPlayer()
+            ctx.restore()
+            return
+          }
           if (!P.sl) return drawPlayer()
           drawKid(P.x, P.y, drawPlayer)
           if (F.phase !== "idle" && P.tipX != null) {
@@ -13920,6 +13996,16 @@
             ix = 0
             iy = 0
           }
+          P.launchT = Math.max(0, (P.launchT || 0) - dt)
+          if (P.launchT > 0) {
+            ix = 0
+            iy = 0
+          }
+          {
+            const fs = Math.hypot(P.vx, P.vy),
+              tg = !P.sl && fs > 6 ? Math.min(1, (fs - 6) / 6) * 0.9 * TS : 0
+            P.lf = lerp(P.lf || 0, tg, Math.min(1, dt * 12))
+          }
           const mag = Math.min(1, Math.hypot(ix, iy)),
             canMove =
               (F.phase === "idle" ||
@@ -13993,7 +14079,7 @@
           // 썰매는 눈길처럼 살짝 미끄러져요
           const k = Math.min(
             1,
-            dt * (pl ? 9 : P.sl ? (P.bumpT > 0 ? 0.8 : mag > 0 ? 5 : 2.2) : mag > 0 ? 11 : 14),
+            dt * (P.launchT > 0 ? 2 : pl ? 9 : P.sl ? (P.bumpT > 0 ? 0.8 : mag > 0 ? 5 : 2.2) : mag > 0 ? 11 : 14),
           )
           P.vx += (tvx - P.vx) * k
           P.vy += (tvy - P.vy) * k
@@ -14002,7 +14088,10 @@
             const mv = P.sl ? sledMoveAxis : moveAxis
             mv(P.vx * dt, 0)
             mv(0, P.vy * dt)
-            if (P.sl) sledBump(dt)
+            if (P.sl) {
+              sledBump(dt)
+              sledRam()
+            }
           }
           const spd = Math.hypot(P.vx, P.vy)
           if (canMove && F.phase === "idle" && mag > 0.1) {
@@ -14446,6 +14535,56 @@
               if (dc && dc !== 6 && dc !== 23 && dc !== 34)
                 items.push({ k: dc, x, y, key: y + (KEYY[dc] || 0.6) })
             }
+        }
+        /* ================= 크리스마스 연출 v2 (XMAS=false 면 전부 꺼져요) ================= */
+        /* 땅 위에서 반짝이는 눈 결정 */
+        function xGlints(x0, y0, x1, y1) {
+          if (!XMAS || lowSpecOn) return
+          const u = TS / 48
+          ctx.save()
+          ctx.lineCap = "round"
+          for (let y = Math.max(0, y0); y < Math.min(MH, y1 + 1); y++)
+            for (let x = Math.max(0, x0); x < Math.min(MW, x1 + 1); x++) {
+              const h = hash(x, y, 77)
+              if (h > 0.085 || SOL[y * MW + x] || isW(x + 0.5, y + 0.5)) continue
+              const a = Math.sin(time * 1.5 + h * 90)
+              if (a < 0.55) continue
+              const k = (a - 0.55) / 0.45,
+                px = sxv(x + hash(x, y, 78)),
+                py = syv(y + hash(x, y, 79)),
+                r = (1.8 + 3.2 * k) * u
+              ctx.globalAlpha = 0.35 * k
+              ctx.fillStyle = "#cfe9ff"
+              ctx.beginPath()
+              ctx.arc(px, py, r * 0.9, 0, 6.3)
+              ctx.fill()
+              ctx.globalAlpha = 0.9 * k
+              ctx.strokeStyle = "#ffffff"
+              ctx.lineWidth = 1.2 * u
+              ctx.beginPath()
+              ctx.moveTo(px - r, py)
+              ctx.lineTo(px + r, py)
+              ctx.moveTo(px, py - r * 1.25)
+              ctx.lineTo(px, py + r * 1.25)
+              ctx.stroke()
+            }
+          ctx.restore()
+        }
+        /* 화면 가장자리에 차가운 서리빛 (눈 내리는 겨울 분위기) */
+        let xFrostG = null,
+          xFrostK = ""
+        function xFrost() {
+          if (!XMAS || lowSpecOn) return
+          const k = W + "x" + H
+          if (k !== xFrostK) {
+            xFrostK = k
+            xFrostG = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.32, W / 2, H / 2, Math.hypot(W, H) * 0.56)
+            xFrostG.addColorStop(0, "rgba(190,225,255,0)")
+            xFrostG.addColorStop(0.7, "rgba(176,214,255,.10)")
+            xFrostG.addColorStop(1, "rgba(160,200,255,.30)")
+          }
+          ctx.fillStyle = xFrostG
+          ctx.fillRect(0, 0, W, H)
         }
         /* ================= 크리스마스 장식 (XMAS=false 면 호출되지 않음) ================= */
         const XBULB = ["#ff4d5e", "#ffd34d", "#4fc3ff", "#6dff8a", "#ff8ad8"],
@@ -16572,10 +16711,21 @@
           if (it.k === "G") return drawGrass(it)
           if (it.k === "W") return drawWaterItem(it)
           if (it.k === "L") return drawSled(it.s)
-          if (it.k === "O")
-            return it.o.sl
-              ? drawKid(it.o.x, it.o.y, () => drawOther(it.o))
-              : drawOther(it.o)
+          if (it.k === "O") {
+            const o = it.o,
+              sp = Math.hypot(o.dvx || 0, o.dvy || 0)
+            o.lf = lerp(o.lf || 0, !o.sl && sp > 6 ? Math.min(1, (sp - 6) / 6) * 0.9 * TS : 0, 0.2)
+            if (o.sl) return drawKid(o.x, o.y, () => drawOther(o))
+            if (o.lf > 1) {
+              xAirShadow(o.x, o.y, o.lf)
+              ctx.save()
+              ctx.translate(0, -o.lf)
+              drawOther(o)
+              ctx.restore()
+              return
+            }
+            return drawOther(o)
+          }
           if (it.k === "T")
             return drawPetAt(it.id, it.x, it.y, it.hop, it.ph, it.mv)
           if (it.k === "S") return drawStruct(it.s)
@@ -16918,7 +17068,7 @@
             R = 21 * s,
             cy = sy - R - (sw ? -3 : 6) * s - bob * (sw ? 0.3 : 1),
             lean = clamp(P.vx * 0.05, -0.18, 0.18)
-          if (!sw && !P.sl) {
+          if (!sw && !P.sl && !(P.lf > 1)) {
             ctx.fillStyle = "rgba(0,40,30,.25)"
             ctx.beginPath()
             ctx.ellipse(
@@ -17249,11 +17399,53 @@
               py = syv(l.y) - (l.z + Math.sin(time * 1.5 + l.ph) * 0.05) * TS
             if (px < -20 || px > W + 20 || py < -20 || py > H + 20) continue
             if (XMAS) {
-              ctx.globalAlpha = 0.9
-              ctx.fillStyle = l.col
-              ctx.beginPath()
-              ctx.arc(px, py, ((l.sz * TS) / 48) * 0.75, 0, 6.3)
-              ctx.fill()
+              const r = ((l.sz * TS) / 48) * 0.75
+              if (l.sz > 3.1 && !lowSpecOn) {
+                // 가까이 있는 큰 눈송이: 부드러운 빛 + 6갈래 결정이 천천히 돌아요
+                ctx.globalAlpha = 0.22
+                ctx.fillStyle = "#dff1ff"
+                ctx.beginPath()
+                ctx.arc(px, py, r * 1.9, 0, 6.3)
+                ctx.fill()
+                ctx.save()
+                ctx.translate(px, py)
+                ctx.rotate(l.rot * 0.25)
+                ctx.globalAlpha = 0.95
+                ctx.strokeStyle = "#ffffff"
+                ctx.lineCap = "round"
+                ctx.lineWidth = Math.max(1, r * 0.34)
+                ctx.beginPath()
+                for (let k = 0; k < 3; k++) {
+                  const a = k * 1.0472,
+                    c = Math.cos(a) * r * 1.55,
+                    n = Math.sin(a) * r * 1.55
+                  ctx.moveTo(-c, -n)
+                  ctx.lineTo(c, n)
+                }
+                ctx.stroke()
+                ctx.lineWidth = Math.max(0.8, r * 0.2)
+                ctx.beginPath()
+                for (let k = 0; k < 6; k++) {
+                  const a = k * 1.0472,
+                    c = Math.cos(a),
+                    n = Math.sin(a),
+                    bx = c * r * 0.95,
+                    by = n * r * 0.95
+                  ctx.moveTo(bx, by)
+                  ctx.lineTo(bx + Math.cos(a + 0.7) * r * 0.5, by + Math.sin(a + 0.7) * r * 0.5)
+                  ctx.moveTo(bx, by)
+                  ctx.lineTo(bx + Math.cos(a - 0.7) * r * 0.5, by + Math.sin(a - 0.7) * r * 0.5)
+                }
+                ctx.stroke()
+                ctx.restore()
+              } else {
+                // 멀리 있는 작은 눈송이일수록 더 흐릿하고 작아요
+                ctx.globalAlpha = 0.45 + Math.min(0.5, l.sz * 0.13)
+                ctx.fillStyle = l.col
+                ctx.beginPath()
+                ctx.arc(px, py, r, 0, 6.3)
+                ctx.fill()
+              }
               continue
             }
             ctx.save()
@@ -18141,9 +18333,11 @@
             drawGroundRow(r, xa, xb)
           drawWaves(x0, y0, x1, y1)
           drawFlat(x0, y0, x1, y1)
+          xGlints(x0, y0, x1, y1)
           for (const it of items) drawIt(it)
           drawPortalFx(x0, y0, x1, y1)
           drawFireflies()
+          xFrost()
           drawTarget(
             F.phase === "charge"
               ? aimTarget(F.aim.dx, F.aim.dy, F.ch)
@@ -21862,7 +22056,7 @@
           }
           mpUI()
         }
-        const dispName = () => save.nick || "낚시꾼"
+        const dispName = () => filterChat(save.nick || "낚시꾼")
         async function loadCloud(u, seq) {
           try {
             const snap = await MP.db
@@ -22112,7 +22306,7 @@
                 const v = s.val()
                 if (!plFirst && v && s.key !== (MP.user && MP.user.uid))
                   addSys(
-                    `${String(v.n || "낚시꾼").slice(0, 10)}님이 입장했어요`,
+                    `${filterChat(String(v.n || "낚시꾼").slice(0, 10))}님이 입장했어요`,
                   )
               },
             ],
@@ -22286,7 +22480,7 @@
           o.f = v.f || 0
           o.bx = v.bx || 0
           o.by = v.by || 0
-          o.n = String(v.n || "낚시꾼").slice(0, 10)
+          o.n = filterChat(String(v.n || "낚시꾼").slice(0, 10))
           o.a = v.a | 0
           o.pl = v.pl === 0 ? 0 : 1
           o.sl = v.sl > 0 ? v.sl | 0 : 0
@@ -22664,6 +22858,27 @@
             if (F.phase === "wait" || F.phase === "bite" || F.phase === "reel")
               cutFishing(v.n)
           } else if (
+            v.type === "launch" &&
+            save.settings.drag !== false &&
+            !P.sl &&
+            typeof v.vx === "number" &&
+            typeof v.vy === "number"
+          ) {
+            if (busy) {
+              R = null
+              F.lure = null
+              F.phase = "idle"
+              F.pull = false
+            }
+            P.pull = null
+            P.vx = clamp(v.vx, -20, 20)
+            P.vy = clamp(v.vy, -20, 20)
+            P.launchT = 1.1
+            shake = Math.max(shake, 0.6)
+            vib([40, 30, 80])
+            sfx.lost && sfx.lost()
+            sledSnow(P.x, P.y, 12)
+          } else if (
             v.type === "pull" &&
             save.settings.drag !== false &&
             typeof v.px === "number"
@@ -22835,13 +23050,224 @@
   "짱깨": "짜장면",
   "허접": "후진",
         }
-        const chatFilterRe = new RegExp(
-          Object.keys(CHAT_FILTER)
-            .sort((a, b) => b.length - a.length)
-            .join("|"),
-          "g",
-        )
-        const filterChat = (t) => String(t).replace(chatFilterRe, (m) => CHAT_FILTER[m])
+        /* ================= 비속어 필터 v2 =================
+   - 한글을 자모로 풀어서 비교해요: 씨발 / 시발 / 씨ㅂ / ㅅㅂ / 쉬발 / 씨이이발 / 씨바아알
+   - 사이에 낀 기호·특수문자는 무시해요: 씨@발, 씨^^!발, 시.발, 시-_-발, ㅅ*ㅂ
+   - 숫자·기호를 ㅣ 로 쓴 것도 잡아요: 시1발, 시!발, 시|발
+   - "씨 발" 처럼 한 글자씩 띄어 쓴 것도 잡지만, "이시 발견" 같은 평범한 문장은 건드리지 않아요
+   - 영어/로마자/한영키 오타: fuck, f.u.c.k, f*ck, fuuuck, sibal, ssibal, tlqkf, qudtls ...
+   - 겹쳐 쓴 글자 줄이기(ㅅㅅㅂㅂ, fuuuck), 전각 문자(ｆｕｃｋ), 숨은 글자(제로폭 문자) 모두 처리해요 */
+        const CF_L = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ",
+          CF_V = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ",
+          CF_T = ["", "ㄱ", "ㄲ", "ㄱㅅ", "ㄴ", "ㄴㅈ", "ㄴㅎ", "ㄷ", "ㄹ", "ㄹㄱ", "ㄹㅁ", "ㄹㅂ", "ㄹㅅ", "ㄹㅌ", "ㄹㅍ", "ㄹㅎ", "ㅁ", "ㅂ", "ㅂㅅ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"],
+          CF_CMP = { "ㄳ": "ㄱㅅ", "ㄵ": "ㄴㅈ", "ㄶ": "ㄴㅎ", "ㄺ": "ㄹㄱ", "ㄻ": "ㄹㅁ", "ㄼ": "ㄹㅂ", "ㄽ": "ㄹㅅ", "ㄾ": "ㄹㅌ", "ㄿ": "ㄹㅍ", "ㅀ": "ㄹㅎ", "ㅄ": "ㅂㅅ" },
+          // 글자에서 푼 자모: 된소리·일부 모음을 같은 것으로 본다 (씨=시, 쉬=시)
+          CF_FS = { "ㄲ": "ㄱ", "ㄸ": "ㄷ", "ㅃ": "ㅂ", "ㅆ": "ㅅ", "ㅉ": "ㅈ", "ㅟ": "ㅣ", "ㅢ": "ㅣ" },
+          // 낱자(ㅅㅂ 같은 초성체): ㄲ 은 그대로 둬야 ㅅㄱ(수고)과 구분돼요
+          CF_FA = { "ㅆ": "ㅅ", "ㅃ": "ㅂ", "ㄸ": "ㄷ", "ㅉ": "ㅈ", "ㅟ": "ㅣ", "ㅢ": "ㅣ" },
+          // ㅣ·ㅅ 처럼 생긴 문자를 자모로 (낱자 취급)
+          CF_LOOK = { "1": "ㅣ", "!": "ㅣ", "|": "ㅣ", "l": "ㅣ", "i": "ㅣ", "^": "ㅅ" },
+          CF_LEET = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "@": "a", "$": "s", "!": "i", "|": "i", "+": "t" }
+        const cfJamo = (cp) =>
+          cp >= 0x3131 && cp <= 0x3163
+            ? String.fromCharCode(cp)
+            : cp >= 0x1100 && cp <= 0x1112
+              ? CF_L[cp - 0x1100]
+              : cp >= 0x1161 && cp <= 0x1175
+                ? CF_V[cp - 0x1161]
+                : cp >= 0x11a8 && cp <= 0x11c2
+                  ? CF_T[cp - 0x11a7]
+                  : ""
+        /* 공백 처리: 양쪽이 모두 한 글자짜리 토큰이면 붙여 읽고, 아니면 단어를 끊는다 */
+        function cfSpaces(src) {
+          const sp = new Array(src.length).fill(0) // 0=일반글자, 1=건너뜀, 2=끊김
+          for (let i = 0; i < src.length; i++) {
+            if (!/\s/.test(src[i])) continue
+            let j = i
+            while (j + 1 < src.length && /\s/.test(src[j + 1])) j++
+            let l = i,
+              r = j + 1
+            while (l > 0 && !/\s/.test(src[l - 1])) l--
+            let re = r
+            while (re < src.length && !/\s/.test(src[re])) re++
+            const one = i > 0 && r < src.length && i - l <= 1 && re - r <= 1
+            for (let k = i; k <= j; k++) sp[k] = one ? 1 : 2
+            i = j
+          }
+          return sp
+        }
+        function cfPush(K, c, a, z, sa, first, last) {
+          const n = K.c.length
+          if (n && K.c[n - 1] === c && c !== "#") {
+            K.z[n - 1] = z
+            K.ls[n - 1] = last
+            K.sa[n - 1] = K.sa[n - 1] || sa
+            return
+          }
+          K.c.push(c)
+          K.a.push(a)
+          K.z.push(z)
+          K.sa.push(sa)
+          K.fs.push(first)
+          K.ls.push(last)
+        }
+        const cfBreak = (K, i) => K.c.length && K.c[K.c.length - 1] !== "#" && cfPush(K, "#", i, i, false, true, true)
+        /* 한글 뼈대: 글자 → 자모열 (+ 원문 위치, 낱자 여부) */
+        function cfHangul(src, look) {
+          src = String(src)
+          const K = { c: [], a: [], z: [], sa: [], fs: [], ls: [] },
+            sp = cfSpaces(src)
+          let openV = null
+          for (let i = 0; i < src.length; i++) {
+            if (sp[i] === 1) continue
+            if (sp[i] === 2) {
+              cfBreak(K, i)
+              openV = null
+              continue
+            }
+            const nf = src[i].normalize("NFKC")
+            for (const ch of nf) {
+              const cp = ch.codePointAt(0),
+                js = []
+              if (cp >= 0xac00 && cp <= 0xd7a3) {
+                const x = cp - 0xac00,
+                  L = CF_L[(x / 588) | 0],
+                  V = CF_V[((x % 588) / 28) | 0],
+                  T = CF_T[x % 28],
+                  fv = CF_FS[V] || V
+                if (!(L === "ㅇ" && openV === fv)) js.push([CF_FS[L] || L, false])
+                js.push([fv, false])
+                for (const t of T) js.push([CF_FS[t] || t, false])
+                openV = T ? null : fv
+              } else {
+                let j = cfJamo(cp)
+                if (!j && look && CF_LOOK[ch]) j = CF_LOOK[ch]
+                if (!j) continue // 한글이 아닌 글자·기호·제로폭 문자는 건너뛴다
+                openV = null
+                if (j === "ㅇ") continue
+                for (const t of CF_CMP[j] || j) js.push([CF_FA[t] || t, true])
+              }
+              js.forEach((e, k) => cfPush(K, e[0], i, i, e[1], k === 0, k === js.length - 1))
+            }
+          }
+          return K
+        }
+        /* 로마자 뼈대: 알파벳(+ 리트 문자)만 남기고 겹친 글자는 하나로 */
+        function cfLatin(src) {
+          src = String(src)
+          const K = { c: [], a: [], z: [], sa: [], fs: [], ls: [] },
+            sp = cfSpaces(src)
+          for (let i = 0; i < src.length; i++) {
+            if (sp[i] === 1) continue
+            if (sp[i] === 2) {
+              cfBreak(K, i)
+              continue
+            }
+            for (const ch0 of src[i].normalize("NFKC").toLowerCase()) {
+              const ch = /[a-z]/.test(ch0) ? ch0 : CF_LEET[ch0]
+              if (ch) cfPush(K, ch, i, i, false, true, true)
+              else if (/[ㄱ-ㅣ가-힣\u1100-\u11ff]/.test(ch0)) cfBreak(K, i)
+            }
+          }
+          return K
+        }
+        /* 오탐 방지: 이 문구 안에서 걸린 건 무시 */
+        const CF_OK = [
+          "시발점", "시발역", "시발 역", "시바견", "시바이누", "새끼손", "새끼발", "새끼고양이", "새끼 고양이", "새끼강아지", "새끼 강아지",
+          "새끼 물고기", "새끼물고기", "새끼 새", "새끼 오리", "새끼 곰", "새끼 사슴", "새끼줄", "새끼 거북", "새끼 상어",
+          "고추장", "고추참치", "풋고추", "청양고추", "고추가루", "고춧가루", "조개구이", "조개껍", "조개탕", "조개젓", "가리비조개", "조개류",
+          "보지 못", "보지못", "보지 않", "보지않", "보지만", "보지는", "보지도", "보지 말", "보지말", "보지마", "보지 마",
+          "shiitake", "shitake", "niger", "scunthorpe", "assist", "assure", "class",
+        ]
+        const cfRaw = Object.assign({}, CHAT_FILTER, {
+          /* --- 아래는 v2 에서 추가한 단어 --- */
+          씨팔: "에이", 시팔: "에이", 쉬팔: "에이", 씨벌: "에이", 시벌: "에이", 씨펄: "에이", 시펄: "에이", 쓰발: "에이", 슈발: "에이",
+          시부럴: "에이", 씨부럴: "에이", 시부랄: "에이", 씨부랄: "에이", 씨뱅: "에이", 시ㅂ: "에이", ㅅㅂ: "에이", ㅆㅂ: "에이", ㅅㅃ: "에이", ㅆㅃ: "에이",
+          ㅅㅂㄴ: "저런", ㅅㅂㄹㅁ: "저런", 씨발년: "나쁜사람", 씨발놈: "나쁜사람",
+          븅신: "쩝쩝", 빙신: "쩝쩝", 뱅신: "쩝쩝", 병쉰: "쩝쩝", ㅂㅅ: "쩝쩝", ㅄ: "쩝쩝", 병1신: "쩝쩝",
+          지롤: "어우", 지럴: "어우", 쥐랄: "어우", 지랄염병: "어우",
+          ㅁㅊ: "나쁜", 미췬: "나쁜", 미틴: "나쁜", ㅈㄴ: "매우", 존내: "매우", 조온나: "매우", 졸리: "매우",
+          개색: "나쁜애", 개쉑: "나쁜애", 개셰: "나쁜애", 새키: "강냉이", ㅅㄲ: "강냉이", ㅅㅋ: "강냉이", ㄱㅅㄲ: "나쁜애",
+          ㄲㅈ: "사라져", ㄷㅊ: "살살해", 닥치: "살살해", 느금: "아잉", 니엄마: "아잉", 느그엄마: "아잉", 니어미: "아잉", 엄창: "아잉", 엿먹: "아잉",
+          개같: "나쁜", 머저리: "한심이", 빡대가리: "한심이", 쌍년: "나쁜사람", 디져: "끝나", 디질: "끝날", 디졌: "끝났",
+          섹스: "아잉", 섹쓰: "아잉", 야동: "아잉", 강간: "아잉", 보빨: "아잉", 딸치: "아잉", 딸쳐: "아잉", 꼬츄: "아잉",
+          맘충: "아잉", 한남충: "아잉", 김치녀: "아잉", 된장녀: "아잉", 틀딱: "아잉", 급식충: "아잉", 일베충: "아잉", 좌빨: "아잉", 수꼴: "아잉",
+          쪽바리: "아잉", 쪽발이: "아잉", 왜놈: "아잉", 똥남아: "아잉", 검둥이: "아잉", 니그로: "아잉", 짱개: "짜장면",
+          /* 영어 / 로마자 / 한영키 */
+          fuck: "에이", fck: "에이", fuk: "에이", fuq: "에이", fcuk: "에이", fvck: "에이", phuck: "에이", motherfuck: "에이",
+          shit: "에이", sht: "에이", bullshit: "에이", bitch: "나쁜애", btch: "나쁜애", biatch: "나쁜애", bastard: "나쁜애", asshole: "나쁜애",
+          dickhead: "나쁜애", pussy: "아잉", cunt: "아잉", slut: "아잉", whore: "아잉", porn: "아잉", nigger: "아잉", nigga: "아잉", faggot: "아잉", retard: "아잉",
+          sibal: "에이", shibal: "에이", sival: "에이", sibar: "에이", ssibal: "에이", tlqkf: "에이", tlqkd: "에이",
+          qudtls: "쩝쩝", byungshin: "쩝쩝", byeongsin: "쩝쩝", byungsin: "쩝쩝", wlfkf: "어우", jiral: "어우",
+          gaesaekki: "나쁜애", gaesaeki: "나쁜애", gaesekki: "나쁜애", gesaeki: "나쁜애", saekki: "강냉이", sekki: "강냉이", ehdgoanfrk: "아잉",
+        })
+        const CF_H = [],
+          CF_E = []
+        for (const w of Object.keys(cfRaw).sort((x, y) => y.length - x.length)) {
+          const r = cfRaw[w]
+          if (/^[a-z0-9@$!|+ ]+$/i.test(w)) {
+            const K = cfLatin(w)
+            if (K.c.length) CF_E.push({ c: K.c, r })
+          } else {
+            const K = cfHangul(w, false)
+            if (K.c.length) CF_H.push({ c: K.c, sa: K.sa, r })
+          }
+        }
+        function cfScan(K, P, out, latin) {
+          const n = K.c.length
+          for (const p of P) {
+            const m = p.c.length
+            for (let i = 0; i + m <= n; i++) {
+              if (K.c[i] !== p.c[0]) continue
+              if (latin) {
+                if (i > 0 && K.c[i - 1] !== "#") continue // 단어 앞에서 시작할 때만 (Scunthorpe 같은 오탐 방지)
+              } else if (!K.fs[i]) continue
+              let ok = true
+              for (let k = 1; k < m; k++)
+                if (K.c[i + k] !== p.c[k]) {
+                  ok = false
+                  break
+                }
+              if (!ok) continue
+              if (!latin) {
+                if (!K.ls[i + m - 1]) continue
+                for (let k = 0; k < m; k++) if (p.sa[k] && !K.sa[i + k]) ok = false
+                if (!ok) continue
+              }
+              out.push({ s: K.a[i], e: K.z[i + m - 1] + 1, r: p.r })
+            }
+          }
+        }
+        function filterChat(t) {
+          t = String(t)
+          if (!t) return t
+          const hits = []
+          cfScan(cfHangul(t, false), CF_H, hits, false)
+          cfScan(cfHangul(t, true), CF_H, hits, false)
+          cfScan(cfLatin(t), CF_E, hits, true)
+          if (!hits.length) return t
+          const low = t.toLowerCase(),
+            safe = []
+          for (const w of CF_OK) {
+            let p = low.indexOf(w)
+            while (p >= 0) {
+              safe.push([p, p + w.length])
+              p = low.indexOf(w, p + 1)
+            }
+          }
+          const hs = hits
+            .filter((h) => !safe.some((r) => h.s >= r[0] && h.e <= r[1]))
+            .sort((x, y) => x.s - y.s || y.e - y.s - (x.e - x.s))
+          let out = "",
+            pos = 0
+          for (const h of hs) {
+            if (h.s < pos) continue
+            out += t.slice(pos, h.s) + h.r
+            pos = h.e
+          }
+          return out + t.slice(pos)
+        }
+        const hasBadWord = (t) => filterChat(t) !== String(t)
         function mpSay(t) {
           t = filterChat(String(t).trim().slice(0, 50))
           if (!t) return
@@ -23074,7 +23500,7 @@
             }
           }
           if (!osw) {
-            ctx.fillStyle = o.sl ? "rgba(0,0,0,0)" : "rgba(0,40,30,.25)"
+            ctx.fillStyle = o.sl || o.lf > 1 ? "rgba(0,0,0,0)" : "rgba(0,40,30,.25)"
             ctx.beginPath()
             ctx.ellipse(
               sx,
@@ -23560,6 +23986,10 @@
             toast("닉네임을 입력해 주세요")
             return
           }
+          if (hasBadWord(v)) {
+            toast("닉네임에 쓸 수 없는 말이 들어 있어요")
+            return
+          }
           save.nick = v
           persist()
           cloudSaveNow()
@@ -23867,7 +24297,7 @@
               ? arr
                   .map(
                     (r, i) =>
-                      `<div class="rk ${r.k === MP.user.uid ? "me" : ""}"><b class="rn">${i + 1}</b><img src="${avUrl(AVS[(r.avatar | 0) % AVS.length])}" alt="" onerror="this.style.visibility='hidden'"><div class="rg"><span>${String(r.nick || "낚시꾼").replace(/[<>&]/g, "")}</span><small>도감 ${r.dex || 0}/${FISH.length}</small></div><div class="rc">${ICON.coin}${(r.earned || 0).toLocaleString()}</div></div>`,
+                      `<div class="rk ${r.k === MP.user.uid ? "me" : ""}"><b class="rn">${i + 1}</b><img src="${avUrl(AVS[(r.avatar | 0) % AVS.length])}" alt="" onerror="this.style.visibility='hidden'"><div class="rg"><span>${filterChat(String(r.nick || "낚시꾼")).replace(/[<>&]/g, "")}</span><small>도감 ${r.dex || 0}/${FISH.length}</small></div><div class="rc">${ICON.coin}${(r.earned || 0).toLocaleString()}</div></div>`,
                   )
                   .join("")
               : '<div class="rk0">아직 기록이 없어요</div>'
