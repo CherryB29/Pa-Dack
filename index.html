@@ -6335,7 +6335,7 @@
         /* 크리스마스 테마: false 로 바꾸면 눈/전구/장식이 전부 꺼져요 */
         const XMAS = true
         /* 디버그: true 면 상단 골드/토큰 표시를 눌러 값을 직접 입력할 수 있어요 (배포 전에 false) */
-        const DEBUG = false
+        const DEBUG = true
         const SAVE_KEY = "healing-fishing-v3"
         const defaultSave = () => ({
           gold: 0,
@@ -11090,12 +11090,27 @@
           if (musicGain) musicGain.gain.value = musicLevel()
           else if (musicEl) musicEl.volume = musicLevel()
         }
+        // 브라우저 자동 재생 정책: 사용자가 처음 누른 뒤에 재생을 다시 시도
+        let musicArmed = false
+        function armMusicOnGesture() {
+          if (musicArmed) return
+          musicArmed = true
+          const go = () => {
+            document.removeEventListener("pointerdown", go, true)
+            document.removeEventListener("keydown", go, true)
+            musicArmed = false
+            ac()
+            playMusic()
+          }
+          document.addEventListener("pointerdown", go, true)
+          document.addEventListener("keydown", go, true)
+        }
         function playMusic() {
           if (!musicEnabled() || document.hidden) return
           const el = ensureMusic()
           if (!el) return
           syncMusicVolume()
-          el.play().catch(() => {})
+          el.play().catch(() => armMusicOnGesture())
         }
         function stopMusic() {
           if (musicEl) musicEl.pause()
@@ -25415,7 +25430,6 @@
                 MP.auth = firebase.auth()
                 MP.db = firebase.database()
                 MP.on = true
-                MP.auth.getRedirectResult().catch(() => {})
                 setLoadMsg("로그인 상태 확인 중...")
                 MP.auth.onAuthStateChanged(onAuth)
               } catch (e) {
@@ -25488,11 +25502,19 @@
           mpUI()
         }
         const dispName = () => filterChat(save.nick || "낚시꾼")
+        const withTimeout = (p, ms) =>
+          Promise.race([
+            p,
+            new Promise((_, rej) =>
+              setTimeout(() => rej(new Error("timeout")), ms),
+            ),
+          ])
         async function loadCloud(u, seq) {
           try {
-            const snap = await MP.db
-                .ref("users/" + u.uid + "/save")
-                .once("value"),
+            const snap = await withTimeout(
+                MP.db.ref("users/" + u.uid + "/save").once("value"),
+                8000,
+              ),
               c = snap.val()
             if (seq !== authSeq) return false
             if (c) {
