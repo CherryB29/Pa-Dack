@@ -15559,18 +15559,28 @@
           return 0
         }
         function sledPut(s) {
-          if (MP.on && MP.user && MP.db)
-            MP.db
-              .ref("world/main/sleds/" + s.id)
-              .set({ x: +s.x.toFixed(2), y: +s.y.toFixed(2), h: +s.h.toFixed(2) })
-              .catch(() => {})
+          if (!(MP.on && MP.user && MP.db)) return
+          const ref = MP.db.ref("world/main/sleds/" + s.id)
+          ref
+            .set({
+              x: +s.x.toFixed(2),
+              y: +s.y.toFixed(2),
+              h: +s.h.toFixed(2),
+              o: s.owner || sledSelf(),
+            })
+            .catch(() => {})
+          // 주인이 게임을 끄거나 연결이 끊기면 썰매도 사라진다
+          if (s.mine) ref.onDisconnect().remove()
         }
         function sledRemoveMine() {
           const s = sledMine()
           if (!s) return
           sledArr = sledList().filter((x) => x !== s)
-          if (MP.on && MP.user && MP.db)
-            MP.db.ref("world/main/sleds/" + s.id).remove().catch(() => {})
+          if (MP.on && MP.user && MP.db) {
+            const ref = MP.db.ref("world/main/sleds/" + s.id)
+            ref.onDisconnect().cancel()
+            ref.remove().catch(() => {})
+          }
         }
         // 모든 플레이어의 썰매를 실시간으로 받아 맵에 그린다 (탑승 버튼도 같이 뜬다)
         let sledWatching = false
@@ -15590,12 +15600,18 @@
                   continue
                 seen.add(id)
                 const h = isFinite(r.h) ? +r.h : 0,
+                  owner = typeof r.o === "string" ? r.o : "",
+                  mineNow = !!owner && owner === sledSelf(),
                   s = sledById(id)
-                if (!s) L.push({ id, x: +r.x, y: +r.y, h })
-                else if (!s.mine && !sledOcc(id).length) {
-                  s.x = +r.x
-                  s.y = +r.y
-                  s.h = h
+                if (!s) L.push({ id, x: +r.x, y: +r.y, h, owner, mine: mineNow })
+                else {
+                  s.owner = owner
+                  s.mine = mineNow
+                  if (!s.mine && !sledOcc(id).length) {
+                    s.x = +r.x
+                    s.y = +r.y
+                    s.h = h
+                  }
                 }
               }
               // DB 에서 사라진 다른 사람의 썰매는 정리 (타고 있는 중이면 유지)
@@ -15680,7 +15696,7 @@
                 toast("맵에 썰매가 가득 찼어요", 1600)
                 return false
               }
-              L.push((s = { id, x, y, h, mine: true }))
+              L.push((s = { id, x, y, h, mine: true, owner: sledSelf() }))
             }
             s.x = x
             s.y = y
