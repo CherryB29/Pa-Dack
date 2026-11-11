@@ -1563,11 +1563,11 @@
         border: 2px solid rgb(var(--white-rgb) / 0.3);
       }
       #joy.snap #knob {
-        border: 2px solid var(--white);
+        border: 2px solid var(--lock-color, var(--white));
         background: radial-gradient(
           circle,
-          var(--white) 0%,
-          var(--white) var(--lock-fill, 0%),
+          var(--lock-color, var(--white)) 0%,
+          var(--lock-color, var(--white)) var(--lock-fill, 0%),
           transparent calc(var(--lock-fill, 0%) + 1%)
         );
         box-shadow: none;
@@ -2804,14 +2804,13 @@
         padding-top: 12px;
       }
       .xrw {
-        width: 220px;
-        height: 220px;
+        width: 236px;
+        height: 236px;
         border-radius: 50%;
-        box-shadow:
-          0 0 0 5px var(--gold-400),
-          0 8px 22px rgb(var(--black-rgb) / 0.4);
+        box-shadow: 0 0 0 4px var(--wheel-rim), 0 0 0 8px var(--gold-400), 0 12px 30px var(--black-a-40);
         will-change: transform;
       }
+
       .xrw svg {
         display: block;
         width: 100%;
@@ -2837,21 +2836,28 @@
         display: flex;
         align-items: center;
         gap: 3px;
+        background: var(--black-a-20);
+        border: 1px solid currentColor;
+        border-radius: 99px;
+        padding: 3px 9px;
       }
+
       .xrg svg {
         width: 14px;
         height: 14px;
       }
       .xrm {
         position: absolute;
-        top: 0;
+        top: -2px;
         left: 50%;
-        width: 24px;
-        height: 28px;
+        width: 26px;
+        height: 32px;
         transform: translateX(-50%);
-        background: var(--white);
-        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        background: linear-gradient( var(--gold-100), var(--gold-500) 55%, var(--gold-pointer-dark) );
+        clip-path: polygon(50% 100%, 0 25%, 18% 0, 82% 0, 100% 25%);
+        z-index: 2;
       }
+
       .xrl {
         display: flex;
         align-items: center;
@@ -2861,7 +2867,11 @@
         font-size: 14px;
         font-weight: 800;
         text-shadow: 0 1px 2px rgb(var(--black-rgb) / 0.3);
+        background: var(--black-a-20);
+        border-radius: 14px;
+        padding: 6px 12px;
       }
+
       .xrl img,
       .xrl svg {
         width: 30px;
@@ -4762,26 +4772,8 @@
         inset: -8px;
       }
       /* 룰렛 */
-      .xrw {
-        width: 236px;
-        height: 236px;
-        box-shadow:
-          0 0 0 4px var(--wheel-rim),
-          0 0 0 8px var(--gold-400),
-          0 12px 30px var(--black-a-40);
-      }
-      .xrm {
-        top: -2px;
-        z-index: 2;
-        width: 26px;
-        height: 32px;
-        background: linear-gradient(
-          var(--gold-100),
-          var(--gold-500) 55%,
-          var(--gold-pointer-dark)
-        );
-        clip-path: polygon(50% 100%, 0 25%, 18% 0, 82% 0, 100% 25%);
-      }
+      
+      
       .bl {
         fill: var(--gold-100);
         animation: gzbl 1s steps(1) infinite;
@@ -4794,17 +4786,8 @@
           fill: var(--gold-blink-dim);
         }
       }
-      .xrg span {
-        background: var(--black-a-20);
-        border: 1px solid currentColor;
-        border-radius: 99px;
-        padding: 3px 9px;
-      }
-      .xrl {
-        background: var(--black-a-20);
-        border-radius: 14px;
-        padding: 6px 12px;
-      }
+      
+      
       .xrl:empty {
         background: none;
       }
@@ -4865,28 +4848,40 @@
       .xsg > .xsf {
         grid-column: 1 / -1;
       }
-      .xsc,
-      .xsf {
+      .xsc {
         position: relative;
         font: inherit;
         color: var(--white);
-      }
-      .xsc {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 2px;
         padding: 10px 4px 8px;
         border-radius: 16px;
-        background: linear-gradient(
-          180deg,
-          color-mix(in srgb, var(--rc) 30%, var(--blue-store-light)),
-          var(--blue-store-dark)
-        );
+        background: linear-gradient( 180deg, color-mix(in srgb, var(--rc) 30%, var(--blue-store-light)), var(--blue-store-dark) );
         border: 1.5px solid color-mix(in srgb, var(--rc) 70%, transparent);
         box-shadow: 0 6px 14px var(--black-a-25);
         cursor: pointer;
       }
+      .xsf {
+        position: relative;
+        font: inherit;
+        color: var(--white);
+        --rc: var(--orange-500-b);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        margin-bottom: 4px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        text-align: left;
+        background: linear-gradient( 120deg, var(--gold-token-glow), var(--gold-token-edge) );
+        border: 1.5px solid var(--orange-500-b);
+        box-shadow: 0 0 18px var(--gold-token-shadow);
+      }
+
+      
       .xsi {
         width: 58px;
         height: 58px;
@@ -4947,24 +4942,7 @@
         background: var(--black-a-40);
         color: var(--ice-text);
       }
-      .xsf {
-        --rc: var(--orange-500-b);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: 100%;
-        margin-bottom: 4px;
-        padding: 10px 12px;
-        border-radius: 16px;
-        text-align: left;
-        background: linear-gradient(
-          120deg,
-          var(--gold-token-glow),
-          var(--gold-token-edge)
-        );
-        border: 1.5px solid var(--orange-500-b);
-        box-shadow: 0 0 18px var(--gold-token-shadow);
-      }
+      
       .xsf .xsi {
         width: 60px;
         height: 60px;
@@ -4991,24 +4969,29 @@
         inset: 0;
         z-index: 90;
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
         background: var(--black-a-67);
+        padding: 20px;
       }
+
       #rtSheet[hidden] {
         display: none;
       }
       .rtbox {
         width: 100%;
         max-width: 480px;
-        max-height: 86%;
+        max-height: 80%;
         overflow: auto;
         background: linear-gradient(var(--blue-900), var(--blue-950));
-        border-radius: 24px 24px 0 0;
+        border-radius: 22px;
         border: 1px solid var(--ln);
-        padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+        padding: 18px 16px;
         color: var(--tx);
+        box-shadow: 0 20px 60px var(--black-a-67);
+        animation: rtpop 0.25s cubic-bezier(0.2, 1.2, 0.4, 1);
       }
+
       .rth {
         display: flex;
         justify-content: space-between;
@@ -5089,13 +5072,9 @@
       .xcbg {
         position: absolute;
         inset: 0;
-        background: radial-gradient(
-          120% 80% at 50% 62%,
-          var(--winter-sky) 0,
-          var(--winter-midnight) 55%,
-          var(--winter-deep) 100%
-        );
+        background: radial-gradient( 120% 70% at 50% 100%, var(--winter-purple) 0, var(--winter-blue) 42%, var(--winter-shadow) 75%, var(--winter-black) 100% );
       }
+
       #xcOv.near .xcbg,
       #xcOv.rv .xcbg {
         background: radial-gradient(
@@ -5113,33 +5092,28 @@
           filter: brightness(1.35);
         }
       }
-      .xcsn,
+      .xcsn {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: radial-gradient(2px 2px at 20px 30px, var(--white), transparent), radial-gradient( 1.5px 1.5px at 90px 80px, var(--white-a-60), transparent ), radial-gradient( 2.5px 2.5px at 160px 20px, var(--white-a-80), transparent );
+        background-size: 200px 160px;
+        opacity: 0.8;
+        animation: xcsn 6s linear infinite;
+      }
       .xcsn::after {
         position: absolute;
         inset: 0;
         pointer-events: none;
-        background-image:
-          radial-gradient(2px 2px at 20px 30px, var(--white), transparent),
-          radial-gradient(
-            1.5px 1.5px at 90px 80px,
-            var(--white-a-60),
-            transparent
-          ),
-          radial-gradient(
-            2.5px 2.5px at 160px 20px,
-            var(--white-a-80),
-            transparent
-          );
-        background-size: 200px 160px;
-        opacity: 0.45;
-        animation: xcsn 6s linear infinite;
-      }
-      .xcsn::after {
-        content: "";
+        background-image: radial-gradient(2px 2px at 20px 30px, var(--white), transparent), radial-gradient( 1.5px 1.5px at 90px 80px, var(--white-a-60), transparent ), radial-gradient( 2.5px 2.5px at 160px 20px, var(--white-a-80), transparent );
         background-size: 320px 260px;
-        opacity: 0.7;
+        opacity: 0.8;
+        animation: xcsn 6s linear infinite;
+        content: "";
         animation-duration: 3.5s;
       }
+
+      
       @keyframes xcsn {
         to {
           background-position: -40px 160px;
@@ -5498,15 +5472,7 @@
       }
 
       /* ===== 컷씬 배경: 크리스마스 밤 마을 ===== */
-      .xcbg {
-        background: radial-gradient(
-          120% 70% at 50% 100%,
-          var(--winter-purple) 0,
-          var(--winter-blue) 42%,
-          var(--winter-shadow) 75%,
-          var(--winter-black) 100%
-        );
-      }
+      
       .xcgl {
         position: absolute;
         left: -10%;
@@ -5600,10 +5566,7 @@
           opacity: 0.5;
         }
       }
-      .xcsn,
-      .xcsn::after {
-        opacity: 0.8;
-      }
+      
       .xcsn3 {
         position: absolute;
         inset: 0;
@@ -5665,17 +5628,8 @@
       #xr .xrl {
         margin-top: 4px;
       }
-      #rtSheet {
-        align-items: center;
-        padding: 20px;
-      }
-      .rtbox {
-        border-radius: 22px;
-        max-height: 80%;
-        padding: 18px 16px;
-        box-shadow: 0 20px 60px var(--black-a-67);
-        animation: rtpop 0.25s cubic-bezier(0.2, 1.2, 0.4, 1);
-      }
+      
+      
       @keyframes rtpop {
         from {
           opacity: 0;
@@ -11057,75 +11011,75 @@
         let AC = null,
           NB = null
         const MUSIC_URL = "public/music/Wish Background.ogg"
-        const musicAudio = new Audio()
-        musicAudio.preload = "none"
-        musicAudio.loop = true
-        musicAudio.src = MUSIC_URL
-        let musicReady = false,
-          musicPlayPending = false,
-          musicRetryPending = false
+        let musicBuf = null,
+          musicLoading = null,
+          musicSrc = null,
+          musicGain = null
         function musicEnabled() {
           return save.settings.music && (save.settings.musicVolume ?? 50) > 0
         }
-        function removeMusicRetry() {
-          if (!musicRetryPending) return
-          musicRetryPending = false
-          document.removeEventListener("pointerdown", retryMusic)
-          document.removeEventListener("keydown", retryMusic)
+        function musicLevel() {
+          return save.settings.music
+            ? clamp((save.settings.musicVolume ?? 50) / 100, 0, 1)
+            : 0
         }
-        function retryMusic() {
-          if (musicEnabled()) playMusic()
+        function loadMusic() {
+          if (musicBuf) return Promise.resolve(musicBuf)
+          if (!musicLoading) {
+            musicLoading = fetch(MUSIC_URL)
+              .then((r) => r.arrayBuffer())
+              .then((b) => ac().decodeAudioData(b))
+              .then((buf) => (musicBuf = buf))
+              .catch((e) => {
+                musicLoading = null
+                console.error("Background music could not be loaded.", e)
+                return null
+              })
+          }
+          return musicLoading
+        }
+        function stopMusic() {
+          if (!musicSrc) return
+          try {
+            musicSrc.stop()
+          } catch (e) {}
+          musicSrc.disconnect()
+          musicSrc = null
         }
         function playMusic() {
-          if (
-            !musicReady ||
-            !musicEnabled() ||
-            !musicAudio.paused ||
-            musicPlayPending
-          )
-            return
-          musicAudio.volume = clamp(
-            (save.settings.musicVolume ?? 50) / 100,
-            0,
-            1,
-          )
-          musicPlayPending = true
-          musicAudio.play().then(
-            () => {
-              musicPlayPending = false
-              removeMusicRetry()
-            },
-            (error) => {
-              musicPlayPending = false
-              if (error.name === "NotAllowedError") {
-                if (!musicRetryPending) {
-                  musicRetryPending = true
-                  document.addEventListener("pointerdown", retryMusic)
-                  document.addEventListener("keydown", retryMusic)
-                }
-                return
-              }
-              console.error("Background music could not be played.", error)
-            },
-          )
+          if (!musicEnabled() || musicSrc || document.hidden) return
+          const ctx = ac()
+          if (!ctx) return
+          loadMusic().then((buf) => {
+            // 로딩 사이에 설정이 바뀌었거나 이미 재생 중이면 무시
+            if (!buf || musicSrc || !musicEnabled() || document.hidden) return
+            musicGain = ctx.createGain()
+            musicGain.gain.value = musicLevel()
+            musicGain.connect(ctx.destination)
+            musicSrc = ctx.createBufferSource()
+            musicSrc.buffer = buf
+            musicSrc.loop = true
+            musicSrc.connect(musicGain)
+            musicSrc.start()
+          })
         }
         function syncMusic() {
-          musicAudio.volume = clamp(
-            (save.settings.musicVolume ?? 50) / 100,
-            0,
-            1,
-          )
-          musicAudio.muted = !save.settings.music
-          if (musicEnabled()) playMusic()
-          else musicAudio.pause()
+          if (!musicEnabled()) return stopMusic()
+          if (!musicSrc) return playMusic()
+          musicGain.gain.value = musicLevel()
         }
-        musicAudio.addEventListener("error", () => {
-          console.error("Background music failed to load.", musicAudio.error)
-        })
         function startMusic() {
-          musicReady = true
           syncMusic()
         }
+        // 백그라운드(탭 숨김)에서는 오디오 컨텍스트를 멈추고, 다시 보이면 재개
+        document.addEventListener("visibilitychange", () => {
+          if (!AC) return
+          if (document.hidden) AC.suspend()
+          else if (musicEnabled()) {
+            AC.resume()
+            playMusic()
+          }
+        })
         function ac() {
           if (!AC) {
             try {
@@ -12929,7 +12883,7 @@
 
         /* ---- 탭 / 큰 지도 터치로 자동 걸어가기 (A* 길찾기) ---- */
         /* ================= 입력 ================= */
-        const joy = { id: null, cx: 0, cy: 0, x: 0, y: 0, snap: false },
+        const joy = { id: null, cx: 0, cy: 0, x: 0, y: 0, snap: false, full: false },
           keys = new Set()
         let dragTap = null,
           autoMv = null,
@@ -12946,7 +12900,7 @@
           if (
             startRun &&
             save.settings.autoRun &&
-            joy.snap &&
+            joy.full &&
             F.phase === "idle"
           ) {
             const l = Math.hypot(joy.x, joy.y) || 1
@@ -12955,10 +12909,12 @@
             showToast("자동 이동 · 터치하면 멈춰요", 1400)
           }
           joy.snap = false
+          joy.full = false
           joy.id = null
           joy.x = joy.y = 0
           joyEl.className = ""
           knob.style.removeProperty("--lock-fill")
+          knob.style.removeProperty("--lock-color")
         }
         fv.addEventListener("pointerdown", (e) => {
           if (e.target.closest("#act,#sledBtn,#card,#mm,#qPills,#hud")) return
@@ -13018,11 +12974,12 @@
           else if (!joy.snap && l > R * 2.4) joy.snap = true
           else if (joy.snap && l < R * 2.0) joy.snap = false
           joyEl.classList.toggle("snap", !!joy.snap)
+          const fill = joy.snap ? clamp((l / R - 2.4) / 1.6, 0, 1) : 0
+          joy.full = !!joy.snap && fill >= 1
+          joyEl.classList.toggle("full", joy.full)
+          knob.style.setProperty("--lock-color", joy.full ? "var(--ac)" : "var(--white)")
           if (joy.snap)
-            knob.style.setProperty(
-              "--lock-fill",
-              Math.round(clamp((l / R - 2.4) / 1.6, 0, 1) * 100) + "%",
-            )
+            knob.style.setProperty("--lock-fill", Math.round(fill * 100) + "%")
         })
         const up = (e) => {
           if (dragTap && e.pointerId === dragTap.id) {
