@@ -15567,6 +15567,7 @@
               y: +s.y.toFixed(2),
               h: +s.h.toFixed(2),
               o: s.owner || sledSelf(),
+              t: s.t === undefined ? firebase.database.ServerValue.TIMESTAMP : s.t,
             })
             .catch(() => {})
           // 주인이 게임을 끄거나 연결이 끊기면 썰매도 사라진다
@@ -15582,6 +15583,12 @@
             ref.remove().catch(() => {})
           }
         }
+        function sledDrop(id, mine) {
+          if (!(MP.on && MP.user && MP.db)) return
+          const ref = MP.db.ref("world/main/sleds/" + id)
+          if (mine) ref.onDisconnect().cancel()
+          ref.remove().catch(() => {})
+        }
         // 모든 플레이어의 썰매를 실시간으로 받아 맵에 그린다 (탑승 버튼도 같이 뜬다)
         let sledWatching = false
         function sledWatch() {
@@ -15592,7 +15599,25 @@
             (snap) => {
               const v = snap.val() || {},
                 L = sledList(),
-                seen = new Set()
+                seen = new Set(),
+                byOwner = {}
+              for (const k in v) {
+                const id = +k,
+                  r = v[k]
+                if (!(id >= 1 && id <= 20) || !r) continue
+                const own = typeof r.o === "string" ? r.o : ""
+                if (!own) {
+                  sledDrop(id, false) // 주인 없는 썰매
+                  continue
+                }
+                const t = typeof r.t === "number" ? r.t : 0;
+                (byOwner[own] || (byOwner[own] = [])).push({ id, t })
+              }
+              for (const own in byOwner) {
+                const list = byOwner[own].sort((a, b) => b.t - a.t || b.id - a.id)
+                for (let i = 1; i < list.length; i++)
+                  sledDrop(list[i].id, own === sledSelf()) // 최근 것만 남기고 나머지 삭제
+              }
               for (const k in v) {
                 const id = +k,
                   r = v[k]
@@ -15603,10 +15628,11 @@
                   owner = typeof r.o === "string" ? r.o : "",
                   mineNow = !!owner && owner === sledSelf(),
                   s = sledById(id)
-                if (!s) L.push({ id, x: +r.x, y: +r.y, h, owner, mine: mineNow })
+                if (!s) L.push({ id, x: +r.x, y: +r.y, h, owner, mine: mineNow, t: r.t })
                 else {
                   s.owner = owner
                   s.mine = mineNow
+                  s.t = r.t
                   if (!s.mine && !sledOcc(id).length) {
                     s.x = +r.x
                     s.y = +r.y
@@ -15701,6 +15727,7 @@
             s.x = x
             s.y = y
             s.h = h
+            s.t = firebase.database.ServerValue.TIMESTAMP
             sledPut(s)
             SLED_UI.key = ""
             SLED_UI.near = null
