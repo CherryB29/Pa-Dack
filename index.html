@@ -11010,11 +11010,14 @@
         /* ================= 사운드 / 진동 ================= */
         let AC = null,
           NB = null
-        const MUSIC_URL = "public/music/Wish Background.ogg"
+        // 음원 후보: Safari 는 Ogg 디코딩을 못 하므로 m4a/mp3 를 먼저 시도
+        const MUSIC_BASE = "public/music/Wish Background"
+        const MUSIC_SRCS = [`${MUSIC_BASE}.m4a`, `${MUSIC_BASE}.mp3`, `${MUSIC_BASE}.ogg`]
         let musicBuf = null,
           musicLoading = null,
           musicSrc = null,
-          musicGain = null
+          musicGain = null,
+          musicEl = null // Web Audio 로 디코딩이 모두 실패했을 때의 대체 재생기
         function musicEnabled() {
           return save.settings.music && (save.settings.musicVolume ?? 50) > 0
         }
@@ -11026,47 +11029,60 @@
         function loadMusic() {
           if (musicBuf) return Promise.resolve(musicBuf)
           if (!musicLoading) {
-            musicLoading = fetch(MUSIC_URL)
-              .then((r) => r.arrayBuffer())
-              .then((b) => ac().decodeAudioData(b))
-              .then((buf) => (musicBuf = buf))
-              .catch((e) => {
-                musicLoading = null
-                console.error("Background music could not be loaded.", e)
-                return null
-              })
+            const tryAt = (k) => {
+              if (k >= MUSIC_SRCS.length) return Promise.resolve(null)
+              return fetch(MUSIC_SRCS[k])
+                .then((r) => {
+                  if (!r.ok) throw new Error(r.status)
+                  return r.arrayBuffer()
+                })
+                .then((b) => ac().decodeAudioData(b))
+                .then((buf) => (musicBuf = buf))
+                .catch(() => tryAt(k + 1))
+            }
+            musicLoading = tryAt(0)
           }
           return musicLoading
         }
         function stopMusic() {
-          if (!musicSrc) return
-          try {
-            musicSrc.stop()
-          } catch (e) {}
-          musicSrc.disconnect()
-          musicSrc = null
+          if (musicSrc) {
+            try {
+              musicSrc.stop()
+            } catch (e) {}
+            musicSrc.disconnect()
+            musicSrc = null
+          }
+          if (musicEl) musicEl.pause()
         }
         function playMusic() {
-          if (!musicEnabled() || musicSrc || document.hidden) return
+          if (!musicEnabled() || musicSrc || musicEl || document.hidden) return
           const ctx = ac()
           if (!ctx) return
           loadMusic().then((buf) => {
-            // 로딩 사이에 설정이 바뀌었거나 이미 재생 중이면 무시
-            if (!buf || musicSrc || !musicEnabled() || document.hidden) return
-            musicGain = ctx.createGain()
-            musicGain.gain.value = musicLevel()
-            musicGain.connect(ctx.destination)
-            musicSrc = ctx.createBufferSource()
-            musicSrc.buffer = buf
-            musicSrc.loop = true
-            musicSrc.connect(musicGain)
-            musicSrc.start()
+            if (!musicEnabled() || musicSrc || musicEl || document.hidden) return
+            if (buf) {
+              musicGain = ctx.createGain()
+              musicGain.gain.value = musicLevel()
+              musicGain.connect(ctx.destination)
+              musicSrc = ctx.createBufferSource()
+              musicSrc.buffer = buf
+              musicSrc.loop = true
+              musicSrc.connect(musicGain)
+              musicSrc.start()
+            } else {
+              // 디코딩 실패: HTML 오디오로 대체 재생
+              musicEl = new Audio(MUSIC_SRCS[0])
+              musicEl.loop = true
+              musicEl.volume = musicLevel()
+              musicEl.play().catch(() => {})
+            }
           })
         }
         function syncMusic() {
           if (!musicEnabled()) return stopMusic()
-          if (!musicSrc) return playMusic()
-          musicGain.gain.value = musicLevel()
+          if (musicSrc) musicGain.gain.value = musicLevel()
+          else if (musicEl) musicEl.volume = musicLevel()
+          else playMusic()
         }
         function startMusic() {
           syncMusic()
@@ -11084,6 +11100,7 @@
           if (!AC) {
             try {
               AC = new (window.AudioContext || window.webkitAudioContext)()
+              if (navigator.audioSession) navigator.audioSession.type = "ambient"
             } catch (e) {}
           }
           if (AC && AC.state === "suspended") AC.resume()
