@@ -2807,7 +2807,10 @@
         width: 236px;
         height: 236px;
         border-radius: 50%;
-        box-shadow: 0 0 0 4px var(--wheel-rim), 0 0 0 8px var(--gold-400), 0 12px 30px var(--black-a-40);
+        box-shadow:
+          0 0 0 4px var(--wheel-rim),
+          0 0 0 8px var(--gold-400),
+          0 12px 30px var(--black-a-40);
         will-change: transform;
       }
 
@@ -2853,7 +2856,11 @@
         width: 26px;
         height: 32px;
         transform: translateX(-50%);
-        background: linear-gradient( var(--gold-100), var(--gold-500) 55%, var(--gold-pointer-dark) );
+        background: linear-gradient(
+          var(--gold-100),
+          var(--gold-500) 55%,
+          var(--gold-pointer-dark)
+        );
         clip-path: polygon(50% 100%, 0 25%, 18% 0, 82% 0, 100% 25%);
         z-index: 2;
       }
@@ -4772,8 +4779,7 @@
         inset: -8px;
       }
       /* 룰렛 */
-      
-      
+
       .bl {
         fill: var(--gold-100);
         animation: gzbl 1s steps(1) infinite;
@@ -4786,8 +4792,7 @@
           fill: var(--gold-blink-dim);
         }
       }
-      
-      
+
       .xrl:empty {
         background: none;
       }
@@ -4858,7 +4863,11 @@
         gap: 2px;
         padding: 10px 4px 8px;
         border-radius: 16px;
-        background: linear-gradient( 180deg, color-mix(in srgb, var(--rc) 30%, var(--blue-store-light)), var(--blue-store-dark) );
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--rc) 30%, var(--blue-store-light)),
+          var(--blue-store-dark)
+        );
         border: 1.5px solid color-mix(in srgb, var(--rc) 70%, transparent);
         box-shadow: 0 6px 14px var(--black-a-25);
         cursor: pointer;
@@ -4876,12 +4885,15 @@
         padding: 10px 12px;
         border-radius: 16px;
         text-align: left;
-        background: linear-gradient( 120deg, var(--gold-token-glow), var(--gold-token-edge) );
+        background: linear-gradient(
+          120deg,
+          var(--gold-token-glow),
+          var(--gold-token-edge)
+        );
         border: 1.5px solid var(--orange-500-b);
         box-shadow: 0 0 18px var(--gold-token-shadow);
       }
 
-      
       .xsi {
         width: 58px;
         height: 58px;
@@ -4942,7 +4954,7 @@
         background: var(--black-a-40);
         color: var(--ice-text);
       }
-      
+
       .xsf .xsi {
         width: 60px;
         height: 60px;
@@ -5072,7 +5084,13 @@
       .xcbg {
         position: absolute;
         inset: 0;
-        background: radial-gradient( 120% 70% at 50% 100%, var(--winter-purple) 0, var(--winter-blue) 42%, var(--winter-shadow) 75%, var(--winter-black) 100% );
+        background: radial-gradient(
+          120% 70% at 50% 100%,
+          var(--winter-purple) 0,
+          var(--winter-blue) 42%,
+          var(--winter-shadow) 75%,
+          var(--winter-black) 100%
+        );
       }
 
       #xcOv.near .xcbg,
@@ -5096,7 +5114,18 @@
         position: absolute;
         inset: 0;
         pointer-events: none;
-        background-image: radial-gradient(2px 2px at 20px 30px, var(--white), transparent), radial-gradient( 1.5px 1.5px at 90px 80px, var(--white-a-60), transparent ), radial-gradient( 2.5px 2.5px at 160px 20px, var(--white-a-80), transparent );
+        background-image:
+          radial-gradient(2px 2px at 20px 30px, var(--white), transparent),
+          radial-gradient(
+            1.5px 1.5px at 90px 80px,
+            var(--white-a-60),
+            transparent
+          ),
+          radial-gradient(
+            2.5px 2.5px at 160px 20px,
+            var(--white-a-80),
+            transparent
+          );
         background-size: 200px 160px;
         opacity: 0.8;
         animation: xcsn 6s linear infinite;
@@ -5105,7 +5134,18 @@
         position: absolute;
         inset: 0;
         pointer-events: none;
-        background-image: radial-gradient(2px 2px at 20px 30px, var(--white), transparent), radial-gradient( 1.5px 1.5px at 90px 80px, var(--white-a-60), transparent ), radial-gradient( 2.5px 2.5px at 160px 20px, var(--white-a-80), transparent );
+        background-image:
+          radial-gradient(2px 2px at 20px 30px, var(--white), transparent),
+          radial-gradient(
+            1.5px 1.5px at 90px 80px,
+            var(--white-a-60),
+            transparent
+          ),
+          radial-gradient(
+            2.5px 2.5px at 160px 20px,
+            var(--white-a-80),
+            transparent
+          );
         background-size: 320px 260px;
         opacity: 0.8;
         animation: xcsn 6s linear infinite;
@@ -5113,7 +5153,6 @@
         animation-duration: 3.5s;
       }
 
-      
       @keyframes xcsn {
         to {
           background-position: -40px 160px;
@@ -5472,7 +5511,7 @@
       }
 
       /* ===== 컷씬 배경: 크리스마스 밤 마을 ===== */
-      
+
       .xcgl {
         position: absolute;
         left: -10%;
@@ -5566,7 +5605,7 @@
           opacity: 0.5;
         }
       }
-      
+
       .xcsn3 {
         position: absolute;
         inset: 0;
@@ -5628,8 +5667,7 @@
       #xr .xrl {
         margin-top: 4px;
       }
-      
-      
+
       @keyframes rtpop {
         from {
           opacity: 0;
@@ -6297,7 +6335,7 @@
         /* 크리스마스 테마: false 로 바꾸면 눈/전구/장식이 전부 꺼져요 */
         const XMAS = true
         /* 디버그: true 면 상단 골드/토큰 표시를 눌러 값을 직접 입력할 수 있어요 (배포 전에 false) */
-        const DEBUG = false
+        const DEBUG = true
         const SAVE_KEY = "healing-fishing-v3"
         const defaultSave = () => ({
           gold: 0,
@@ -11010,11 +11048,14 @@
         /* ================= 사운드 / 진동 ================= */
         let AC = null,
           NB = null
-        const MUSIC_URL = "public/music/Wish Background.ogg"
-        let musicBuf = null,
-          musicLoading = null,
-          musicSrc = null,
+        // 음원은 m4a 하나만 사용. 재생할 수 없거나 로딩에 실패하면 재생하지 않음
+        const MUSIC_URL = "public/music/Wish Background.m4a"
+        let musicEl = null, // 스트리밍 재생기: 파일을 받는 대로 바로 재생
+          musicNode = null,
           musicGain = null
+        function musicCanPlay() {
+          return !!new Audio().canPlayType('audio/mp4; codecs="mp4a.40.2"')
+        }
         function musicEnabled() {
           return save.settings.music && (save.settings.musicVolume ?? 50) > 0
         }
@@ -11023,50 +11064,46 @@
             ? clamp((save.settings.musicVolume ?? 50) / 100, 0, 1)
             : 0
         }
-        function loadMusic() {
-          if (musicBuf) return Promise.resolve(musicBuf)
-          if (!musicLoading) {
-            musicLoading = fetch(MUSIC_URL)
-              .then((r) => r.arrayBuffer())
-              .then((b) => ac().decodeAudioData(b))
-              .then((buf) => (musicBuf = buf))
-              .catch((e) => {
-                musicLoading = null
-                console.error("Background music could not be loaded.", e)
-                return null
-              })
+        function ensureMusic() {
+          if (musicEl) return musicEl
+          if (!musicCanPlay()) return null
+          musicEl = new Audio(MUSIC_URL)
+          musicEl.addEventListener("error", () => {
+            // 로딩 실패: 이후 재생 시도하지 않음
+            musicEl = null
+            musicGain = null
+            musicNode = null
+          })
+          musicEl.loop = true
+          musicEl.preload = "auto"
+          const ctx = ac()
+          if (ctx && ctx.createMediaElementSource) {
+            // Web Audio 에 연결해 음량은 게인 노드로 조절
+            musicGain = ctx.createGain()
+            musicGain.connect(ctx.destination)
+            musicNode = ctx.createMediaElementSource(musicEl)
+            musicNode.connect(musicGain)
           }
-          return musicLoading
+          return musicEl
         }
-        function stopMusic() {
-          if (!musicSrc) return
-          try {
-            musicSrc.stop()
-          } catch (e) {}
-          musicSrc.disconnect()
-          musicSrc = null
+        function syncMusicVolume() {
+          if (musicGain) musicGain.gain.value = musicLevel()
+          else if (musicEl) musicEl.volume = musicLevel()
         }
         function playMusic() {
-          if (!musicEnabled() || musicSrc || document.hidden) return
-          const ctx = ac()
-          if (!ctx) return
-          loadMusic().then((buf) => {
-            // 로딩 사이에 설정이 바뀌었거나 이미 재생 중이면 무시
-            if (!buf || musicSrc || !musicEnabled() || document.hidden) return
-            musicGain = ctx.createGain()
-            musicGain.gain.value = musicLevel()
-            musicGain.connect(ctx.destination)
-            musicSrc = ctx.createBufferSource()
-            musicSrc.buffer = buf
-            musicSrc.loop = true
-            musicSrc.connect(musicGain)
-            musicSrc.start()
-          })
+          if (!musicEnabled() || document.hidden) return
+          const el = ensureMusic()
+          if (!el) return
+          syncMusicVolume()
+          el.play().catch(() => {})
+        }
+        function stopMusic() {
+          if (musicEl) musicEl.pause()
         }
         function syncMusic() {
           if (!musicEnabled()) return stopMusic()
-          if (!musicSrc) return playMusic()
-          musicGain.gain.value = musicLevel()
+          syncMusicVolume()
+          playMusic()
         }
         function startMusic() {
           syncMusic()
@@ -12883,7 +12920,15 @@
 
         /* ---- 탭 / 큰 지도 터치로 자동 걸어가기 (A* 길찾기) ---- */
         /* ================= 입력 ================= */
-        const joy = { id: null, cx: 0, cy: 0, x: 0, y: 0, snap: false, full: false },
+        const joy = {
+            id: null,
+            cx: 0,
+            cy: 0,
+            x: 0,
+            y: 0,
+            snap: false,
+            full: false,
+          },
           keys = new Set()
         let dragTap = null,
           autoMv = null,
@@ -12977,7 +13022,10 @@
           const fill = joy.snap ? clamp((l / R - 2.4) / 1.6, 0, 1) : 0
           joy.full = !!joy.snap && fill >= 1
           joyEl.classList.toggle("full", joy.full)
-          knob.style.setProperty("--lock-color", joy.full ? "var(--ac)" : "var(--white)")
+          knob.style.setProperty(
+            "--lock-color",
+            joy.full ? "var(--ac)" : "var(--white)",
+          )
           if (joy.snap)
             knob.style.setProperty("--lock-fill", Math.round(fill * 100) + "%")
         })
@@ -15550,7 +15598,8 @@
           vib(15)
           MP.acc = 9
         }
-        const sledById = (id) => (id ? sledList().find((s) => s.id === id) : null)
+        const sledById = (id) =>
+          id ? sledList().find((s) => s.id === id) : null
         const sledMine = () => sledList().find((s) => s.mine) || null
         // 비어 있는 썰매 번호(1~20, players/sl 규칙 범위)를 고른다
         function sledFreeId() {
@@ -15567,7 +15616,10 @@
               y: +s.y.toFixed(2),
               h: +s.h.toFixed(2),
               o: s.owner || sledSelf(),
-              t: s.t === undefined ? firebase.database.ServerValue.TIMESTAMP : s.t,
+              t:
+                s.t === undefined
+                  ? firebase.database.ServerValue.TIMESTAMP
+                  : s.t,
             })
             .catch(() => {})
           // 주인이 게임을 끄거나 연결이 끊기면 썰매도 사라진다
@@ -15610,25 +15662,41 @@
                   sledDrop(id, false) // 주인 없는 썰매
                   continue
                 }
-                const t = typeof r.t === "number" ? r.t : 0;
-                (byOwner[own] || (byOwner[own] = [])).push({ id, t })
+                const t = typeof r.t === "number" ? r.t : 0
+                ;(byOwner[own] || (byOwner[own] = [])).push({ id, t })
               }
               for (const own in byOwner) {
-                const list = byOwner[own].sort((a, b) => b.t - a.t || b.id - a.id)
+                const list = byOwner[own].sort(
+                  (a, b) => b.t - a.t || b.id - a.id,
+                )
                 for (let i = 1; i < list.length; i++)
                   sledDrop(list[i].id, own === sledSelf()) // 최근 것만 남기고 나머지 삭제
               }
               for (const k in v) {
                 const id = +k,
                   r = v[k]
-                if (!(id >= 1 && id <= 20) || !r || !isFinite(r.x) || !isFinite(r.y))
+                if (
+                  !(id >= 1 && id <= 20) ||
+                  !r ||
+                  !isFinite(r.x) ||
+                  !isFinite(r.y)
+                )
                   continue
                 seen.add(id)
                 const h = isFinite(r.h) ? +r.h : 0,
                   owner = typeof r.o === "string" ? r.o : "",
                   mineNow = !!owner && owner === sledSelf(),
                   s = sledById(id)
-                if (!s) L.push({ id, x: +r.x, y: +r.y, h, owner, mine: mineNow, t: r.t })
+                if (!s)
+                  L.push({
+                    id,
+                    x: +r.x,
+                    y: +r.y,
+                    h,
+                    owner,
+                    mine: mineNow,
+                    t: r.t,
+                  })
                 else {
                   s.owner = owner
                   s.mine = mineNow
@@ -15643,7 +15711,8 @@
               // DB 에서 사라진 다른 사람의 썰매는 정리 (타고 있는 중이면 유지)
               for (let i = L.length - 1; i >= 0; i--) {
                 const s = L[i]
-                if (!s.mine && !seen.has(s.id) && !sledOcc(s.id).length) L.splice(i, 1)
+                if (!s.mine && !seen.has(s.id) && !sledOcc(s.id).length)
+                  L.splice(i, 1)
               }
               SLED_UI.key = ""
             },
@@ -24312,13 +24381,18 @@
         }
         function gxStart(res, slot, n, best, br) {
           const el = $("#grOv"),
-            bi = br.it
+            bi = br.it,
+            QIMG =
+              "data:image/svg+xml," +
+              encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><text x="64" y="96" font-size="112" font-weight="900" text-anchor="middle" fill="#fff" font-family="sans-serif">?</text></svg>',
+              )
           GX.phase = "cap"
           const info =
             n === 1
               ? `<div class="gxinfo" id="gxInfo"><div class="gxrl">${RAR[bi.r].n}</div><div class="gxnm">${bi.n}</div><div class="gxpp">${gxPips(bi.ri)}</div><span class="gt ${br.tag}">${br.tag === "new" ? "NEW" : "+" + br.gold}</span><div class="stls grs">${statLines(bi)}</div><button class="btn big" id="grOk">확인</button></div>`
               : ""
-          el.innerHTML = `<div class="gxdim"></div><div class="gxflash"></div><button class="gxskip" type="button">건너뛰기</button><div class="gxmain" id="gxMain"><div class="gxone"><div class="gxst" id="gxSt"><div class="gxd1"></div><div class="gxd2"></div><svg class="gxring" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="49"/><circle class="fg" id="gxFg" cx="50" cy="50" r="49" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg><div class="gxpulse"></div><div class="gxsw sw-${slot}" id="gxSw"><div class="gxwb" id="gxWb"><img class="s1" alt="" src="${gearURL(bi.id, 128, true)}"><img class="s2" alt="" src="${gearURL(bi.id, 128)}"></div></div></div>${info}</div></div>`
+          el.innerHTML = `<div class="gxdim"></div><div class="gxflash"></div><button class="gxskip" type="button">건너뛰기</button><div class="gxmain" id="gxMain"><div class="gxone"><div class="gxst" id="gxSt"><div class="gxd1"></div><div class="gxd2"></div><svg class="gxring" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="49"/><circle class="fg" id="gxFg" cx="50" cy="50" r="49" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg><div class="gxpulse"></div><div class="gxsw sw-${slot}" id="gxSw"><div class="gxwb" id="gxWb"><img class="s1" alt="" src="${n === 10 ? QIMG : gearURL(bi.id, 128, true)}"><img class="s2" alt="" src="${n === 10 ? QIMG : gearURL(bi.id, 128)}"></div></div></div>${info}</div></div>`
           const T =
               n === 10
                 ? 2300
@@ -24382,7 +24456,7 @@
           const main = $("#gxMain")
           main.innerHTML = `<div class="gxten ${inst ? "gxinst" : ""}"><h3>${S.n} 10회</h3><div class="gxgrid">${order
             .map((r, i) => {
-              const mystery = i === 0,
+              const mystery = false,
                 c = mystery ? "#fff" : RAR[r.it.r].c,
                 ri = r.it.ri
               return `<div class="gxc ri${ri}${mystery ? " mystery" : ""}" style="--rc:${c}"><div class="in"><div class="gxb"><i></i></div><div class="gxf">${mystery ? '<span class="mystery-mark">?</span>' : `${r.tag === "new" ? "<em>NEW</em>" : ""}<img src="${gearURL(r.it.id, 64)}" alt=""><span class="nm">${r.it.n}</span><i class="bar"></i>`}</div></div></div>`
@@ -24499,7 +24573,7 @@
             ["x1", 150],
             ["x4", 150],
             ["x7", 150],
-            ["sled", 200],
+            ["sled", 500],
           ],
           XR_PRIZE = [
             [0, "sled", 0, 0.8],
