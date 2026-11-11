@@ -15229,7 +15229,7 @@
         }
         // 운전자 이동: 내 좌석이 아니라 썰매 전체가 부딪히는지로 판단
         function sledMoveAxis(dx, dy) {
-          const s = sledList()[P.sl - 1]
+          const s = sledById(P.sl)
           if (!s) return moveAxis(dx, dy)
           const r = sledRot(s.h, SLED_SEATS[P.ss] || SLED_SEATS[0]),
             cx = P.x - r[0],
@@ -15251,7 +15251,7 @@
           sledBumpCd -= dt
           P.bumpT = (P.bumpT || 0) - dt
           const L = sledList(),
-            me = L[P.sl - 1]
+            me = sledById(P.sl)
           if (!me || !P.drv) return
           const r = sledRot(me.h, SLED_SEATS[P.ss] || SLED_SEATS[0]),
             cx = P.x - r[0],
@@ -15340,7 +15340,7 @@
         function sledRam() {
           if (!P.drv) return
           const sp = Math.hypot(P.vx, P.vy),
-            me = sledList()[P.sl - 1]
+            me = sledById(P.sl)
           if (sp < SLED_HITV || !me) return
           const c = Math.cos(me.h),
             n = Math.sin(me.h),
@@ -15400,8 +15400,9 @@
           }
         }
         function sledStep(dt = 0) {
+          sledWatch()
           const L = sledList()
-          if (!sledEquipped() && L.length && !P.sl) L.length = 0
+          if (!sledEquipped() && !P.sl) sledRemoveMine()
           sledBuild()
           for (const s of L) {
             // 운전자가 바라보는 쪽으로 썰매도 부드럽게 돌아간다
@@ -15439,7 +15440,7 @@
                 d.o.y = s.y + f[1]
               }
           }
-          if (P.sl && !L[P.sl - 1]) P.sl = 0
+          if (P.sl && !sledById(P.sl)) P.sl = 0
           if (P.sl) {
             // 같은 자리를 동시에 잡으면 uid 가 작은 쪽이 우선, 나머지는 빈 자리로 이동
             const occ = sledOcc(P.sl),
@@ -15493,7 +15494,7 @@
         }
         // 동승자: 운전자 위치에서 계산한 내 좌석으로 따라가요
         function sledSeat() {
-          const s = sledList()[P.sl - 1],
+          const s = sledById(P.sl),
             d = sledOcc(P.sl)[0]
           if (!s || !d || d.me) return
           const f = sledRot(s.h, SLED_SEATS[P.ss] || SLED_SEATS[0])
@@ -15549,20 +15550,69 @@
           vib(15)
           MP.acc = 9
         }
-        function sledSaveRest(s) {
-          if (s.personal) return
+        const sledById = (id) => (id ? sledList().find((s) => s.id === id) : null)
+        const sledMine = () => sledList().find((s) => s.mine) || null
+        // 비어 있는 썰매 번호(1~20, players/sl 규칙 범위)를 고른다
+        function sledFreeId() {
+          const L = sledList()
+          for (let i = 1; i <= 20; i++) if (!L.some((s) => s.id === i)) return i
+          return 0
+        }
+        function sledPut(s) {
           if (MP.on && MP.user && MP.db)
             MP.db
               .ref("world/main/sleds/" + s.id)
-              .set({
-                x: +s.x.toFixed(2),
-                y: +s.y.toFixed(2),
-                h: +s.h.toFixed(2),
-              })
+              .set({ x: +s.x.toFixed(2), y: +s.y.toFixed(2), h: +s.h.toFixed(2) })
               .catch(() => {})
         }
+        function sledRemoveMine() {
+          const s = sledMine()
+          if (!s) return
+          sledArr = sledList().filter((x) => x !== s)
+          if (MP.on && MP.user && MP.db)
+            MP.db.ref("world/main/sleds/" + s.id).remove().catch(() => {})
+        }
+        // 모든 플레이어의 썰매를 실시간으로 받아 맵에 그린다 (탑승 버튼도 같이 뜬다)
+        let sledWatching = false
+        function sledWatch() {
+          if (sledWatching || !(MP.on && MP.user && MP.db)) return
+          sledWatching = true
+          MP.db.ref("world/main/sleds").on(
+            "value",
+            (snap) => {
+              const v = snap.val() || {},
+                L = sledList(),
+                seen = new Set()
+              for (const k in v) {
+                const id = +k,
+                  r = v[k]
+                if (!(id >= 1 && id <= 20) || !r || !isFinite(r.x) || !isFinite(r.y))
+                  continue
+                seen.add(id)
+                const h = isFinite(r.h) ? +r.h : 0,
+                  s = sledById(id)
+                if (!s) L.push({ id, x: +r.x, y: +r.y, h })
+                else if (!s.mine && !sledOcc(id).length) {
+                  s.x = +r.x
+                  s.y = +r.y
+                  s.h = h
+                }
+              }
+              // DB 에서 사라진 다른 사람의 썰매는 정리 (타고 있는 중이면 유지)
+              for (let i = L.length - 1; i >= 0; i--) {
+                const s = L[i]
+                if (!s.mine && !seen.has(s.id) && !sledOcc(s.id).length) L.splice(i, 1)
+              }
+              SLED_UI.key = ""
+            },
+            () => {},
+          )
+        }
+        function sledSaveRest(s) {
+          sledPut(s)
+        }
         function sledDismount() {
-          const s = sledList()[P.sl - 1]
+          const s = sledById(P.sl)
           if (!s) {
             P.sl = 0
             return
@@ -15623,11 +15673,19 @@
             const x = P.x + c * a - n * b,
               y = P.y + n * a + c * b
             if (sledHit(x, y, h)) continue
-            let s = L[0]
-            if (!s) L.push((s = { id: 1, x, y, h, personal: true }))
+            let s = sledMine()
+            if (!s) {
+              const id = sledFreeId()
+              if (!id) {
+                toast("맵에 썰매가 가득 찼어요", 1600)
+                return false
+              }
+              L.push((s = { id, x, y, h, mine: true }))
+            }
             s.x = x
             s.y = y
             s.h = h
+            sledPut(s)
             SLED_UI.key = ""
             SLED_UI.near = null
             sledSnow(x, y, 12)
@@ -15645,10 +15703,11 @@
               return (toast("낚시 중에는 보관할 수 없어요", 1400), false)
             sledDismount()
           }
-          const L = sledList(),
-            s = L[0]
-          if (s) sledSnow(s.x, s.y, 10)
-          L.length = 0
+          const s = sledMine()
+          if (s) {
+            sledSnow(s.x, s.y, 10)
+            sledRemoveMine()
+          }
           SLED_UI.key = ""
           SLED_UI.near = null
           sfx.tick && sfx.tick()
@@ -25012,7 +25071,7 @@
           const sh = $("#itSheet"),
             have = !!save.sled,
             on = sledEquipped(),
-            out = sledList().length > 0,
+            out = !!sledMine(),
             c = RAR.legendary ? RAR.legendary.c : "#f5a623"
           $("#itBody").style.setProperty("--rc", c)
           $("#itBody").innerHTML =
