@@ -16308,7 +16308,16 @@
         function sledStep(dt = 0) {
           sledWatch()
           const L = sledList()
-          if (!sledEquipped() && !P.sl) sledRemoveMine()
+          if (!sledEquipped()) {
+            const mine = sledMine()
+            if (mine) {
+              if (P.sl === mine.id) {
+                if (F.phase !== "idle") cancelCast()
+                sledDismount()
+              }
+              if (P.sl !== mine.id) sledRemoveMine()
+            }
+          }
           sledBuild()
           for (const s of L) {
             // 운전자가 바라보는 쪽으로 썰매도 부드럽게 돌아간다
@@ -16502,6 +16511,12 @@
             ref.remove().catch(() => {})
           }
         }
+        // 브라우저를 닫거나 이동하면 내 썰매도 같이 치운다
+        window.addEventListener("pagehide", () => {
+          try {
+            if (sledMine()) sledRemoveMine()
+          } catch (e) {}
+        })
         function sledDrop(id, mine) {
           if (!(MP.on && MP.user && MP.db)) return
           const ref = MP.db.ref("world/main/sleds/" + id)
@@ -16578,8 +16593,16 @@
               // DB 에서 사라진 다른 사람의 썰매는 정리 (타고 있는 중이면 유지)
               for (let i = L.length - 1; i >= 0; i--) {
                 const s = L[i]
-                if (!s.mine && !seen.has(s.id) && !sledOcc(s.id).length)
+                if (!s.mine && !seen.has(s.id)) {
+                  if (P.sl === s.id) {
+                    P.sl = 0
+                    P.ss = 0
+                    P.vx = P.vy = 0
+                    P.drv = false
+                    toast("썰매가 사라졌어요", 1600)
+                  }
                   L.splice(i, 1)
+                }
               }
               SLED_UI.key = ""
             },
