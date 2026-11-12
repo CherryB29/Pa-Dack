@@ -5472,7 +5472,7 @@
         );
       }
 
-      #xcOv.near .xcbg,
+      /* 결과가 나오기 전에는 배경이 등급 색으로 변하지 않아요 (미리 알면 재미없으니까) */
       #xcOv.rv .xcbg {
         background: radial-gradient(
           120% 80% at 50% 45%,
@@ -5480,14 +5480,6 @@
           var(--winter-midnight) 62%,
           var(--winter-deep) 100%
         );
-      }
-      #xcOv.big.near:not(.rv) .xcbg {
-        animation: xcpulse 0.7s ease-in-out infinite;
-      }
-      @keyframes xcpulse {
-        50% {
-          filter: brightness(1.35);
-        }
       }
       .xcsn {
         position: absolute;
@@ -9904,7 +9896,11 @@
               ri: f.ri,
             }
           }
-          const L = save.gear.luck + coBuff().luck + CFGX.luck
+          const L =
+            save.gear.luck +
+            coBuff().luck +
+            CFGX.luck +
+            (save.gear.snowluck && snowAt(P.x, P.y) ? save.gear.snowluck : 0)
           let tot = 0
           const ws = RORD.map((r, i) => {
             const w = RAR[r].w * FRW[r] * (1 + L * i)
@@ -15033,6 +15029,7 @@
           F.lure = null
           ripple(F.bx, F.by, 1)
           toast("앗, 놓쳤어요… 다시 던져봐요")
+          petReact("sad")
           sfx.lost()
         }
         function hook() {
@@ -15220,6 +15217,7 @@
           splash(F.bx, F.by, 10, 0.8)
           sfx.lost()
           vib(120)
+          petReact("sad")
           toast("물고기가 도망쳤어요")
         }
         function successReel() {
@@ -15411,6 +15409,7 @@
           mpCatch(p)
           showCard(p, isNew)
           sparkBurst(P.x, P.y, p.ri)
+          petReact(p.ri >= 3 ? "epic" : p.ri === 2 || twin || xn ? "joy" : "cheer")
           sfx.jingle(p.ri)
           vib(p.ri >= 3 ? [60, 40, 60, 40, 120] : p.ri >= 1 ? [40, 30, 40] : 30)
           if (p.ri >= 4) {
@@ -15693,7 +15692,7 @@
         }
 
 /* ================= 크리스마스 장비 특수 능력 =================
-   산타 모자: 눈 위 쌍걸이 +10%p / 아이스 스케이트: 눈 위 +55% 속도 + 미끄러짐 / 캔디 케인: 나무 스윙 */
+   산타 모자: 눈 위 쌍걸이 +10%p + 행운 +0.4 / 아이스 스케이트: 눈 위 +55% 속도 + 미끄러짐 / 캔디 케인: 나무 스윙 */
         const snowSm = (a, b, x) => {
           const t = x < a ? 0 : x > b ? 1 : (x - a) / (b - a)
           return t * t * (3 - 2 * t)
@@ -16966,7 +16965,30 @@
         sledBtn.addEventListener("click", sledToggle)
 
         /* --- 펫: 뒤에서 졸졸 따라와요 --- */
-        const PET = { x: 0, y: 0, hop: 0, vh: 0, ph: 0, init: false, last: "" }
+        const PET = { x: 0, y: 0, hop: 0, vh: 0, ph: 0, init: false, last: "", idleT: 0, mood: "", mt: 0, seed: Math.random() }
+        const PET_MOOD_DUR = { alert: 0.6, cheer: 1, joy: 2, epic: 3.2, sad: 1.7 }
+        /* 펫 감정: 좋은 걸 낚으면 기뻐하고, 놓치면 시무룩해요 */
+        function petReact(kind) {
+          if (!PET.init || !(save.equip && save.equip.pet)) return
+          if (kind === "alert" && PET.mood && PET.mood !== "alert") return
+          PET.mood = kind
+          PET.mt = 0
+          if (kind === "joy" || kind === "epic")
+            for (let i = 0; i < (kind === "epic" ? 16 : 9); i++)
+              emit({
+                kind: "d",
+                x: PET.x + rnd(-0.25, 0.25),
+                y: PET.y + rnd(-0.1, 0.1),
+                z: 0.35,
+                vx: rnd(-0.7, 0.7),
+                vy: rnd(-0.4, 0.4),
+                vz: rnd(0.8, 1.8),
+                max: 0.8,
+                col: Math.random() < 0.5 ? "#ffd84a" : "#ff8fb4",
+                sz: rnd(2.4, 4),
+                g: 2,
+              })
+        }
         function petFollow(pt, tx, ty, dt, moving, kk = 1) {
           const dx = tx - pt.x,
             dy = ty - pt.y,
@@ -17095,7 +17117,16 @@
               sz: rnd(2.2, 3.8),
               g: 0,
             })
-          if (F.phase === "bite" && PET.hop <= 0 && PET.vh <= 0) PET.vh = 5
+          if (Math.hypot(P.vx, P.vy) > 0.3 || F.phase === "bite") PET.idleT = 0
+          else PET.idleT += dt
+          if (PET.mood) {
+            PET.mt += dt
+            if (PET.mt >= (PET_MOOD_DUR[PET.mood] || 1)) PET.mood = ""
+          }
+          if (F.phase === "bite" && PET.hop <= 0 && PET.vh <= 0) {
+            PET.vh = 5
+            petReact("alert")
+          }
           PET.vh -= 14 * dt
           PET.hop += PET.vh * dt
           if (PET.hop < 0) {
@@ -17103,19 +17134,174 @@
             PET.vh = Math.max(PET.vh, 0)
           }
         }
-        function drawPetAt(id, x, y, hop, ph, moving) {
+        /* 날아다니는 펫(새·올빼미·불사조·용): 몸통 그림에서 날개를 떼어 내고, 날개를 따로 파닥여요 */
+        const flyKits = {}
+        function petFlyKit(id) {
+          if (flyKits[id] !== undefined) return flyKits[id]
+          const it = IBY[id],
+            S = 128,
+            B = S * 3,
+            off = B / 2 - S / 2
+          let kit = null
+          try {
+            const big = document.createElement("canvas")
+            big.width = big.height = B
+            const bg = big.getContext("2d", { willReadFrequently: true })
+            bg.save()
+            bg.translate(off, off)
+            bg.scale(S / 64, S / 64)
+            gearArt(bg, it)
+            bg.restore()
+            const dt = bg.getImageData(0, 0, B, B).data
+            let x0 = B,
+              y0 = B,
+              x1 = 0,
+              y1 = 0
+            for (let y = 0; y < B; y++)
+              for (let x = 0; x < B; x++)
+                if (dt[(y * B + x) * 4 + 3] > 6) {
+                  if (x < x0) x0 = x
+                  if (x > x1) x1 = x
+                  if (y < y0) y0 = y
+                  if (y > y1) y1 = y
+                }
+            if (x1 >= x0) {
+              const bw = x1 - x0 + 1,
+                bh = y1 - y0 + 1,
+                sc = Math.min(1.12, (S * 0.86) / Math.max(bw, bh)),
+                tx = S / 2 - (bw * sc) / 2 + (off - x0) * sc,
+                ty = S / 2 - (bh * sc) / 2 + (off - y0) * sc,
+                cv = document.createElement("canvas")
+              cv.width = cv.height = S
+              const g = cv.getContext("2d")
+              g.imageSmoothingQuality = "high"
+              g.translate(tx, ty)
+              g.scale(2 * sc, 2 * sc)
+              gearArt(g, Object.assign({}, it, { art: Object.assign({}, it.art, { nowing: 1 }) }))
+              kit = { img: cv, tx, ty, sc, S }
+            }
+          } catch (e) {
+            kit = null
+          }
+          return (flyKits[id] = kit)
+        }
+        function wingShade(col, v) {
+          let h = String(col),
+            r,
+            g,
+            b
+          if (h[0] === "r") [r, g, b] = h.match(/\d+/g).map(Number)
+          else {
+            h = h.replace("#", "")
+            if (h.length === 3) h = h.split("").map((q) => q + q).join("")
+            r = parseInt(h.slice(0, 2), 16)
+            g = parseInt(h.slice(2, 4), 16)
+            b = parseInt(h.slice(4, 6), 16)
+          }
+          const m = v > 0 ? 255 : 0,
+            w = Math.abs(v)
+          return "rgb(" + [r, g, b].map((q) => Math.round(q + (m - q) * w)).join(",") + ")"
+        }
+        /* 그림 좌표(64칸) 기준으로 양쪽 날개를 그려요. fl > 0 이면 날개가 아래로 내려가는 중 */
+        function drawFlapWings(c, art, fl) {
+          const t = art.t
+          for (const side of [-1, 1]) {
+            c.save()
+            if (side > 0) {
+              c.translate(64, 0)
+              c.scale(-1, 1)
+            }
+            c.lineJoin = "round"
+            c.lineWidth = 1.3
+            if (t === "dragon") {
+              const th = -0.18 - fl * 0.5
+              c.translate(20, 37)
+              c.rotate(th)
+              c.translate(-20, -37)
+              c.beginPath()
+              c.moveTo(18, 38)
+              c.bezierCurveTo(8, 30, 3, 22, 4, 14)
+              c.quadraticCurveTo(10, 20, 14, 19)
+              c.quadraticCurveTo(16, 26, 22, 26)
+              c.quadraticCurveTo(22, 32, 24, 36)
+              c.closePath()
+              c.fillStyle = art.c
+              c.fill()
+              c.strokeStyle = wingShade(art.c, -0.36)
+              c.stroke()
+              c.strokeStyle = wingShade(art.c, -0.4)
+              c.lineWidth = 1
+              c.beginPath()
+              c.moveTo(20, 36)
+              c.lineTo(7, 17)
+              c.moveTo(20, 36)
+              c.lineTo(14, 22)
+              c.stroke()
+            } else {
+              const owl = t === "owl",
+                th = (owl ? 0.5 : 0.75) - fl * (owl ? 0.5 : 0.7),
+                col = wingShade(art.a, owl ? -0.18 : -0.16)
+              c.translate(20, owl ? 38 : 37)
+              c.rotate(th)
+              c.beginPath()
+              c.ellipse(0, 10, owl ? 4.8 : 5.2, 10.5, 0, 0, 6.2832)
+              c.fillStyle = col
+              c.fill()
+              c.strokeStyle = wingShade(col, -0.3)
+              c.stroke()
+              if (art.fire) {
+                c.beginPath()
+                c.ellipse(0, 13, 3, 8, 0, 0, 6.2832)
+                c.fillStyle = "#ff5a3a"
+                c.fill()
+              }
+            }
+            c.restore()
+          }
+        }
+        function petHeart(c, x, y, r, col, al) {
+          c.save()
+          c.globalAlpha = al
+          c.fillStyle = col
+          c.beginPath()
+          c.moveTo(x, y + r * 0.9)
+          c.bezierCurveTo(x - r * 1.5, y - r * 0.1, x - r * 0.8, y - r * 1.2, x, y - r * 0.4)
+          c.bezierCurveTo(x + r * 0.8, y - r * 1.2, x + r * 1.5, y - r * 0.1, x, y + r * 0.9)
+          c.fill()
+          c.restore()
+        }
+        function petStar(c, x, y, r, col, al) {
+          c.save()
+          c.globalAlpha = al
+          c.fillStyle = col
+          c.beginPath()
+          c.moveTo(x, y - r)
+          c.quadraticCurveTo(x, y, x + r, y)
+          c.quadraticCurveTo(x, y, x, y + r)
+          c.quadraticCurveTo(x, y, x - r, y)
+          c.quadraticCurveTo(x, y, x, y - r)
+          c.fill()
+          c.restore()
+        }
+        function drawPetAt(id, x, y, hop, ph, moving, st) {
           const s = TS / 48,
             sx = sxv(x),
             sy = syv(y)
           if (sx < -60 || sx > W + 60 || sy < -60 || sy > H + 80) return
           const sw = isW(x, y),
-            im = gearImg(id)
-          if (!im.complete || !im.naturalWidth) return
+            gim = gearImg(id)
+          if (!gim.complete || !gim.naturalWidth) return
           const m = petMvOf(id),
             art = IBY[id].art,
             sz = 30 * s,
             tm = time,
-            sn = Math.sin
+            sn = Math.sin,
+            wk =
+              (m.st === "fly" || m.st === "glide") &&
+              (art.t === "bird" || art.t === "owl" || art.t === "dragon")
+                ? petFlyKit(id)
+                : null,
+            im = wk ? wk.img : gim
           let lift = 0,
             rot = 0,
             qx = 1,
@@ -17208,6 +17394,97 @@
               qx = 1 / qy
             }
           }
+          /* ---- 귀여운 대기·감정 모션 ---- */
+          const stt = st || {},
+            idle = moving ? 0 : stt.idleT || 0,
+            seed =
+              stt.seed !== undefined
+                ? stt.seed
+                : (stt.seed = [...String(id)].reduce((q, ch) => q + ch.charCodeAt(0), 0) % 97 / 97 + (x * 0.013) % 1),
+            flyer = m.st === "fly" || m.st === "glide",
+            mood = stt.mood || "",
+            mdur = PET_MOOD_DUR[mood] || 1,
+            mu = mood ? clamp((stt.mt || 0) / mdur, 0, 1) : 0
+          let flapSpd = 1,
+            wingFold = false,
+            heartT = -1,
+            starT = -1,
+            zzz = false,
+            alertT = -1,
+            tearT = -1,
+            spin = 0
+          if (mood) {
+            const mt = stt.mt || 0
+            if (mood === "alert") {
+              rot += sn(mt * 40) * 0.1 * (1 - mu)
+              alertT = mu
+            } else if (mood === "cheer") {
+              const g = Math.abs(sn(mu * Math.PI * 2))
+              lift += g * 8 * s
+              qy *= 1 + (g - 0.5) * 0.1
+              qx = 1 / qy
+              heartT = mu
+              flapSpd = 1.6
+            } else if (mood === "joy" || mood === "epic") {
+              const hops = mood === "epic" ? 4 : 3,
+                g = Math.abs(sn(mu * Math.PI * hops))
+              lift += g * (mood === "epic" ? 17 : 13) * s
+              qy *= 1 + (g - 0.5) * 0.16
+              qx = 1 / qy
+              rot += sn(mt * 16) * 0.09 * (1 - mu)
+              if (mood === "epic" && mu < 0.55) spin = (mu / 0.55) * 6.2832
+              heartT = mu
+              starT = mu
+              flapSpd = 2
+            } else if (mood === "sad") {
+              const dr = Math.sin(Math.min(1, mu * 3) * 1.5708)
+              qy *= 1 - 0.1 * dr
+              qx = 1 / qy
+              rot += sn(mt * 7) * 0.035 * dr
+              lift *= flyer ? 1 - 0.5 * dr : 1
+              tearT = mu
+              flapSpd = 0.6
+            }
+          } else if (!moving && idle > (DN.n > 0.6 ? 6 : 14)) {
+            // 졸려서 낮잠: 숨 쉬며 꾸벅꾸벅, 날개는 접어요
+            const br = sn(tm * 1.6 + seed * 6)
+            lift = flyer ? lift * 0.25 : 0
+            rot = 0.12 + br * 0.012
+            qy = 0.96 + br * 0.025
+            qx = 1 / qy
+            ox = 0
+            zzz = true
+            wingFold = true
+          } else if (!moving && idle > 2.2) {
+            const T = tm + seed * 7,
+              slot = Math.floor(T / 6),
+              u = (T % 6) / 6,
+              hh = Math.abs(sn(slot * 12.9898 + seed * 78.233) * 43758.5453) % 1,
+              act = Math.floor(hh * 6)
+            if (act === 1 && u < 0.5) {
+              // 두리번두리번
+              rot += sn(u * 12.566) * 0.13
+              ox += sn(u * 12.566) * 1.2 * s
+            } else if (act === 2 && u < 0.4) {
+              // 쭈욱 기지개
+              const e = sn((u / 0.4) * Math.PI)
+              qy *= 1 + 0.12 * e
+              qx *= 1 - 0.07 * e
+            } else if (act === 3 && u < 0.45) {
+              // 신나서 콩콩
+              const g = Math.abs(sn((u / 0.45) * Math.PI * 2))
+              lift += g * 7 * s
+              qy *= 1 + (g - 0.5) * 0.12
+              qx = 1 / qy
+            } else if (act === 4 && u < 0.25) {
+              // 부르르
+              rot += sn(u * 90) * 0.12 * (1 - u / 0.25)
+            } else if (act === 5 && u < 0.65) {
+              // 마음이 몽글몽글
+              heartT = u / 0.65
+              lift += sn(u * 18) * 1.4 * s
+            }
+          }
           lift += hop * 10 * s
           if (!sw) {
             const sh = Math.max(0.55, 1 - lift / (46 * s))
@@ -17228,7 +17505,23 @@
           ctx.translate(sx + ox, sy + (sw ? 3 * s : 0) - lift)
           if (rot) ctx.rotate(rot)
           ctx.scale(qx, qy)
+          if (spin) {
+            ctx.translate(0, -sz * 0.45)
+            ctx.rotate(spin)
+            ctx.translate(0, sz * 0.45)
+          }
+          const wingsBack = wk && art.t === "dragon",
+            wingFl = wk ? (wingFold ? (art.t === "dragon" ? -0.35 : 1) : sn(tm * m.flap * flapSpd + x * 3)) : 0,
+            wingsDraw = () => {
+              ctx.save()
+              ctx.translate(-sz / 2 + (wk.tx * sz) / wk.S, -sz + 2 * s + (wk.ty * sz) / wk.S)
+              ctx.scale((wk.sc * sz) / 64, (wk.sc * sz) / 64)
+              drawFlapWings(ctx, art, wingFl)
+              ctx.restore()
+            }
+          if (wingsBack) wingsDraw()
           ctx.drawImage(im, -sz / 2, -sz + 2 * s, sz, sz)
+          if (wk && !wingsBack) wingsDraw()
           if (art.nose) {
             // 루돌프의 코: 깜빡이며 빛나요
             const gy = -sz + 2 * s + (sz * 34) / 64,
@@ -17248,6 +17541,81 @@
             ctx.globalCompositeOperation = "source-over"
           }
           ctx.restore()
+          // 머리 위 표현: 하트·반짝이·zzz·느낌표·눈물
+          const hx = sx + ox,
+            hy = sy + (sw ? 3 * s : 0) - lift - sz * 0.95
+          if (heartT >= 0)
+            for (let i = 0; i < 3; i++) {
+              const q = heartT - i * 0.12
+              if (q <= 0 || q >= 1) continue
+              petHeart(
+                ctx,
+                hx + (i - 1) * sz * 0.3 + sn(q * 6 + i) * sz * 0.06,
+                hy - q * sz * 0.55,
+                (i === 1 ? 4.4 : 3.2) * s,
+                i === 1 ? "#ff5f93" : "#ff8fb4",
+                sn(q * Math.PI),
+              )
+            }
+          if (starT >= 0)
+            for (let i = 0; i < 6; i++) {
+              const a = (i / 6) * 6.2832 + 0.5,
+                d = sz * (0.35 + starT * 0.55)
+              petStar(
+                ctx,
+                hx + Math.cos(a) * d,
+                hy + sz * 0.35 + Math.sin(a) * d * 0.7,
+                (3 + (i % 2) * 2) * s,
+                i % 2 ? "#ffe27a" : "#fff",
+                sn(starT * Math.PI),
+              )
+            }
+          if (zzz) {
+            ctx.save()
+            ctx.textAlign = "center"
+            ctx.textBaseline = "middle"
+            ctx.lineJoin = "round"
+            for (let i = 0; i < 3; i++) {
+              const q = (tm * 0.5 + i / 3) % 1
+              ctx.globalAlpha = sn(q * Math.PI) * 0.95
+              ctx.font = `900 ${(7 + q * 7) * s}px "Hada Round",sans-serif`
+              ctx.lineWidth = 2.5
+              ctx.strokeStyle = "rgba(40,60,110,.8)"
+              ctx.strokeText(i % 2 ? "z" : "Z", hx + sz * 0.3 + q * sz * 0.3, hy + sz * 0.2 - q * sz * 0.55)
+              ctx.fillStyle = "#e8f2ff"
+              ctx.fillText(i % 2 ? "z" : "Z", hx + sz * 0.3 + q * sz * 0.3, hy + sz * 0.2 - q * sz * 0.55)
+            }
+            ctx.restore()
+          }
+          if (alertT >= 0) {
+            ctx.save()
+            ctx.textAlign = "center"
+            ctx.textBaseline = "middle"
+            ctx.globalAlpha = 1 - alertT * 0.5
+            ctx.font = `900 ${14 * s}px "Hada Round",sans-serif`
+            ctx.lineWidth = 3
+            ctx.lineJoin = "round"
+            ctx.strokeStyle = "rgba(120,50,0,.85)"
+            const ay = hy - sz * 0.05 - sn(Math.min(1, alertT * 3) * Math.PI) * 3 * s
+            ctx.strokeText("!", hx, ay)
+            ctx.fillStyle = "#ffd84a"
+            ctx.fillText("!", hx, ay)
+            ctx.restore()
+          }
+          if (tearT >= 0) {
+            ctx.save()
+            ctx.globalAlpha = sn(Math.min(1, tearT * 1.4) * Math.PI) * 0.9
+            ctx.fillStyle = "#7fd0ff"
+            const tx = hx - sz * 0.17,
+              ty = hy + sz * 0.5 + tearT * sz * 0.3,
+              r = 2.2 * s
+            ctx.beginPath()
+            ctx.moveTo(tx, ty - r * 1.8)
+            ctx.quadraticCurveTo(tx + r * 1.3, ty, tx, ty + r * 0.8)
+            ctx.quadraticCurveTo(tx - r * 1.3, ty, tx, ty - r * 1.8)
+            ctx.fill()
+            ctx.restore()
+          }
         }
         function update(dt) {
           sledStep(dt)
@@ -20265,7 +20633,7 @@
             return drawOther(o)
           }
           if (it.k === "T")
-            return drawPetAt(it.id, it.x, it.y, it.hop, it.ph, it.mv)
+            return drawPetAt(it.id, it.x, it.y, it.hop, it.ph, it.mv, it.st)
           if (it.k === "S") return drawStruct(it.s)
           if (it.k >= 7) return drawDec2(it)
           const s = TS / 48,
@@ -22063,6 +22431,7 @@
                 hop: PET.hop,
                 ph: PET.ph,
                 mv: Math.hypot(P.vx, P.vy) > 0.3,
+                st: PET,
                 key: PET.y,
               })
           }
@@ -22077,6 +22446,7 @@
                 hop: 0,
                 ph: o.pp.ph,
                 mv: (o.mv || 0) > 0.2,
+                st: o.pp,
                 key: o.pp.y,
               })
           }
@@ -22818,12 +23188,15 @@
           guard: "리듬 보호",
           coop: "동료 시너지",
           snowtwin: "눈 위 쌍걸이",
+          snowluck: "눈 위 행운",
           skate: "얼음 질주",
           cane: "나무 그랩 스윙",
           sense: "보물 냄새",
         }
         const fmtSp = (k, v) =>
-          k === "snowtwin"
+          k === "snowluck"
+            ? "+" + v.toFixed(1)
+            : k === "snowtwin"
             ? "+" + Math.round(v * 100) + "%p"
             : k === "skate" || k === "cane" || k === "sense"
               ? "ON"
@@ -23995,7 +24368,7 @@
             4,
             { luck: 1.3, bite: 0.7, zone: 0.6 },
             { t: "santa", a: "#e0302e", b: "#ffffff", sp: 1 },
-            { gold: 0.2, big: 0.15, snowtwin: 0.1 },
+            { gold: 0.2, big: 0.15, snowtwin: 0.1, snowluck: 0.4 },
           ],
           [
             "x8",
@@ -24074,6 +24447,7 @@
             guard: 0,
             coop: 0,
             snowtwin: 0, // 산타 모자: 눈 위 쌍걸이 추가 확률
+            snowluck: 0, // 산타 모자: 눈 위 행운 추가
             skate: 0, // 아이스 스케이트: 눈 위 가속 + 미끄러짐
             cane: 0, // 캔디 케인 낚싯대: 나무 걸기 스윙
           }
@@ -25079,11 +25453,13 @@
               O(32, 44, 16, 14, a)
               E(32, 47.6, 10.5, 10, b)
               hl(25, 36, 6, 3.4)
-              O(16.5, 44.5, 5.2, 10.5, sd(a, -0.16), 0.18)
-              O(47.5, 44.5, 5.2, 10.5, sd(a, -0.16), -0.18)
-              if (o.fire) {
-                FL("#ff5a3a", 13.5, 53, 9, 3)
-                FL("#ff5a3a", 50.5, 53, 9, 3)
+              if (!o.nowing) {
+                O(16.5, 44.5, 5.2, 10.5, sd(a, -0.16), 0.18)
+                O(47.5, 44.5, 5.2, 10.5, sd(a, -0.16), -0.18)
+                if (o.fire) {
+                  FL("#ff5a3a", 13.5, 53, 9, 3)
+                  FL("#ff5a3a", 50.5, 53, 9, 3)
+                }
               }
               O(32, 27, 13.5, 12.5, a)
               if (!o.fire) {
@@ -25184,8 +25560,10 @@
                 c.arc(x, y, 2.6, 0.25, 2.9)
                 c.stroke()
               }
-              O(15.5, 45.5, 4.8, 10.5, sd(a, -0.18), 0.12)
-              O(48.5, 45.5, 4.8, 10.5, sd(a, -0.18), -0.12)
+              if (!o.nowing) {
+                O(15.5, 45.5, 4.8, 10.5, sd(a, -0.18), 0.12)
+                O(48.5, 45.5, 4.8, 10.5, sd(a, -0.18), -0.12)
+              }
               O(32, 27.5, 15, 12.5, a)
               O(24.5, 27.2, 7, 6.8, b)
               O(39.5, 27.2, 7, 6.8, b)
@@ -25486,7 +25864,7 @@
               break
             }
             case "dragon": {
-              for (const sx of [-1, 1]) {
+              for (const sx of o.nowing ? [] : [-1, 1]) {
                 const X = (x) => (sx < 0 ? x : 64 - x)
                 PO(k, () => {
                   c.moveTo(X(18), 38)
@@ -26398,7 +26776,7 @@
           if ((now - XC.t0) / XC.D > 0.72 && !XC.near) {
             XC.near = true
             $("#xcOv").classList.add("near")
-            if (XC.p[0] <= 1) vib([20, 60, 20])
+            vib([20, 60, 20]) // 등급과 상관없이 똑같이 울려요
           }
           XC.raf = requestAnimationFrame(xcLoop)
         }
@@ -26546,6 +26924,7 @@
           guard: "릴 감기에 실패해도 줄 체력이 덜 닳아요 (최대 80%)",
           coop: "근처(7칸 안)에 함께 낚시하는 동료가 있으면 입질과 행운이 올라가요",
           snowtwin: "눈 위에 서 있으면 쌍걸이 확률이 올라가요",
+          snowluck: "눈 위에 서 있으면 행운이 올라가요 (낚는 순간 눈 위에 서 있을 때)",
           skate: "눈 위에서 이동 속도가 +55%, 얼음처럼 미끄러져요",
           cane: "나무에 줄을 걸고 빙글빙글 돌아요",
           sense: "보물이 가까울수록 루돌프의 코가 더 빠르고 밝게 깜빡여요 (최대 100칸)",
@@ -26687,6 +27066,7 @@
           대물: "물고기가 더 크고 비싸게 잡혀요",
           보호: "리듬을 놓칠 때 받는 피해가 줄어요",
           "눈 쌍걸이": "눈이 쌓인 곳에 서 있으면 쌍걸이 확률이 올라가고, 산타 모자 끝이 빛나요",
+          "눈 행운": "눈 위에서 낚으면 행운이 올라가요",
           스케이트: "눈 위에서 이동 속도 +55%, 얼음처럼 쭉 미끄러져요",
           걸기: "낚싯대를 나무에 걸고 이동하면 빙글빙글 돌아요. 다시 누르면 장애물을 무시하고 돌던 방향으로 멀리 날아가요",
         }
@@ -26702,6 +27082,7 @@
           if (g.big) l.push(["대물", "+" + Math.round(g.big * 100) + "%"])
           if (g.guard) l.push(["보호", "-" + Math.round(g.guard * 100) + "%"])
           if (g.snowtwin) l.push(["눈 쌍걸이", "+" + Math.round(g.snowtwin * 100) + "%p"])
+          if (g.snowluck) l.push(["눈 행운", "+" + g.snowluck.toFixed(1)])
           if (g.skate) l.push(["스케이트", "ON"])
           if (g.cane) l.push(["걸기", "ON"])
           return l.length
@@ -27755,6 +28136,7 @@
               const b = petTarget(o.ep, o.x, o.y, o.fx, o.fy, o.dvx || 0, o.dvy || 0)
               if (!o.pp) o.pp = { x: b.x, y: b.y, ph: 0 }
               petFollow(o.pp, b.x, b.y, h, undefined, petMvOf(o.ep).k)
+              o.pp.idleT = o.mv > 0.2 ? 0 : (o.pp.idleT || 0) + h
             } else o.pp = null
           }
           MP.online = n + 1
