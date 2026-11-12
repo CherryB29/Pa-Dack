@@ -13236,6 +13236,9 @@
             case "tdig":
               treasureStart()
               break
+            case "swing":
+              swingRelease()
+              break
             case "bite":
               hook()
               break
@@ -14434,6 +14437,13 @@
               return
             }
           }
+          if (save.gear.cane) {
+            const T = findHookTree(F.tx, F.ty)
+            if (T) {
+              startSwing(T)
+              return
+            }
+          }
           if (!isW(F.tx, F.ty) && save.gear.grap && (P.grCd || 0) <= 0) {
             const dx = F.tx - P.x,
               dy = F.ty - P.y,
@@ -14868,7 +14878,11 @@
           cd.max = Math.max(cd.max, p.size)
           save.inv.push({ id: f.id, size: p.size, price: p.price })
           let twin = false
-          if (Math.random() < (save.gear.twin || 0)) {
+          if (
+            Math.random() <
+            (save.gear.twin || 0) +
+              (save.gear.snowtwin && snowAt(P.x, P.y) ? save.gear.snowtwin : 0)
+          ) {
             twin = true
             cd.n++
             save.inv.push({
@@ -15170,6 +15184,346 @@
           }
           if (dx) P.vx = 0
           if (dy) P.vy = 0
+        }
+
+/* ================= 크리스마스 장비 특수 능력 =================
+   산타 모자: 눈 위 쌍걸이 +10%p / 아이스 스케이트: 눈 위 +20% 속도 + 미끄러짐 / 캔디 케인: 나무 스윙 */
+        const snowSm = (a, b, x) => {
+          const t = x < a ? 0 : x > b ? 1 : (x - a) / (b - a)
+          return t * t * (3 - 2 * t)
+        }
+        /* 바닥 렌더링(bakeChunk)의 눈 쌓임 공식과 똑같이 계산해서, 보이는 눈 위에 서 있는지 판정해요 */
+        function snowAt(x, y) {
+          if (!XMAS || isW(x, y)) return false
+          const zs = snowSm(0.08, 0.4, fld(ZS, x, y)),
+            zc = snowSm(0.08, 0.4, fld(ZC, x, y)),
+            il = -fld(SDF, x, y),
+            bn = vnoise(x * 0.35, y * 0.35, 18),
+            ht = fld(HT, x, y),
+            sa =
+              (1 - snowSm(0.7, 1.5 + bn * 1.3, il)) *
+              (1 - zs * 0.6) *
+              (1 - snowSm(0.3, 0.55, ht) * 0.7),
+            sk =
+              snowSm(
+                0.3,
+                0.52,
+                vnoise(x * 0.2, y * 0.2, 41) +
+                  (vnoise(x * 1.3, y * 1.3, 43) - 0.5) * 0.3,
+              ) *
+              (1 - zc) *
+              (1 - zs * 0.6) *
+              (1 - sa * 0.7) *
+              0.94,
+            sn = snowSm(0.86, 0.97, ht) * (1 - zc)
+          return Math.max(sk, sn) > 0.5
+        }
+
+        /* --- 산타 모자: 눈 위에 서 있으면 모자 끝(방울)이 빛나요 --- */
+        function drawSantaGlow(sx, cy, R) {
+          if (!(save.gear && save.gear.snowtwin) || !P.onSnow) return
+          const S = R * 1.75,
+            px = sx - S / 2 + (S * 52) / 64,
+            py = cy - R * 0.72 - S * 0.76 + (S * 27) / 64,
+            pu = 0.68 + 0.32 * Math.sin(time * 5)
+          ctx.save()
+          ctx.globalCompositeOperation = "lighter"
+          const gr = ctx.createRadialGradient(px, py, 0, px, py, R * 0.95)
+          gr.addColorStop(0, `rgba(255,255,255,${0.95 * pu})`)
+          gr.addColorStop(0.35, `rgba(190,235,255,${0.5 * pu})`)
+          gr.addColorStop(1, "rgba(120,200,255,0)")
+          ctx.fillStyle = gr
+          ctx.beginPath()
+          ctx.arc(px, py, R * 0.95, 0, 6.283)
+          ctx.fill()
+          ctx.fillStyle = `rgba(255,255,255,${0.9 * pu})`
+          const L1 = R * 0.8 * pu,
+            W1 = R * 0.1
+          ctx.beginPath()
+          ctx.moveTo(px, py - L1)
+          ctx.lineTo(px + W1, py)
+          ctx.lineTo(px, py + L1)
+          ctx.lineTo(px - W1, py)
+          ctx.closePath()
+          ctx.fill()
+          ctx.beginPath()
+          ctx.moveTo(px - L1, py)
+          ctx.lineTo(px, py + W1)
+          ctx.lineTo(px + L1, py)
+          ctx.lineTo(px, py - W1)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+        }
+
+        /* --- 아이스 스케이트: 눈 위에 날 자국이 남아요 --- */
+        const skTrail = []
+        let skAcc = 0
+        function skTrailAdd(dt) {
+          skAcc -= dt
+          if (skAcc > 0) return
+          skAcc = 0.03
+          const l = Math.hypot(P.vx, P.vy) || 1
+          skTrail.push({ x: P.x, y: P.y, nx: -P.vy / l, ny: P.vx / l, t0: time })
+          if (skTrail.length > 90) skTrail.shift()
+        }
+        function drawSkTrail() {
+          while (skTrail.length && time - skTrail[0].t0 > 1.8) skTrail.shift()
+          if (skTrail.length < 2) return
+          const k = TS / 48
+          ctx.save()
+          ctx.lineCap = "round"
+          ctx.lineWidth = 1.3 * k
+          for (const side of [-1, 1]) {
+            for (let i = 1; i < skTrail.length; i++) {
+              const a = skTrail[i - 1],
+                b = skTrail[i]
+              if (Math.hypot(b.x - a.x, b.y - a.y) > 0.6) continue
+              const al = Math.max(0, 1 - (time - b.t0) / 1.8)
+              ctx.strokeStyle = `rgba(150,205,240,${al * 0.6})`
+              ctx.beginPath()
+              ctx.moveTo(sxv(a.x + a.nx * 0.07 * side), syv(a.y + a.ny * 0.07 * side))
+              ctx.lineTo(sxv(b.x + b.nx * 0.07 * side), syv(b.y + b.ny * 0.07 * side))
+              ctx.stroke()
+            }
+          }
+          ctx.restore()
+        }
+
+        /* --- 캔디 케인 낚싯대: 나무에 걸어 빙글빙글 (아크샨 스윙) --- */
+        const HOOK_TREES = new Set([1, 7, 8, 9, 10, 11]),
+          HOOK_H = 1.45, // 줄이 걸리는 높이 (타일)
+          SW_V0 = 3.6,
+          SW_VMAX = 10.5,
+          SW_ACC = 7
+        let swingHint = true
+        /* (x, y) 근처에 걸 수 있는 나무가 있으면 줄기 위치를 돌려줘요 (줄기 근처 + 잎 부분 둘 다 인정) */
+        function findHookTree(x, y) {
+          let best = null,
+            bd = 1.4
+          const x0 = Math.floor(x) - 1,
+            y0 = Math.floor(y) - 1
+          for (let ty = y0; ty <= y0 + 4; ty++)
+            for (let tx = x0; tx <= x0 + 2; tx++) {
+              if (tx < 0 || ty < 0 || tx >= MW || ty >= MH) continue
+              if (!HOOK_TREES.has(DEC[ty * MW + tx])) continue
+              const cx = tx + 0.5,
+                cy = ty + 0.78,
+                d = Math.min(
+                  Math.hypot(x - cx, y - cy),
+                  Math.hypot(x - cx, y - (cy - 1.2)),
+                )
+              if (d < bd) {
+                bd = d
+                best = { x: cx, y: cy }
+              }
+            }
+          return best
+        }
+        function startSwing(T) {
+          const dx = P.x - T.x,
+            dy = P.y - T.y,
+            d = Math.hypot(dx, dy) || 1
+          F.phase = "swing"
+          F.t = 0
+          F.lure = null
+          F.bx = T.x
+          F.by = T.y
+          F.dx = -dx / d
+          F.dy = -dy / d
+          F.sw = {
+            ax: T.x,
+            ay: T.y,
+            th: Math.atan2(dy, dx),
+            r: d,
+            R: clamp(d, 1.5, 8),
+            dir: 0,
+            v: 0,
+            t: 0,
+          }
+          P.vx = P.vy = 0
+          P.airT = 0.3
+          sfx.hook && sfx.hook()
+          vib(25)
+          for (let i = 0; i < 10; i++)
+            emit({
+              kind: "d",
+              x: T.x + rnd(-0.3, 0.3),
+              y: T.y,
+              z: HOOK_H * 0.8 + rnd(-0.3, 0.3),
+              vx: rnd(-0.5, 0.5),
+              vy: rnd(-0.3, 0.3),
+              vz: rnd(0.2, 0.8),
+              max: 0.6,
+              col: i % 2 ? "#ff5a52" : "#ffffff",
+              sz: rnd(2.5, 4),
+              g: 2,
+            })
+          if (swingHint) {
+            swingHint = false
+            toast("나무에 걸었어요! 이동하면 돌아요 · 낚시 버튼으로 날아가요", 2600)
+          }
+        }
+        function swingStep(dt, ix, iy) {
+          const s = F.sw
+          if (!s) {
+            F.phase = "idle"
+            return
+          }
+          s.t += dt
+          const cs = Math.cos(s.th),
+            sn = Math.sin(s.th),
+            mag = Math.hypot(ix, iy)
+          if (mag > 0.3) {
+            // 조이스틱을 민 방향 쪽으로 돌아요 (줄 접선 방향 성분), 줄 방향 성분은 줄 길이 조절
+            const tg = (ix * -sn + iy * cs) / mag,
+              rd = (ix * cs + iy * sn) / mag
+            if (Math.abs(tg) > 0.35) {
+              const nd = tg > 0 ? 1 : -1
+              if (s.dir !== nd) {
+                s.v = s.dir ? Math.max(SW_V0, s.v * 0.35) : SW_V0
+                s.dir = nd
+              }
+            }
+            if (Math.abs(rd) > 0.8) s.R = clamp(s.R + rd * 2.2 * dt, 1.5, 8)
+          }
+          if (s.dir) s.v = Math.min(SW_VMAX, s.v + SW_ACC * dt)
+          s.r += (s.R - s.r) * Math.min(1, dt * 6)
+          const w = s.dir ? (s.dir * s.v) / s.r : 0,
+            th2 = s.th + w * dt,
+            nx = s.ax + Math.cos(th2) * s.r,
+            ny = s.ay + Math.sin(th2) * s.r
+          if (blocked(nx, ny) && !blocked(P.x, P.y)) {
+            // 장애물에 부딪히면 줄이 풀려요
+            F.sw = null
+            F.phase = "idle"
+            P.vx = P.vy = 0
+            P.airT = 0.2
+            shake = Math.max(shake, 0.5)
+            vib(30)
+            sfx.tick && sfx.tick()
+            return
+          }
+          s.th = th2
+          P.x = nx
+          P.y = ny
+          P.airT = 0.3
+          P.vx = s.dir ? -Math.sin(s.th) * s.dir * s.v : 0
+          P.vy = s.dir ? Math.cos(s.th) * s.dir * s.v : 0
+          const ddx = s.ax - P.x,
+            ddy = s.ay - P.y,
+            dl = Math.hypot(ddx, ddy) || 1
+          F.dx = ddx / dl
+          F.dy = ddy / dl
+          if (s.dir && Math.random() < dt * 24)
+            emit({
+              kind: "d",
+              x: P.x + rnd(-0.1, 0.1),
+              y: P.y,
+              z: 0.2,
+              vx: rnd(-0.2, 0.2),
+              vy: rnd(-0.2, 0.2),
+              vz: rnd(0, 0.3),
+              max: 0.45,
+              col: Math.random() < 0.5 ? "#ff5a52" : "#ffffff",
+              sz: rnd(2.5, 4.5),
+              g: 0,
+            })
+          if (s.t > 25) {
+            toast("줄이 풀렸어요")
+            swingRelease()
+          }
+        }
+        /* 다시 누르면 돌던 방향(접선)으로 날아가요 */
+        function swingRelease() {
+          const s = F.sw
+          F.sw = null
+          F.phase = "idle"
+          if (s && s.dir) {
+            const v = Math.min(15, s.v * 1.35)
+            P.vx = -Math.sin(s.th) * s.dir * v
+            P.vy = Math.cos(s.th) * s.dir * v
+            P.launchT = 1.2
+            P.airT = 1
+            shake = Math.max(shake, 0.3)
+            sfx.whoosh && sfx.whoosh()
+            vib([20, 20, 40])
+          } else {
+            P.vx = P.vy = 0
+            P.airT = 0.2
+          }
+        }
+        function drawSwingRope() {
+          const s = F.sw
+          if (!s) return
+          const k = TS / 48,
+            tipX = P.tipX || sxv(P.x),
+            tipY = P.tipY || syv(P.y),
+            ax = sxv(s.ax),
+            ay = syv(s.ay) - HOOK_H * TS,
+            mx = (tipX + ax) / 2,
+            my = (tipY + ay) / 2 + Math.min(14 * k, Math.hypot(ax - tipX, ay - tipY) * 0.05)
+          ctx.save()
+          ctx.lineCap = "round"
+          ctx.lineWidth = 2.6 * k
+          ctx.strokeStyle = "#ffffff"
+          ctx.beginPath()
+          ctx.moveTo(tipX, tipY)
+          ctx.quadraticCurveTo(mx, my, ax, ay)
+          ctx.stroke()
+          ctx.strokeStyle = "#e0302e"
+          ctx.lineCap = "butt"
+          ctx.setLineDash([4 * k, 4 * k])
+          ctx.beginPath()
+          ctx.moveTo(tipX, tipY)
+          ctx.quadraticCurveTo(mx, my, ax, ay)
+          ctx.stroke()
+          ctx.setLineDash([])
+          // 나무에 걸린 갈고리
+          ctx.lineCap = "round"
+          ctx.lineWidth = 3.4 * k
+          ctx.strokeStyle = "#ffffff"
+          ctx.beginPath()
+          ctx.arc(ax, ay - 4 * k, 5.5 * k, 0.1, Math.PI * 1.15)
+          ctx.stroke()
+          ctx.lineWidth = 1.8 * k
+          ctx.strokeStyle = "#e0302e"
+          ctx.beginPath()
+          ctx.arc(ax, ay - 4 * k, 5.5 * k, 0.1, Math.PI * 1.15)
+          ctx.stroke()
+          ctx.restore()
+        }
+        /* 캔디 케인을 들고 던질 때, 조준 지점 근처에 걸 수 있는 나무가 있으면 표시해요 */
+        function drawCaneHint() {
+          if (!(save.gear && save.gear.cane) || F.phase !== "charge") return
+          const tg = aimTarget(F.aim.dx, F.aim.dy, F.ch),
+            T = findHookTree(tg.x, tg.y)
+          if (!T) return
+          const k = TS / 48,
+            x = sxv(T.x),
+            y = syv(T.y) - HOOK_H * TS,
+            p = 1 + Math.sin(time * 6) * 0.1
+          ctx.save()
+          ctx.lineWidth = 3 * k
+          ctx.strokeStyle = "rgba(255,255,255,.95)"
+          ctx.beginPath()
+          ctx.arc(x, y, 15 * k * p, 0, 6.283)
+          ctx.stroke()
+          ctx.strokeStyle = "#e0302e"
+          ctx.setLineDash([5 * k, 5 * k])
+          ctx.lineDashOffset = -time * 20
+          ctx.beginPath()
+          ctx.arc(x, y, 15 * k * p, 0, 6.283)
+          ctx.stroke()
+          ctx.setLineDash([])
+          ctx.font = "700 " + Math.round(11 * k) + "px sans-serif"
+          ctx.textAlign = "center"
+          ctx.fillStyle = "#fff"
+          ctx.strokeStyle = "rgba(0,0,0,.55)"
+          ctx.lineWidth = 3 * k
+          ctx.strokeText("걸기", x, y - 20 * k)
+          ctx.fillText("걸기", x, y - 20 * k)
+          ctx.restore()
         }
 
         /* ================= 썰매 (맵 곳곳, 4인승) =================
@@ -16186,6 +16540,11 @@
             iy = 0
           }
           P.launchT = Math.max(0, (P.launchT || 0) - dt)
+          P.airT = Math.max(0, (P.airT || 0) - dt)
+          if ((P.snowT = (P.snowT || 0) - dt) <= 0) {
+            P.snowT = 0.06
+            P.onSnow = snowAt(P.x, P.y)
+          }
           if (P.launchT > 0) {
             ix = 0
             iy = 0
@@ -16210,7 +16569,7 @@
             cancelCast()
           const wasSw = P.sw
           P.wat = isW(P.x, P.y)
-          P.sw = P.wat && !P.sl // 썰매 위에서는 헤엄치지 않아요
+          P.sw = P.wat && !P.sl && !(P.airT > 0) // 썰매·스윙·날아가는 중에는 헤엄치지 않아요
           if (P.sw && !wasSw) {
             splash(P.x, P.y, 12, 0.9)
             sfx.splash(0.6)
@@ -16240,6 +16599,15 @@
             ? Math.min(1, (P.pr || 0) + dt * 4.5)
             : Math.max(0, (P.pr || 0) - dt * 10)
           P.runT = mag > 0.2 && canMove && !P.sw ? (P.runT || 0) + dt : 0
+          // 아이스 스케이트: 눈 위에서만 빠르고 미끄러워요
+          const skOn = !!(
+            save.gear.skate &&
+            P.onSnow &&
+            !P.sw &&
+            !P.sl &&
+            canMove &&
+            !(P.launchT > 0)
+          )
           const sp = P.sl
             ? // 신발·버프·질주 영향은 35%만 받고, 어떤 경우에도 기본 속도의 2.3배를 넘지 않아요
               Math.min(
@@ -16254,6 +16622,7 @@
               )
             : 3.3 *
               save.gear.speed *
+              (skOn ? 1.2 : 1) *
               (P.sw ? 0.6 * save.gear.swim : 1) *
               (1 + save.gear.sprint * clamp(P.runT / 1.4, 0, 1))
           let tvx = canMove ? ix * sp : 0,
@@ -16280,13 +16649,18 @@
                       : mag > 0
                         ? 5
                         : 2.2
-                    : mag > 0
-                      ? 11
-                      : 14),
+                    : skOn
+                      ? mag > 0
+                        ? 3
+                        : 0.8
+                      : mag > 0
+                        ? 11
+                        : 14),
           )
           P.vx += (tvx - P.vx) * k
           P.vy += (tvy - P.vy) * k
           if (P.sl && !P.drv) sledSeat()
+          else if (F.phase === "swing") swingStep(dt, ix, iy)
           else {
             const mv = P.sl ? sledMoveAxis : moveAxis
             mv(P.vx * dt, 0)
@@ -16297,6 +16671,21 @@
             }
           }
           const spd = Math.hypot(P.vx, P.vy)
+          if (skOn && spd > 1.2) skTrailAdd(dt)
+          if (P.airT > 0 && spd > 5 && Math.random() < dt * 30)
+            emit({
+              kind: "d",
+              x: P.x + rnd(-0.1, 0.1),
+              y: P.y + rnd(-0.05, 0.05),
+              z: 0.25 + rnd(0, 0.2),
+              vx: rnd(-0.2, 0.2),
+              vy: rnd(-0.2, 0.2),
+              vz: rnd(0, 0.3),
+              max: 0.45,
+              col: Math.random() < 0.5 ? "#ff5a52" : "#ffffff",
+              sz: rnd(2.5, 4.5),
+              g: 0,
+            })
           if (canMove && F.phase === "idle" && mag > 0.1) {
             P.fx = ix / mag
             P.fy = iy / mag
@@ -16320,7 +16709,7 @@
                 vx: rnd(-0.05, 0.05),
                 vy: rnd(-0.03, 0.03),
                 max: 0.5,
-                col: P.sl ? "#ffffff" : "#e9dcb8",
+                col: P.sl || skOn ? "#ffffff" : "#e9dcb8",
                 sz: rnd(2.5, 4),
                 g: 0,
               })
@@ -19423,6 +19812,8 @@
               return lerp(0.5, -0.2, F.ch)
             case "pop":
               return lerp(0.7, 0.05, eOut(Math.min(1, F.t / 0.3)))
+            case "swing":
+              return 1
           }
           return 0.5
         }
@@ -19623,6 +20014,7 @@
           ctx.restore()
           if (sw) swimOverlay(sx, cy, R, s)
           drawHat(save.equip && save.equip.hat, sx, cy, R)
+          drawSantaGlow(sx, cy, R)
           if (fishing) {
             const hx = sx + F.dx * R * 0.8,
               hy = cy + R * 0.5 + F.dy * R * 0.25,
@@ -19674,6 +20066,10 @@
           const s = TS / 48,
             ph = F.phase
           if (ph === "idle" || ph === "charge") return
+          if (ph === "swing") {
+            drawSwingRope()
+            return
+          }
           const tipX = P.tipX || sxv(P.x),
             tipY = P.tipY || syv(P.y)
           if (ph === "pop") {
@@ -20828,6 +21224,7 @@
           drawWaves(x0, y0, x1, y1)
           drawFlat(x0, y0, x1, y1)
           xGlints(x0, y0, x1, y1)
+          drawSkTrail()
           for (const it of items) drawIt(it)
           drawPortalFx(x0, y0, x1, y1)
           drawFireflies()
@@ -20837,6 +21234,7 @@
               ? aimTarget(F.aim.dx, F.aim.dy, F.ch)
               : nearNow,
           )
+          drawCaneHint()
           drawLineAndBobber()
           drawSelfSay()
           drawOtherArrows()
@@ -20920,6 +21318,12 @@
               t = "당기기"
               icn = ICON.rod
               st = "버튼을 누르면 당겨요 · 톡 치면 놓아요"
+              break
+            case "swing":
+              s = "wait"
+              t = "놓기"
+              icn = ICON.hook
+              st = "이동하면 돌아요 · 버튼을 누르면 날아가요"
               break
             case "windup":
             case "flight":
@@ -21508,8 +21912,17 @@
           big: "대물",
           guard: "리듬 보호",
           coop: "동료 시너지",
+          snowtwin: "눈 위 쌍걸이",
+          skate: "얼음 질주",
+          cane: "나무 그랩 스윙",
         }
         const fmtSp = (k, v) =>
+          k === "snowtwin"
+            ? "+" + Math.round(v * 100) + "%p"
+            : k === "skate" || k === "cane"
+              ? "ON"
+              : fmtSp0(k, v)
+        const fmtSp0 = (k, v) =>
           k === "swim"
             ? "×" + (1 + v).toFixed(1)
             : k === "grapple"
@@ -22601,7 +23014,7 @@
             4,
             { bite: 1, power: 0.9, zone: 0.7 },
             { c: "#e0302e", h: "#2a8a50", t: "#ffffff", cane: 1, sp: 1 },
-            { twin: 0.1, longcast: 0.25, gold: 0.1 },
+            { twin: 0.1, longcast: 0.25, gold: 0.1, cane: 1 },
           ],
           [
             "x2",
@@ -22636,7 +23049,7 @@
               blade: 1,
               sp: 1,
             },
-            { sprint: 0.3, guard: 0.2 },
+            { sprint: 0.3, guard: 0.2, skate: 1 },
           ],
           [
             "x5",
@@ -22676,7 +23089,7 @@
             4,
             { luck: 1.3, bite: 0.7, zone: 0.6 },
             { t: "santa", a: "#e0302e", b: "#ffffff", sp: 1 },
-            { gold: 0.2, big: 0.15 },
+            { gold: 0.2, big: 0.15, snowtwin: 0.1 },
           ],
           [
             "x8",
@@ -22745,6 +23158,9 @@
             big: 0,
             guard: 0,
             coop: 0,
+            snowtwin: 0, // 산타 모자: 눈 위 쌍걸이 추가 확률
+            skate: 0, // 아이스 스케이트: 눈 위 가속 + 미끄러짐
+            cane: 0, // 캔디 케인 낚싯대: 나무 걸기 스윙
           }
           for (const sl of ["rod", "shoes", "hat", "pet"]) {
             const id = save.equip && save.equip[sl],
@@ -25264,6 +25680,9 @@
           질주: "땅에서 달리는 속도가 빨라져요",
           대물: "물고기가 더 크고 비싸게 잡혀요",
           보호: "리듬을 놓칠 때 받는 피해가 줄어요",
+          "눈 쌍걸이": "눈이 쌓인 곳에 서 있으면 쌍걸이 확률이 올라가고, 산타 모자 끝이 빛나요",
+          스케이트: "눈 위에서 이동 속도 +20%, 얼음처럼 쭉 미끄러져요",
+          걸기: "낚싯대를 나무에 걸고 이동하면 빙글빙글 돌아요. 다시 누르면 돌던 방향으로 날아가요",
         }
         function spChips(g) {
           const l = []
@@ -25276,6 +25695,9 @@
           if (g.sprint) l.push(["질주", "+" + Math.round(g.sprint * 100) + "%"])
           if (g.big) l.push(["대물", "+" + Math.round(g.big * 100) + "%"])
           if (g.guard) l.push(["보호", "-" + Math.round(g.guard * 100) + "%"])
+          if (g.snowtwin) l.push(["눈 쌍걸이", "+" + Math.round(g.snowtwin * 100) + "%p"])
+          if (g.skate) l.push(["스케이트", "ON"])
+          if (g.cane) l.push(["걸기", "ON"])
           return l.length
             ? `<div class="spc">${l.map((x) => `<span><i></i>${x[0]} <b>${x[1]}</b></span>`).join("")}</div><div class="spd">${l.map((x) => `<p><b>${x[0]}</b>${SPD[x[0]] || ""}</p>`).join("")}</div>`
             : ""
@@ -26326,6 +26748,7 @@
             "tpull",
             "topen",
             "drag",
+            "swing",
           ].includes(F.phase)
           if (v.type === "msg") {
             if (v.m) addLine("관리자", String(v.m).slice(0, 120), "adm")
