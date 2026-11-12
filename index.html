@@ -20328,6 +20328,11 @@
           }
           if (F.phase === "windup")
             return [P.tipX || sxv(P.x), P.tipY || syv(P.y), true]
+          if (F.phase === "drag") {
+            // 줄 끝은 상대 발밑이 아니라 상대 몸통 가운데(실제로 그려지는 위치)에 붙어요
+            const s = TS / 48
+            return [sxv(F.bx), syv(F.by) - 26 * s, true]
+          }
           return [sxv(F.bx), syv(F.by), false]
         }
         function drawLineAndBobber() {
