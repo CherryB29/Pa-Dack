@@ -26752,6 +26752,7 @@
           o.fx = v.fx || 0
           o.fy = v.fy || 1
           o.f = v.f || 0
+          o.sw = Array.isArray(v.sw) ? v.sw : 0
           o.bx = v.bx || 0
           o.by = v.by || 0
           o.n = filterChat(String(v.n || "낚시꾼").slice(0, 10))
@@ -26938,8 +26939,12 @@
             y: +P.y.toFixed(2),
             vx: +P.vx.toFixed(2),
             vy: +P.vy.toFixed(2),
-            fx: +(F.phase === "charge" ? F.dx : P.fx).toFixed(2),
-            fy: +(F.phase === "charge" ? F.dy : P.fy).toFixed(2),
+            fx: +(F.phase === "charge" || F.phase === "swing" ? F.dx : P.fx).toFixed(2),
+            fy: +(F.phase === "charge" || F.phase === "swing" ? F.dy : P.fy).toFixed(2),
+            sw:
+              F.phase === "swing" && F.sw
+                ? [+F.sw.ax.toFixed(2), +F.sw.ay.toFixed(2)]
+                : 0,
             f:
               F.phase === "charge"
                 ? 4
@@ -27009,6 +27014,7 @@
               d.pl,
               d.sl,
               d.ss,
+              JSON.stringify(d.sw),
               d.s,
               d.st,
               d.ct,
@@ -27530,10 +27536,46 @@
           for (const ch of o.uid || "") h = (h * 31 + ch.charCodeAt(0)) % 360
           return `hsl(${h} 82% 64%)`
         }
+        /* 다른 사람의 캔디 케인 스윙 줄 (내 줄과 같은 모양으로, 그 사람 낚싯대 끝에서 나와요) */
+        function drawOtherSwing(o) {
+          const s = TS / 48,
+            sx = sxv(o.x),
+            sy = syv(o.y),
+            R = 20 * s,
+            cy = sy - R - 6 * s,
+            dx = o.fx || 1,
+            dy = o.fy || 0,
+            hx = sx + dx * R * 0.8,
+            hy = cy + R * 0.5 + dy * R * 0.25,
+            tipX = hx + dx * 30 * s,
+            tipY = hy + dy * 12 * s - 26 * s,
+            ax = sxv(o.sw[0]),
+            ay = syv(o.sw[1]) - HOOK_H * TS,
+            mx = (tipX + ax) / 2,
+            my = (tipY + ay) / 2 + Math.min(14 * s, Math.hypot(ax - tipX, ay - tipY) * 0.05)
+          ctx.save()
+          ctx.lineCap = "round"
+          ctx.lineWidth = 2.6 * s
+          ctx.strokeStyle = "#ffffff"
+          ctx.beginPath()
+          ctx.moveTo(tipX, tipY)
+          ctx.quadraticCurveTo(mx, my, ax, ay)
+          ctx.stroke()
+          ctx.strokeStyle = "#e0302e"
+          ctx.lineCap = "butt"
+          ctx.setLineDash([4 * s, 4 * s])
+          ctx.beginPath()
+          ctx.moveTo(tipX, tipY)
+          ctx.quadraticCurveTo(mx, my, ax, ay)
+          ctx.stroke()
+          ctx.setLineDash([])
+          ctx.restore()
+        }
         function drawOther(o) {
           const s = TS / 48,
             sx = sxv(o.x),
             sy = syv(o.y)
+          if (Array.isArray(o.sw) && !o.stale) drawOtherSwing(o)
           if (sx < -90 || sx > W + 90 || sy < -90 || sy > H + 150) return
           const osw = isW(o.x, o.y) && !o.sl,
             R = 20 * s,
