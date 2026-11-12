@@ -15693,7 +15693,7 @@
         }
 
 /* ================= 크리스마스 장비 특수 능력 =================
-   산타 모자: 눈 위 쌍걸이 +10%p / 아이스 스케이트: 눈 위 +33% 속도 + 미끄러짐 / 캔디 케인: 나무 스윙 */
+   산타 모자: 눈 위 쌍걸이 +10%p / 아이스 스케이트: 눈 위 +55% 속도 + 미끄러짐 / 캔디 케인: 나무 스윙 */
         const snowSm = (a, b, x) => {
           const t = x < a ? 0 : x > b ? 1 : (x - a) / (b - a)
           return t * t * (3 - 2 * t)
@@ -17372,7 +17372,7 @@
               )
             : 3.3 *
               save.gear.speed *
-              (skOn ? 1.33 : 1) *
+              (skOn ? 1.55 : 1) *
               (P.sw ? 0.6 * save.gear.swim : 1) *
               (1 + save.gear.sprint * clamp(P.runT / 1.4, 0, 1))
           let tvx = canMove ? ix * sp : 0,
@@ -21963,18 +21963,18 @@
                 br = nightBulbs[i + 4],
                 k = DN.n * (0.55 + 0.45 * lit)
               ctx.fillStyle = bc
+              ctx.globalAlpha = 0.06 * k
+              ctx.beginPath()
+              ctx.arc(bx, by, br * 4, 0, 6.3)
+              ctx.fill()
               ctx.globalAlpha = 0.16 * k
               ctx.beginPath()
-              ctx.arc(bx, by, br * 7, 0, 6.3)
+              ctx.arc(bx, by, br * 2.2, 0, 6.3)
               ctx.fill()
-              ctx.globalAlpha = 0.34 * k
-              ctx.beginPath()
-              ctx.arc(bx, by, br * 3.4, 0, 6.3)
-              ctx.fill()
-              ctx.globalAlpha = 0.9 * k
+              ctx.globalAlpha = 0.45 * k
               ctx.fillStyle = "#fff"
               ctx.beginPath()
-              ctx.arc(bx, by, br * 1.1, 0, 6.3)
+              ctx.arc(bx, by, br * 0.8, 0, 6.3)
               ctx.fill()
             }
             ctx.globalAlpha = 1
@@ -26546,7 +26546,7 @@
           guard: "릴 감기에 실패해도 줄 체력이 덜 닳아요 (최대 80%)",
           coop: "근처(7칸 안)에 함께 낚시하는 동료가 있으면 입질과 행운이 올라가요",
           snowtwin: "눈 위에 서 있으면 쌍걸이 확률이 올라가요",
-          skate: "눈 위에서 이동 속도가 +33%, 얼음처럼 미끄러져요",
+          skate: "눈 위에서 이동 속도가 +55%, 얼음처럼 미끄러져요",
           cane: "나무에 줄을 걸고 빙글빙글 돌아요",
           sense: "보물이 가까울수록 루돌프의 코가 더 빠르고 밝게 깜빡여요 (최대 100칸)",
         }
@@ -26687,7 +26687,7 @@
           대물: "물고기가 더 크고 비싸게 잡혀요",
           보호: "리듬을 놓칠 때 받는 피해가 줄어요",
           "눈 쌍걸이": "눈이 쌓인 곳에 서 있으면 쌍걸이 확률이 올라가고, 산타 모자 끝이 빛나요",
-          스케이트: "눈 위에서 이동 속도 +33%, 얼음처럼 쭉 미끄러져요",
+          스케이트: "눈 위에서 이동 속도 +55%, 얼음처럼 쭉 미끄러져요",
           걸기: "낚싯대를 나무에 걸고 이동하면 빙글빙글 돌아요. 다시 누르면 장애물을 무시하고 돌던 방향으로 멀리 날아가요",
         }
         function spChips(g) {
