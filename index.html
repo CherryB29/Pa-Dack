@@ -21941,6 +21941,10 @@
           xGlints(x0, y0, x1, y1)
           drawSkTrail()
           for (const it of items) drawIt(it)
+          for (const k in MP.others) {
+            const o = MP.others[k]
+            if (!o.stale && Array.isArray(o.sw)) drawOtherSwing(o)
+          }
           drawPortalFx(x0, y0, x1, y1)
           drawFireflies()
           xFrost()
@@ -27548,6 +27552,16 @@
               o.x += o.dvx * h
               o.y += o.dvy * h
             }
+            if (Array.isArray(o.sw) && o.sw.length > 1) {
+              const ax = +o.sw[0],
+                ay = +o.sw[1],
+                r = Math.hypot(o.tx - ax, o.ty - ay),
+                cd = Math.hypot(o.x - ax, o.y - ay)
+              if (r > 0.3 && cd > 0.01) {
+                o.x = ax + ((o.x - ax) / cd) * r
+                o.y = ay + ((o.y - ay) / cd) * r
+              }
+            }
             const sp = Math.hypot(o.dvx || 0, o.dvy || 0)
             o.walk = (o.walk || 0) + sp * h * 2.8
             o.mv = Math.min(1, sp / 1.5)
@@ -28216,13 +28230,23 @@
           ctx.quadraticCurveTo(mx, my, ax, ay)
           ctx.stroke()
           ctx.setLineDash([])
+          ctx.lineCap = "round"
+          ctx.lineWidth = 3.4 * s
+          ctx.strokeStyle = "#ffffff"
+          ctx.beginPath()
+          ctx.arc(ax, ay - 4 * s, 5.5 * s, 0.1, Math.PI * 1.15)
+          ctx.stroke()
+          ctx.lineWidth = 1.8 * s
+          ctx.strokeStyle = "#e0302e"
+          ctx.beginPath()
+          ctx.arc(ax, ay - 4 * s, 5.5 * s, 0.1, Math.PI * 1.15)
+          ctx.stroke()
           ctx.restore()
         }
         function drawOther(o) {
           const s = TS / 48,
             sx = sxv(o.x),
             sy = syv(o.y)
-          if (Array.isArray(o.sw) && !o.stale) drawOtherSwing(o)
           if (sx < -90 || sx > W + 90 || sy < -90 || sy > H + 150) return
           const osw = isW(o.x, o.y) && !o.sl,
             R = 20 * s,
