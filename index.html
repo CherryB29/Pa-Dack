@@ -836,12 +836,113 @@
         font-size: 16px;
       }
 
-      #loader p {
-        margin: 0;
-        text-shadow: 0 2px 6px rgb(var(--blue-900-rgb) / 0.3);
+      #loader {
+        overflow: hidden;
+        background:
+          radial-gradient(120% 70% at 50% 0, var(--teal-800), transparent 70%),
+          linear-gradient(var(--blue-900), var(--blue-950));
+      }
+      #loader .ld-bubbles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      #loader .ld-bubbles i {
+        position: absolute;
+        bottom: -30px;
+        width: var(--sz, 12px);
+        height: var(--sz, 12px);
+        border-radius: 50%;
+        border: 1.5px solid rgb(var(--white-rgb) / 0.35);
+        background: rgb(var(--white-rgb) / 0.08);
+        animation: ldUp var(--t, 6s) linear infinite;
+        animation-delay: var(--d, 0s);
+        left: var(--x, 50%);
+      }
+      #loader .ld-bubbles i:nth-child(1) { --x: 12%; --sz: 10px; --t: 7s; --d: 0s; }
+      #loader .ld-bubbles i:nth-child(2) { --x: 26%; --sz: 16px; --t: 9s; --d: 2s; }
+      #loader .ld-bubbles i:nth-child(3) { --x: 40%; --sz: 8px; --t: 6s; --d: 1s; }
+      #loader .ld-bubbles i:nth-child(4) { --x: 58%; --sz: 14px; --t: 8s; --d: 3s; }
+      #loader .ld-bubbles i:nth-child(5) { --x: 72%; --sz: 10px; --t: 7s; --d: 0.5s; }
+      #loader .ld-bubbles i:nth-child(6) { --x: 84%; --sz: 18px; --t: 10s; --d: 2.5s; }
+      #loader .ld-bubbles i:nth-child(7) { --x: 92%; --sz: 9px; --t: 6.5s; --d: 4s; }
+      #loader .ld-bubbles i:nth-child(8) { --x: 5%; --sz: 13px; --t: 8.5s; --d: 5s; }
+      @keyframes ldUp {
+        to {
+          transform: translateY(-110vh);
+          opacity: 0;
+        }
+      }
+      #loader .ld-box {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        animation: ldIn 0.6s var(--ease-out) both;
+      }
+      @keyframes ldIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.96);
+        }
+      }
+      #loader .ld-fish svg {
+        width: 72px;
+        height: 72px;
+      }
+      #loader .ld-fish {
+        animation: ldBob 1.6s ease-in-out infinite;
+        filter: drop-shadow(0 6px 14px rgb(var(--black-rgb) / 0.35));
+      }
+      @keyframes ldBob {
+        0%,
+        100% {
+          transform: translateY(0) rotate(-4deg);
+        }
+        50% {
+          transform: translateY(-10px) rotate(4deg);
+        }
+      }
+      #loader .ld-title {
+        font-size: 30px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        background: linear-gradient(var(--gold-100), var(--gold-500));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 4px 16px rgb(var(--black-rgb) / 0.3);
+      }
+      #loader .ld-bar {
+        position: relative;
+        width: 180px;
+        height: 6px;
+        border-radius: 99px;
+        overflow: hidden;
+        background: rgb(var(--white-rgb) / 0.15);
+      }
+      #loader .ld-bar span {
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, var(--teal-500), var(--gold-400));
+        animation: ldBar 1.3s ease-in-out infinite;
+      }
+      @keyframes ldBar {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(260%);
+        }
       }
       #loadMsg {
+        margin: 0;
         font-size: 14px;
+        font-weight: 700;
+        color: var(--ice-text);
         opacity: var(--opacity-muted);
       }
       .spin {
@@ -5750,9 +5851,23 @@
   </head>
   <body>
     <div id="loader">
-      <div class="spin"></div>
-      <p>Pa-Dack</p>
-      <p id="loadMsg">연결 중...</p>
+      <div class="ld-bubbles" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="ld-box">
+        <div class="ld-fish" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="72" height="72">
+            <path d="M8 32 C20 14 42 14 52 32 C42 50 20 50 8 32Z" fill="#ffb454"/>
+            <path d="M52 32 L62 22 L60 32 L62 42Z" fill="#ff8a5b"/>
+            <circle cx="20" cy="29" r="3" fill="#0c1c28"/>
+            <circle cx="21" cy="28" r="1" fill="#fff"/>
+            <path d="M28 22 C32 28 32 36 28 42" stroke="#fff3b0" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>
+          </svg>
+        </div>
+        <div class="ld-title">Pa-Dack</div>
+        <div class="ld-bar"><span></span></div>
+        <p id="loadMsg">연결 중...</p>
+      </div>
     </div>
     <div id="login" hidden>
       <div class="lbox">
@@ -6172,6 +6287,10 @@
                 ><input type="checkbox" id="setLow" /><i></i
               ></label>
             </div>
+            <div class="row">
+              <div class="g">버전</div>
+              <div class="g" id="appVer" style="opacity: var(--opacity-muted)"></div>
+            </div>
           </div>
           <div class="box" id="acct">
             <h3>계정 · 멀티플레이</h3>
@@ -6276,6 +6395,8 @@
     </div>
 
     <script>
+      /* 앱 버전: 업데이트할 때 이 값만 바꾸면 설정 창에 함께 보여요 */
+      const APP_VERSION = "1.4.0"
       const __start = () => {
         "use strict"
         /* ================= Firebase 설정 (여기에 콘솔의 firebaseConfig 값을 붙여 넣어요) ================= */
@@ -28575,6 +28696,7 @@
           document.documentElement.toggleAttribute("data-lowspec", lowSpecOn)
           resize()
         }
+        $("#appVer").textContent = "v" + APP_VERSION
         const sLow = $("#setLow")
         sLow.checked = lowSpecOn
         applyLowSpec()
