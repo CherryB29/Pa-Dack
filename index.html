@@ -729,10 +729,6 @@
 
       .row .g {
         flex: 1;
-        font-weight: 800;
-        font-size: 15px;
-        min-width: 0;
-        word-break: keep-all;
       }
       .volume-row {
         align-items: center;
@@ -861,14 +857,54 @@
         animation-delay: var(--d, 0s);
         left: var(--x, 50%);
       }
-      #loader .ld-bubbles i:nth-child(1) { --x: 12%; --sz: 10px; --t: 7s; --d: 0s; }
-      #loader .ld-bubbles i:nth-child(2) { --x: 26%; --sz: 16px; --t: 9s; --d: 2s; }
-      #loader .ld-bubbles i:nth-child(3) { --x: 40%; --sz: 8px; --t: 6s; --d: 1s; }
-      #loader .ld-bubbles i:nth-child(4) { --x: 58%; --sz: 14px; --t: 8s; --d: 3s; }
-      #loader .ld-bubbles i:nth-child(5) { --x: 72%; --sz: 10px; --t: 7s; --d: 0.5s; }
-      #loader .ld-bubbles i:nth-child(6) { --x: 84%; --sz: 18px; --t: 10s; --d: 2.5s; }
-      #loader .ld-bubbles i:nth-child(7) { --x: 92%; --sz: 9px; --t: 6.5s; --d: 4s; }
-      #loader .ld-bubbles i:nth-child(8) { --x: 5%; --sz: 13px; --t: 8.5s; --d: 5s; }
+      #loader .ld-bubbles i:nth-child(1) {
+        --x: 12%;
+        --sz: 10px;
+        --t: 7s;
+        --d: 0s;
+      }
+      #loader .ld-bubbles i:nth-child(2) {
+        --x: 26%;
+        --sz: 16px;
+        --t: 9s;
+        --d: 2s;
+      }
+      #loader .ld-bubbles i:nth-child(3) {
+        --x: 40%;
+        --sz: 8px;
+        --t: 6s;
+        --d: 1s;
+      }
+      #loader .ld-bubbles i:nth-child(4) {
+        --x: 58%;
+        --sz: 14px;
+        --t: 8s;
+        --d: 3s;
+      }
+      #loader .ld-bubbles i:nth-child(5) {
+        --x: 72%;
+        --sz: 10px;
+        --t: 7s;
+        --d: 0.5s;
+      }
+      #loader .ld-bubbles i:nth-child(6) {
+        --x: 84%;
+        --sz: 18px;
+        --t: 10s;
+        --d: 2.5s;
+      }
+      #loader .ld-bubbles i:nth-child(7) {
+        --x: 92%;
+        --sz: 9px;
+        --t: 6.5s;
+        --d: 4s;
+      }
+      #loader .ld-bubbles i:nth-child(8) {
+        --x: 5%;
+        --sz: 13px;
+        --t: 8.5s;
+        --d: 5s;
+      }
       @keyframes ldUp {
         to {
           transform: translateY(-110vh);
@@ -901,10 +937,19 @@
         border-radius: 28px;
         overflow: hidden;
         background:
-          radial-gradient(70% 60% at 30% 30%, rgb(var(--teal-300-rgb) / 0.22), transparent 70%),
-          linear-gradient(rgb(var(--white-rgb) / 0.07), rgb(var(--white-rgb) / 0.02));
+          radial-gradient(
+            70% 60% at 30% 30%,
+            rgb(var(--teal-300-rgb) / 0.22),
+            transparent 70%
+          ),
+          linear-gradient(
+            rgb(var(--white-rgb) / 0.07),
+            rgb(var(--white-rgb) / 0.02)
+          );
         border: 1px solid rgb(var(--white-rgb) / 0.14);
-        box-shadow: 0 18px 40px rgb(var(--black-rgb) / 0.35), inset 0 1px 0 rgb(var(--white-rgb) / 0.12);
+        box-shadow:
+          0 18px 40px rgb(var(--black-rgb) / 0.35),
+          inset 0 1px 0 rgb(var(--white-rgb) / 0.12);
       }
       #loader .ld-sun {
         position: absolute;
@@ -913,12 +958,19 @@
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: radial-gradient(circle at 35% 35%, var(--gold-100), var(--gold-400));
+        background: radial-gradient(
+          circle at 35% 35%,
+          var(--gold-100),
+          var(--gold-400)
+        );
         box-shadow: 0 0 22px 6px rgb(var(--white-rgb) / 0.18);
         animation: ldSun 4s ease-in-out infinite;
       }
       @keyframes ldSun {
-        50% { transform: scale(1.12); opacity: 0.85; }
+        50% {
+          transform: scale(1.12);
+          opacity: 0.85;
+        }
       }
       #loader .ld-dock {
         position: absolute;
@@ -938,8 +990,12 @@
         background: #6b4423;
         border-radius: 2px;
       }
-      #loader .ld-post.a { left: 26px; }
-      #loader .ld-post.b { left: 118px; }
+      #loader .ld-post.a {
+        left: 26px;
+      }
+      #loader .ld-post.b {
+        left: 118px;
+      }
       /* 발은 선착장 위에 고정 (몸통만 흔들려도 발은 안 떠요) */
       #loader .ld-foot {
         position: absolute;
@@ -950,8 +1006,12 @@
         background: #ff8a5b;
         box-shadow: inset 0 -2px 0 rgb(var(--black-rgb) / 0.18);
       }
-      #loader .ld-foot.l { left: 56px; }
-      #loader .ld-foot.r { left: 88px; }
+      #loader .ld-foot.l {
+        left: 56px;
+      }
+      #loader .ld-foot.r {
+        left: 88px;
+      }
       #loader .ld-char {
         position: absolute;
         left: 40px;
@@ -962,8 +1022,13 @@
         transform-origin: 50% 94px;
       }
       @keyframes ldBob {
-        0%, 100% { transform: translateY(0) rotate(-1.5deg); }
-        50% { transform: translateY(-3px) rotate(1.5deg); }
+        0%,
+        100% {
+          transform: translateY(0) rotate(-1.5deg);
+        }
+        50% {
+          transform: translateY(-3px) rotate(1.5deg);
+        }
       }
       #loader .ld-ring {
         position: relative;
@@ -988,15 +1053,23 @@
         opacity: 0;
         transition: opacity 0.4s;
       }
-      #loader .ld-ring img.on { opacity: 1; }
+      #loader .ld-ring img.on {
+        opacity: 1;
+      }
       #loader .ld-eye {
         transform-box: fill-box;
         transform-origin: center;
         animation: ldBlink 3.6s infinite;
       }
       @keyframes ldBlink {
-        0%, 94%, 100% { transform: scaleY(1); }
-        97% { transform: scaleY(0.1); }
+        0%,
+        94%,
+        100% {
+          transform: scaleY(1);
+        }
+        97% {
+          transform: scaleY(0.1);
+        }
       }
       #loader .ld-rod {
         position: absolute;
@@ -1011,7 +1084,10 @@
         right: 0;
         top: 130px;
         bottom: 0;
-        background: linear-gradient(rgb(var(--teal-500-rgb) / 0.5), rgb(var(--blue-700-rgb) / 0.75));
+        background: linear-gradient(
+          rgb(var(--teal-500-rgb) / 0.5),
+          rgb(var(--blue-700-rgb) / 0.75)
+        );
       }
       #loader .ld-wave {
         position: absolute;
@@ -1020,7 +1096,10 @@
         height: 18px;
         animation: ldWave 5s linear infinite;
       }
-      #loader .ld-wave.w1 { top: 121px; fill: rgb(var(--teal-500-rgb) / 0.5); }
+      #loader .ld-wave.w1 {
+        top: 121px;
+        fill: rgb(var(--teal-500-rgb) / 0.5);
+      }
       #loader .ld-wave.w2 {
         top: 127px;
         fill: rgb(var(--teal-300-b-rgb) / 0.35);
@@ -1028,7 +1107,9 @@
         animation-direction: reverse;
       }
       @keyframes ldWave {
-        to { transform: translateX(-50%); }
+        to {
+          transform: translateX(-50%);
+        }
       }
       #loader .ld-bobber {
         position: absolute;
@@ -1042,8 +1123,13 @@
         animation: ldFloat 2.2s ease-in-out infinite;
       }
       @keyframes ldFloat {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(3px); }
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(3px);
+        }
       }
       #loader .ld-ripple {
         position: absolute;
@@ -1055,10 +1141,18 @@
         border: 1.5px solid rgb(var(--white-rgb) / 0.6);
         animation: ldRip 2.2s ease-out infinite;
       }
-      #loader .ld-ripple.r2 { animation-delay: 1.1s; }
+      #loader .ld-ripple.r2 {
+        animation-delay: 1.1s;
+      }
       @keyframes ldRip {
-        from { transform: scale(0.4); opacity: 0.9; }
-        to { transform: scale(1.7); opacity: 0; }
+        from {
+          transform: scale(0.4);
+          opacity: 0.9;
+        }
+        to {
+          transform: scale(1.7);
+          opacity: 0;
+        }
       }
       #loader .ld-title {
         font-size: 32px;
@@ -1088,17 +1182,6 @@
         background: linear-gradient(90deg, var(--teal-500), var(--gold-400));
         transition: width 0.5s var(--ease-out);
       }
-      #loader .ld-bar span::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(90deg, transparent, rgb(var(--white-rgb) / 0.55), transparent);
-        transform: translateX(-100%);
-        animation: ldShine 1.4s ease-in-out infinite;
-      }
-      @keyframes ldShine {
-        to { transform: translateX(100%); }
-      }
       #loader .ld-ver {
         position: absolute;
         left: 0;
@@ -1122,7 +1205,9 @@
         word-break: keep-all;
         transition: opacity 0.35s;
       }
-      #loader .ld-tip.out { opacity: 0; }
+      #loader .ld-tip.out {
+        opacity: 0;
+      }
       #loader .ld-slow {
         margin: 0;
         font-size: 12px;
@@ -1130,27 +1215,50 @@
         color: var(--gold-300);
         opacity: 0;
         transform: translateY(-4px);
-        transition: opacity 0.4s, transform 0.4s;
+        transition:
+          opacity 0.4s,
+          transform 0.4s;
         word-break: keep-all;
         text-align: center;
       }
-      #loader.slow .ld-slow { opacity: 1; transform: none; }
-      #loader.warn #loadMsg { color: var(--gold-300); opacity: 1; }
-      /* 불러오기 완료: 찌가 잠기고 큰 물고기가 낚여요 */
-      #loader.done .ld-char { animation: ldHop 0.55s ease-out both; }
-      @keyframes ldHop {
-        40% { transform: translateY(-14px) scale(1.05); }
-        100% { transform: translateY(0); }
+      #loader.slow .ld-slow {
+        opacity: 1;
+        transform: none;
       }
-      #loader.done .ld-bobber { animation: ldDip 0.4s ease-out both; }
+      #loader.warn #loadMsg {
+        color: var(--gold-300);
+        opacity: 1;
+      }
+      /* 불러오기 완료: 찌가 잠기고 큰 물고기가 낚여요 */
+      #loader.done .ld-char {
+        animation: ldHop 0.55s ease-out both;
+      }
+      @keyframes ldHop {
+        40% {
+          transform: translateY(-14px) scale(1.05);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+      #loader.done .ld-bobber {
+        animation: ldDip 0.4s ease-out both;
+      }
       @keyframes ldDip {
-        50% { transform: translateY(9px); }
+        50% {
+          transform: translateY(9px);
+        }
       }
       @media (max-width: 340px) {
-        #loader .ld-scene { transform: scale(0.9); margin: -9px -15px; }
+        #loader .ld-scene {
+          transform: scale(0.9);
+          margin: -9px -15px;
+        }
       }
       @media (prefers-reduced-motion: reduce) {
-        #loader *, #loader *::before, #loader *::after {
+        #loader *,
+        #loader *::before,
+        #loader *::after {
           animation-duration: 0.001s !important;
           animation-iteration-count: 1 !important;
           transition-duration: 0.001s !important;
@@ -1535,6 +1643,7 @@
         border-radius: 50%;
         background: var(--green-600);
         box-shadow: 0 0 0 3px rgb(var(--green-600-rgb) / 0.3);
+        margin: 3px;
       }
       #login {
         position: fixed;
@@ -1968,19 +2077,16 @@
         display: flex;
         gap: 14px;
         align-items: center;
+        background: rgb(var(--blue-950-rgb) / 0.85);
+        backdrop-filter: blur(var(--blur-md));
+        -webkit-backdrop-filter: blur(var(--blur-md));
+        box-shadow: 0 4px 14px rgb(var(--black-rgb) / 0.25);
         transition:
           transform var(--dur-slow) cubic-bezier(0.2, 1.5, 0.4, 1),
           opacity var(--dur-base);
         pointer-events: none;
-        background: rgb(var(--blue-950-rgb) / 0.9);
-        backdrop-filter: blur(var(--blur-lg));
-        -webkit-backdrop-filter: blur(var(--blur-lg));
-        border: 1px solid color-mix(in srgb, var(--rc) 70%, transparent);
         border-radius: 22px;
-        color: var(--tx);
-        box-shadow:
-          0 12px 34px rgb(var(--black-rgb) / 0.5),
-          0 0 28px color-mix(in srgb, var(--rc) 35%, transparent);
+        color: var(--white);
       }
       #cEmoji {
         width: 80px;
@@ -2201,6 +2307,10 @@
         gap: 10px;
         padding: 8px 0;
         border-bottom: 1px solid var(--ln);
+        font-weight: 800;
+        font-size: 15px;
+        min-width: 0;
+        word-break: keep-all;
       }
       .row .e {
         font-size: 26px;
@@ -4808,6 +4918,7 @@
         transition: opacity 1s linear;
       }
       #chatNew {
+        position: absolute;
         top: auto;
         bottom: 10px;
         left: 50%;
@@ -6075,24 +6186,68 @@
           <div class="ld-char">
             <div class="ld-ring">
               <svg viewBox="0 0 64 64">
-                <rect width="64" height="64" fill="#ffd5dc"/>
-                <circle class="ld-eye" cx="22" cy="29" r="3.4" fill="#3a2a2a"/>
-                <circle class="ld-eye" cx="42" cy="29" r="3.4" fill="#3a2a2a"/>
-                <path d="M22 40 Q32 49 42 40" stroke="#3a2a2a" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <rect width="64" height="64" fill="#ffd5dc" />
+                <circle class="ld-eye" cx="22" cy="29" r="3.4" fill="#3a2a2a" />
+                <circle class="ld-eye" cx="42" cy="29" r="3.4" fill="#3a2a2a" />
+                <path
+                  d="M22 40 Q32 49 42 40"
+                  stroke="#3a2a2a"
+                  stroke-width="3"
+                  fill="none"
+                  stroke-linecap="round"
+                />
               </svg>
-              <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="" onload="this.classList.add('on')" onerror="this.remove()" />
+              <img
+                src="https://randomuser.me/api/portraits/men/1.jpg"
+                alt=""
+                onload="this.classList.add('on')"
+                onerror="this.remove()"
+              />
             </div>
           </div>
           <svg class="ld-rod" viewBox="0 0 300 190">
-            <path d="M114 80 Q190 66 234 26" stroke="#c9a063" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-            <path d="M234 26 Q244 80 240 130" stroke="#fff" stroke-opacity=".75" stroke-width="1.2" fill="none">
-              <animate attributeName="d" dur="2.6s" repeatCount="indefinite" values="M234 26 Q246 80 240 130;M234 26 Q236 80 240 130;M234 26 Q246 80 240 130"/>
+            <path
+              d="M114 80 Q190 66 234 26"
+              stroke="#c9a063"
+              stroke-width="3.5"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <path
+              d="M234 26 Q244 80 240 130"
+              stroke="#fff"
+              stroke-opacity=".75"
+              stroke-width="1.2"
+              fill="none"
+            >
+              <animate
+                attributeName="d"
+                dur="2.6s"
+                repeatCount="indefinite"
+                values="M234 26 Q246 80 240 130;M234 26 Q236 80 240 130;M234 26 Q246 80 240 130"
+              />
             </path>
-            <circle cx="114" cy="80" r="4" fill="#fff"/>
+            <circle cx="114" cy="80" r="4" fill="#fff" />
           </svg>
           <div class="ld-water"></div>
-          <svg class="ld-wave w2" viewBox="0 0 600 18" preserveAspectRatio="none"><path d="M0 9 Q37.5 -1 75 9 T150 9 T225 9 T300 9 T375 9 T450 9 T525 9 T600 9 V18 H0Z"/></svg>
-          <svg class="ld-wave w1" viewBox="0 0 600 18" preserveAspectRatio="none"><path d="M0 9 Q37.5 -1 75 9 T150 9 T225 9 T300 9 T375 9 T450 9 T525 9 T600 9 V18 H0Z"/></svg>
+          <svg
+            class="ld-wave w2"
+            viewBox="0 0 600 18"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 9 Q37.5 -1 75 9 T150 9 T225 9 T300 9 T375 9 T450 9 T525 9 T600 9 V18 H0Z"
+            />
+          </svg>
+          <svg
+            class="ld-wave w1"
+            viewBox="0 0 600 18"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 9 Q37.5 -1 75 9 T150 9 T225 9 T300 9 T375 9 T450 9 T525 9 T600 9 V18 H0Z"
+            />
+          </svg>
           <i class="ld-ripple"></i><i class="ld-ripple r2"></i>
           <div class="ld-bobber"></div>
         </div>
@@ -6523,7 +6678,7 @@
             </div>
             <div class="row">
               <div class="g">버전</div>
-              <div class="g" id="appVer" style="opacity: var(--opacity-muted)"></div>
+              <span id="appVer" style="opacity: var(--opacity-muted)"></span>
             </div>
           </div>
           <div class="box" id="acct">
@@ -6822,7 +6977,8 @@
           s.inv = arr(s.inv).filter((i) => i && typeof i === "object")
           s.ptl = arr(s.ptl).filter((v) => typeof v === "number")
           s.trc = arr(s.trc).filter((v) => typeof v === "number")
-          if (s.trH !== undefined) s.trH = arr(s.trH).filter((v) => v && typeof v === "object")
+          if (s.trH !== undefined)
+            s.trH = arr(s.trH).filter((v) => v && typeof v === "object")
           if (s.chips !== undefined) s.chips = arr(s.chips)
           if (!s.codex || typeof s.codex !== "object") s.codex = {}
           if (!s.items || typeof s.items !== "object") s.items = {}
@@ -13098,7 +13254,9 @@
           /* 정리: 부두·구조물 위/입구에 나무, 바위, 버섯 같은 장식이 겹치지 않게 치운다 */
           {
             const KEEP = new Set([22, 24, 36]) // 구조물 자체의 기둥/바위 고리
-            const BLOCKY = new Set([1, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 27, 28, 29, 30])
+            const BLOCKY = new Set([
+              1, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 27, 28, 29, 30,
+            ])
             const clr = (x0, y0, x1, y1, all) => {
               for (let y = Math.max(1, y0); y <= Math.min(MH - 2, y1); y++)
                 for (let x = Math.max(1, x0); x <= Math.min(MW - 2, x1); x++) {
@@ -13114,9 +13272,21 @@
             }
             for (const q of STR) {
               if (q.t === "ruins")
-                clr(Math.floor(q.cx) - 3, Math.floor(q.cy) - 3, Math.floor(q.cx) + 3, Math.floor(q.cy) + 3, true)
+                clr(
+                  Math.floor(q.cx) - 3,
+                  Math.floor(q.cy) - 3,
+                  Math.floor(q.cx) + 3,
+                  Math.floor(q.cy) + 3,
+                  true,
+                )
               else
-                clr(Math.floor(q.x) - 1, Math.floor(q.y) - 1, Math.ceil(q.x + q.w) + 1, Math.ceil(q.y + q.h) + 1, false)
+                clr(
+                  Math.floor(q.x) - 1,
+                  Math.floor(q.y) - 1,
+                  Math.ceil(q.x + q.w) + 1,
+                  Math.ceil(q.y + q.h) + 1,
+                  false,
+                )
             }
           }
           SHD.fill(0)
@@ -13456,8 +13626,7 @@
           },
           keys = new Set()
         let dragTap = null,
-          autoMv = null,
-          autoStuck = 0
+          autoMv = null
         const joyEl = $("#joy"),
           knob = $("#knob")
         function ghostJoy() {
@@ -13475,8 +13644,7 @@
           ) {
             const l = Math.hypot(joy.x, joy.y) || 1
             autoMv = { x: joy.x / l, y: joy.y / l }
-            autoStuck = 0
-            showToast("자동 이동 · 터치하면 멈춰요", 1400)
+            showToast("자동 이동 · 화면을 탭하면 멈춰요", 1400)
           }
           joy.snap = false
           joy.full = false
@@ -13522,6 +13690,7 @@
             joy.cx = e.clientX
             joy.cy = e.clientY
             joy.x = joy.y = 0
+            fv.setPointerCapture(e.pointerId)
             joyEl.style.left = e.clientX - r.left + "px"
             joyEl.style.top = e.clientY - r.top + "px"
             joyEl.className = "on"
@@ -13570,6 +13739,9 @@
         }
         window.addEventListener("pointerup", up)
         window.addEventListener("pointercancel", up)
+        fv.addEventListener("lostpointercapture", (e) => {
+          if (e.pointerId === joy.id) releaseJoy(false)
+        })
         const act = $("#act")
         act.addEventListener("pointerdown", (e) => {
           e.preventDefault()
@@ -15013,7 +15185,10 @@
               span = hi - lo,
               n =
                 span > 0
-                  ? Math.min(1 + Math.floor(rnd(0, 3)), 1 + Math.floor(span / 0.9))
+                  ? Math.min(
+                      1 + Math.floor(rnd(0, 3)),
+                      1 + Math.floor(span / 0.9),
+                    )
                   : 0,
               slack = n > 0 ? span - (n - 1) * 0.9 : 0
             F.tAE = tAE
@@ -15446,7 +15621,9 @@
           mpCatch(p)
           showCard(p, isNew)
           sparkBurst(P.x, P.y, p.ri)
-          petReact(p.ri >= 3 ? "epic" : p.ri === 2 || twin || xn ? "joy" : "cheer")
+          petReact(
+            p.ri >= 3 ? "epic" : p.ri === 2 || twin || xn ? "joy" : "cheer",
+          )
           sfx.jingle(p.ri)
           vib(p.ri >= 3 ? [60, 40, 60, 40, 120] : p.ri >= 1 ? [40, 30, 40] : 30)
           if (p.ri >= 4) {
@@ -15638,7 +15815,10 @@
                   r = rAt(F.t),
                   th =
                     L.th0 +
-                    Math.sin(F.t * 1.6) * 0.35 * kA * clamp(r / (RS || 1), 0, 1),
+                    Math.sin(F.t * 1.6) *
+                      0.35 *
+                      kA *
+                      clamp(r / (RS || 1), 0, 1),
                   wob = Math.sin(F.t * 3) * (1 - kA) * 0.5
                 L.x = F.bx + Math.cos(th) * r - Math.sin(th) * wob
                 L.y = F.by + Math.sin(th) * r + Math.cos(th) * wob
@@ -15752,7 +15932,7 @@
           if (dy) P.vy = 0
         }
 
-/* ================= 크리스마스 장비 특수 능력 =================
+        /* ================= 크리스마스 장비 특수 능력 =================
    산타 모자: 눈 위 쌍걸이 +10%p + 행운 +0.4 / 아이스 스케이트: 눈 위 +55% 속도 + 미끄러짐 / 캔디 케인: 나무 스윙 */
         const snowSm = (a, b, x) => {
           const t = x < a ? 0 : x > b ? 1 : (x - a) / (b - a)
@@ -15830,7 +16010,13 @@
           if (skAcc > 0) return
           skAcc = 0.03
           const l = Math.hypot(P.vx, P.vy) || 1
-          skTrail.push({ x: P.x, y: P.y, nx: -P.vy / l, ny: P.vx / l, t0: time })
+          skTrail.push({
+            x: P.x,
+            y: P.y,
+            nx: -P.vy / l,
+            ny: P.vx / l,
+            t0: time,
+          })
           if (skTrail.length > 90) skTrail.shift()
         }
         function drawSkTrail() {
@@ -15848,8 +16034,14 @@
               const al = Math.max(0, 1 - (time - b.t0) / 1.8)
               ctx.strokeStyle = `rgba(150,205,240,${al * 0.6})`
               ctx.beginPath()
-              ctx.moveTo(sxv(a.x + a.nx * 0.07 * side), syv(a.y + a.ny * 0.07 * side))
-              ctx.lineTo(sxv(b.x + b.nx * 0.07 * side), syv(b.y + b.ny * 0.07 * side))
+              ctx.moveTo(
+                sxv(a.x + a.nx * 0.07 * side),
+                syv(a.y + a.ny * 0.07 * side),
+              )
+              ctx.lineTo(
+                sxv(b.x + b.nx * 0.07 * side),
+                syv(b.y + b.ny * 0.07 * side),
+              )
               ctx.stroke()
             }
           }
@@ -15927,7 +16119,10 @@
             })
           if (swingHint) {
             swingHint = false
-            toast("나무에 걸었어요! 이동하면 돌아요 · 낚시 버튼으로 멀리 날아가요", 2600)
+            toast(
+              "나무에 걸었어요! 이동하면 돌아요 · 낚시 버튼으로 멀리 날아가요",
+              2600,
+            )
           }
         }
         function swingStep(dt, ix, iy) {
@@ -16034,7 +16229,9 @@
             ax = sxv(s.ax),
             ay = syv(s.ay) - HOOK_H * TS,
             mx = (tipX + ax) / 2,
-            my = (tipY + ay) / 2 + Math.min(14 * k, Math.hypot(ax - tipX, ay - tipY) * 0.05)
+            my =
+              (tipY + ay) / 2 +
+              Math.min(14 * k, Math.hypot(ax - tipX, ay - tipY) * 0.05)
           ctx.save()
           ctx.lineCap = "round"
           ctx.lineWidth = 2.6 * k
@@ -17026,8 +17223,26 @@
         sledBtn.addEventListener("click", sledToggle)
 
         /* --- 펫: 뒤에서 졸졸 따라와요 --- */
-        const PET = { x: 0, y: 0, hop: 0, vh: 0, ph: 0, init: false, last: "", idleT: 0, mood: "", mt: 0, seed: Math.random() }
-        const PET_MOOD_DUR = { alert: 0.6, cheer: 1, joy: 2, epic: 3.2, sad: 1.7 }
+        const PET = {
+          x: 0,
+          y: 0,
+          hop: 0,
+          vh: 0,
+          ph: 0,
+          init: false,
+          last: "",
+          idleT: 0,
+          mood: "",
+          mt: 0,
+          seed: Math.random(),
+        }
+        const PET_MOOD_DUR = {
+          alert: 0.6,
+          cheer: 1,
+          joy: 2,
+          epic: 3.2,
+          sad: 1.7,
+        }
         /* 펫 감정: 좋은 걸 낚으면 기뻐하고, 놓치면 시무룩해요 */
         function petReact(kind) {
           if (!PET.init || !(save.equip && save.equip.pet)) return
@@ -17088,13 +17303,37 @@
           otter: { st: "walk", k: 1, dist: 1, sway: 0.12 },
           bunny: { st: "hop", k: 0.9, dist: 1, hopH: 15 },
           frog: { st: "hop", k: 0.85, dist: 0.95, hopH: 9 },
-          bird: { st: "fly", k: 0.9, dist: 1.15, h: 11, flap: 13, amp: 2.8, orbit: 0.3 },
-          dragon: { st: "fly", k: 0.7, dist: 1.25, h: 16, flap: 5.5, amp: 4.6, orbit: 0.5 },
+          bird: {
+            st: "fly",
+            k: 0.9,
+            dist: 1.15,
+            h: 11,
+            flap: 13,
+            amp: 2.8,
+            orbit: 0.3,
+          },
+          dragon: {
+            st: "fly",
+            k: 0.7,
+            dist: 1.25,
+            h: 16,
+            flap: 5.5,
+            amp: 4.6,
+            orbit: 0.5,
+          },
           duck: { st: "waddle", k: 0.95, dist: 1, rot: 0.2 },
           penguin: { st: "waddle", k: 0.9, dist: 1, rot: 0.26 },
           turtle: { st: "plod", k: 0.55, dist: 0.9 },
           crab: { st: "side", k: 1.1, dist: 0.95 },
-          owl: { st: "glide", k: 0.8, dist: 1.1, h: 6, flap: 3.5, amp: 1.8, orbit: 0.2 },
+          owl: {
+            st: "glide",
+            k: 0.8,
+            dist: 1.1,
+            h: 6,
+            flap: 3.5,
+            amp: 1.8,
+            orbit: 0.2,
+          },
           seal: { st: "scoot", k: 0.8, dist: 0.95 },
           slime: { st: "squish", k: 0.85, dist: 0.9 },
           jelly: { st: "float", k: 0.7, dist: 1.05, h: 9, orbit: 0.25 },
@@ -17238,7 +17477,12 @@
               g.imageSmoothingQuality = "high"
               g.translate(tx, ty)
               g.scale(2 * sc, 2 * sc)
-              gearArt(g, Object.assign({}, it, { art: Object.assign({}, it.art, { nowing: 1 }) }))
+              gearArt(
+                g,
+                Object.assign({}, it, {
+                  art: Object.assign({}, it.art, { nowing: 1 }),
+                }),
+              )
               kit = { img: cv, tx, ty, sc, S }
             }
           } catch (e) {
@@ -17254,14 +17498,22 @@
           if (h[0] === "r") [r, g, b] = h.match(/\d+/g).map(Number)
           else {
             h = h.replace("#", "")
-            if (h.length === 3) h = h.split("").map((q) => q + q).join("")
+            if (h.length === 3)
+              h = h
+                .split("")
+                .map((q) => q + q)
+                .join("")
             r = parseInt(h.slice(0, 2), 16)
             g = parseInt(h.slice(2, 4), 16)
             b = parseInt(h.slice(4, 6), 16)
           }
           const m = v > 0 ? 255 : 0,
             w = Math.abs(v)
-          return "rgb(" + [r, g, b].map((q) => Math.round(q + (m - q) * w)).join(",") + ")"
+          return (
+            "rgb(" +
+            [r, g, b].map((q) => Math.round(q + (m - q) * w)).join(",") +
+            ")"
+          )
         }
         /* 그림 좌표(64칸) 기준으로 양쪽 날개를 그려요. fl > 0 이면 날개가 아래로 내려가는 중 */
         function drawFlapWings(c, art, fl) {
@@ -17326,8 +17578,22 @@
           c.fillStyle = col
           c.beginPath()
           c.moveTo(x, y + r * 0.9)
-          c.bezierCurveTo(x - r * 1.5, y - r * 0.1, x - r * 0.8, y - r * 1.2, x, y - r * 0.4)
-          c.bezierCurveTo(x + r * 0.8, y - r * 1.2, x + r * 1.5, y - r * 0.1, x, y + r * 0.9)
+          c.bezierCurveTo(
+            x - r * 1.5,
+            y - r * 0.1,
+            x - r * 0.8,
+            y - r * 1.2,
+            x,
+            y - r * 0.4,
+          )
+          c.bezierCurveTo(
+            x + r * 0.8,
+            y - r * 1.2,
+            x + r * 1.5,
+            y - r * 0.1,
+            x,
+            y + r * 0.9,
+          )
           c.fill()
           c.restore()
         }
@@ -17391,7 +17657,9 @@
             }
             case "waddle": {
               // 펭귄·오리: 뒤뚱뒤뚱
-              lift = moving ? Math.abs(sn(ph)) * 2.4 * s : sn(tm * 2 + x) * 0.6 * s
+              lift = moving
+                ? Math.abs(sn(ph)) * 2.4 * s
+                : sn(tm * 2 + x) * 0.6 * s
               rot = moving ? sn(ph) * m.rot : sn(tm * 1.8 + x) * 0.03
               break
             }
@@ -17449,7 +17717,9 @@
             }
             default: {
               // 고양이·강아지·여우 등: 총총 걷기 (종류별로 흔들림이 달라요)
-              lift = moving ? Math.abs(sn(ph)) * 3.2 * s : sn(tm * 2 + x) * 0.8 * s
+              lift = moving
+                ? Math.abs(sn(ph)) * 3.2 * s
+                : sn(tm * 2 + x) * 0.8 * s
               rot = moving ? sn(ph) * (m.sway || 0.04) : 0
               qy = 1 + (moving ? sn(ph * 2) * 0.04 : 0)
               qx = 1 / qy
@@ -17461,7 +17731,14 @@
             seed =
               stt.seed !== undefined
                 ? stt.seed
-                : (stt.seed = [...String(id)].reduce((q, ch) => q + ch.charCodeAt(0), 0) % 97 / 97 + (x * 0.013) % 1),
+                : (stt.seed =
+                    ([...String(id)].reduce(
+                      (q, ch) => q + ch.charCodeAt(0),
+                      0,
+                    ) %
+                      97) /
+                      97 +
+                    ((x * 0.013) % 1)),
             flyer = m.st === "fly" || m.st === "glide",
             mood = stt.mood || "",
             mdur = PET_MOOD_DUR[mood] || 1,
@@ -17520,7 +17797,8 @@
             const T = tm + seed * 7,
               slot = Math.floor(T / 6),
               u = (T % 6) / 6,
-              hh = Math.abs(sn(slot * 12.9898 + seed * 78.233) * 43758.5453) % 1,
+              hh =
+                Math.abs(sn(slot * 12.9898 + seed * 78.233) * 43758.5453) % 1,
               act = Math.floor(hh * 6)
             if (act === 1 && u < 0.5) {
               // 두리번두리번
@@ -17572,10 +17850,19 @@
             ctx.translate(0, sz * 0.45)
           }
           const wingsBack = wk && art.t === "dragon",
-            wingFl = wk ? (wingFold ? (art.t === "dragon" ? -0.35 : 1) : sn(tm * m.flap * flapSpd + x * 3)) : 0,
+            wingFl = wk
+              ? wingFold
+                ? art.t === "dragon"
+                  ? -0.35
+                  : 1
+                : sn(tm * m.flap * flapSpd + x * 3)
+              : 0,
             wingsDraw = () => {
               ctx.save()
-              ctx.translate(-sz / 2 + (wk.tx * sz) / wk.S, -sz + 2 * s + (wk.ty * sz) / wk.S)
+              ctx.translate(
+                -sz / 2 + (wk.tx * sz) / wk.S,
+                -sz + 2 * s + (wk.ty * sz) / wk.S,
+              )
               ctx.scale((wk.sc * sz) / 64, (wk.sc * sz) / 64)
               drawFlapWings(ctx, art, wingFl)
               ctx.restore()
@@ -17591,7 +17878,10 @@
               pu = 0.65 + 0.35 * sn(mine ? TRS.ph : tm * 4 + x),
               rr = 9 * s * (1 + sk * 1.1),
               gr = ctx.createRadialGradient(0, gy, 0, 0, gy, rr)
-            gr.addColorStop(0, `rgba(255,${120 + sk * 100 | 0},${90 + sk * 90 | 0},${Math.min(1, 0.85 * pu + sk * 0.2)})`)
+            gr.addColorStop(
+              0,
+              `rgba(255,${(120 + sk * 100) | 0},${(90 + sk * 90) | 0},${Math.min(1, 0.85 * pu + sk * 0.2)})`,
+            )
             gr.addColorStop(0.45, `rgba(255,70,50,${0.35 * pu + sk * 0.25})`)
             gr.addColorStop(1, "rgba(255,60,40,0)")
             ctx.globalCompositeOperation = "lighter"
@@ -17642,9 +17932,17 @@
               ctx.font = `900 ${(7 + q * 7) * s}px "Hada Round",sans-serif`
               ctx.lineWidth = 2.5
               ctx.strokeStyle = "rgba(40,60,110,.8)"
-              ctx.strokeText(i % 2 ? "z" : "Z", hx + sz * 0.3 + q * sz * 0.3, hy + sz * 0.2 - q * sz * 0.55)
+              ctx.strokeText(
+                i % 2 ? "z" : "Z",
+                hx + sz * 0.3 + q * sz * 0.3,
+                hy + sz * 0.2 - q * sz * 0.55,
+              )
               ctx.fillStyle = "#e8f2ff"
-              ctx.fillText(i % 2 ? "z" : "Z", hx + sz * 0.3 + q * sz * 0.3, hy + sz * 0.2 - q * sz * 0.55)
+              ctx.fillText(
+                i % 2 ? "z" : "Z",
+                hx + sz * 0.3 + q * sz * 0.3,
+                hy + sz * 0.2 - q * sz * 0.55,
+              )
             }
             ctx.restore()
           }
@@ -17657,7 +17955,8 @@
             ctx.lineWidth = 3
             ctx.lineJoin = "round"
             ctx.strokeStyle = "rgba(120,50,0,.85)"
-            const ay = hy - sz * 0.05 - sn(Math.min(1, alertT * 3) * Math.PI) * 3 * s
+            const ay =
+              hy - sz * 0.05 - sn(Math.min(1, alertT * 3) * Math.PI) * 3 * s
             ctx.strokeText("!", hx, ay)
             ctx.fillStyle = "#ffd84a"
             ctx.fillText("!", hx, ay)
@@ -17700,15 +17999,6 @@
           if (autoMv && joy.id === null && !keys.size) {
             ix = autoMv.x
             iy = autoMv.y
-            if (F.phase === "idle" && !tpA && !(P.sl && !P.drv)) {
-              if (Math.hypot(P.vx, P.vy) < 0.3) {
-                autoStuck += dt
-                if (autoStuck > 0.5) autoMv = null
-              } else autoStuck = 0
-            } else {
-              autoStuck = 0
-            }
-            if (autoMv === null) ix = iy = 0
           }
           if (P.sl && !P.drv) {
             ix = 0
@@ -18290,17 +18580,57 @@
             X = (v) => v * L
           ctx.beginPath()
           ctx.moveTo(X(0.5), 0)
-          ctx.bezierCurveTo(X(0.5), X(-0.13), X(0.3), X(-0.2), X(0.05), X(-0.19))
-          ctx.bezierCurveTo(X(-0.12), X(-0.18), X(-0.22), X(-0.07), X(-0.33), X(-0.035 + w2))
-          ctx.bezierCurveTo(X(-0.4), X(-0.03 + w2), X(-0.44), X(-0.09 + w), X(-0.56), X(-0.18 + w))
+          ctx.bezierCurveTo(
+            X(0.5),
+            X(-0.13),
+            X(0.3),
+            X(-0.2),
+            X(0.05),
+            X(-0.19),
+          )
+          ctx.bezierCurveTo(
+            X(-0.12),
+            X(-0.18),
+            X(-0.22),
+            X(-0.07),
+            X(-0.33),
+            X(-0.035 + w2),
+          )
+          ctx.bezierCurveTo(
+            X(-0.4),
+            X(-0.03 + w2),
+            X(-0.44),
+            X(-0.09 + w),
+            X(-0.56),
+            X(-0.18 + w),
+          )
           ctx.quadraticCurveTo(X(-0.49), X(w), X(-0.56), X(0.18 + w))
-          ctx.bezierCurveTo(X(-0.44), X(0.09 + w), X(-0.4), X(0.03 + w2), X(-0.33), X(0.035 + w2))
-          ctx.bezierCurveTo(X(-0.22), X(0.07), X(-0.12), X(0.18), X(0.05), X(0.19))
+          ctx.bezierCurveTo(
+            X(-0.44),
+            X(0.09 + w),
+            X(-0.4),
+            X(0.03 + w2),
+            X(-0.33),
+            X(0.035 + w2),
+          )
+          ctx.bezierCurveTo(
+            X(-0.22),
+            X(0.07),
+            X(-0.12),
+            X(0.18),
+            X(0.05),
+            X(0.19),
+          )
           ctx.bezierCurveTo(X(0.3), X(0.2), X(0.5), X(0.13), X(0.5), 0)
           ctx.closePath()
           // 가슴지느러미 (몸통과 같은 방향으로 그려야 겹쳐도 한 번만 칠해져요)
           ctx.moveTo(X(0.2), X(-0.12))
-          ctx.quadraticCurveTo(X(0.05), X(-0.3 - w * 0.4), X(-0.12), X(-0.26 - w * 0.4))
+          ctx.quadraticCurveTo(
+            X(0.05),
+            X(-0.3 - w * 0.4),
+            X(-0.12),
+            X(-0.26 - w * 0.4),
+          )
           ctx.quadraticCurveTo(X(0), X(-0.15), X(0.05), X(-0.1))
           ctx.closePath()
           ctx.moveTo(X(0.05), X(0.1))
@@ -22361,24 +22691,24 @@
         let mmLastT = 0,
           mmLastBig = false,
           frameNow = 0
-        /* ===== 현실 시간에 따른 하늘색 (기기 시계 기준) =====
-           ?hour=22 처럼 주소에 붙이면 그 시각으로 미리 볼 수 있어요 */
+        /* ===== 매시 정각의 낮과 30분의 밤 사이를 부드럽게 순환 =====
+           ?hour=22 처럼 주소에 붙이면 해당 시각 색상을 미리 볼 수 있어요 */
         const DN_KEYS = [
           // [시, 곱하기 색 r,g,b, 밤 밝기 0~1, 하늘빛 r,g,b,세기]
           [0, 70, 84, 150, 1, 0, 0, 0, 0], // 자정
           [3, 62, 76, 145, 1, 0, 0, 0, 0], // 깊은 밤
           [4.5, 84, 94, 162, 1, 120, 120, 200, 0.06], // 동트기 전
-          [5.5, 150, 122, 172, 0.8, 255, 140, 120, 0.18], // 새벽 (보랏빛)
-          [6.5, 255, 190, 160, 0.35, 255, 170, 100, 0.24], // 일출
-          [7.5, 255, 226, 200, 0.1, 255, 205, 140, 0.1], // 이른 아침
+          [5.5, 160, 144, 166, 0.8, 238, 174, 158, 0.12], // 새벽 (보랏빛)
+          [6.5, 245, 204, 190, 0.35, 242, 190, 158, 0.16], // 일출
+          [7.5, 245, 226, 208, 0.1, 240, 216, 184, 0.07], // 이른 아침
           [9, 255, 245, 235, 0, 0, 0, 0, 0], // 아침
           [12, 255, 255, 255, 0, 0, 0, 0, 0], // 한낮
           [14.5, 255, 252, 240, 0, 0, 0, 0, 0], // 오후
-          [16.5, 255, 236, 202, 0.05, 255, 210, 140, 0.06], // 늦은 오후
-          [18, 255, 186, 122, 0.2, 255, 150, 70, 0.22], // 노을
-          [19, 236, 132, 142, 0.45, 255, 110, 110, 0.2], // 석양
-          [20, 150, 116, 176, 0.75, 160, 110, 200, 0.14], // 황혼
-          [21, 96, 106, 176, 0.92, 90, 100, 190, 0.07], // 초저녁
+          [16.5, 245, 230, 208, 0.05, 238, 215, 184, 0.04], // 늦은 오후
+          [18, 230, 194, 158, 0.2, 224, 174, 132, 0.12], // 노을
+          [19, 215, 170, 170, 0.45, 224, 162, 162, 0.12], // 석양
+          [20, 165, 145, 176, 0.75, 175, 150, 190, 0.08], // 황혼
+          [21, 132, 143, 190, 0.92, 130, 145, 200, 0.045], // 초저녁
           [22.5, 72, 86, 155, 1, 0, 0, 0, 0], // 밤
           [24, 70, 84, 150, 1, 0, 0, 0, 0],
         ]
@@ -22391,14 +22721,24 @@
           if (now - DN.t < 1000 && DN.h >= 0) return
           DN.t = now
           const d = new Date(),
-            h = DN_FORCE >= 0 ? DN_FORCE : d.getHours() + d.getMinutes() / 60
+            minute =
+              d.getMinutes() +
+              d.getSeconds() / 60 +
+              d.getMilliseconds() / 60000,
+            h =
+              DN_FORCE >= 0
+                ? DN_FORCE
+                : minute < 30
+                  ? 12 + minute * 0.4
+                  : 24 - (minute - 30) * 0.4
           DN.h = h
           for (let i = 1; i < DN_KEYS.length; i++) {
             const a = DN_KEYS[i - 1],
               b = DN_KEYS[i]
             if (h <= b[0]) {
               const f = (h - a[0]) / (b[0] - a[0] || 1)
-              for (let j = 0; j < 8; j++) DN.c[j] = a[j + 1] + (b[j + 1] - a[j + 1]) * f
+              for (let j = 0; j < 8; j++)
+                DN.c[j] = a[j + 1] + (b[j + 1] - a[j + 1]) * f
               DN.n = DN.c[3]
               break
             }
@@ -22421,7 +22761,10 @@
           if (c[7] > 0.01 && !lowSpecOn) {
             // 일출·노을: 위쪽에서 번지는 하늘빛
             const g = ctx.createLinearGradient(0, 0, 0, H * 0.7)
-            g.addColorStop(0, `rgba(${c[4] | 0},${c[5] | 0},${c[6] | 0},${c[7]})`)
+            g.addColorStop(
+              0,
+              `rgba(${c[4] | 0},${c[5] | 0},${c[6] | 0},${c[7]})`,
+            )
             g.addColorStop(1, `rgba(${c[4] | 0},${c[5] | 0},${c[6] | 0},0)`)
             ctx.fillStyle = g
             ctx.fillRect(0, 0, W, H)
@@ -22432,10 +22775,17 @@
               const sa = (DN.n - 0.6) / 0.4
               ctx.fillStyle = "#fff"
               for (let i = 0; i < 46; i++) {
-                const tw = 0.5 + 0.5 * Math.sin(time * (0.8 + hash(i, 3, 91) * 1.6) + i * 2.3)
+                const tw =
+                  0.5 +
+                  0.5 * Math.sin(time * (0.8 + hash(i, 3, 91) * 1.6) + i * 2.3)
                 ctx.globalAlpha = sa * (0.15 + 0.5 * tw)
                 const sz = 0.8 + hash(i, 4, 91) * 1.4
-                ctx.fillRect(hash(i, 1, 91) * W, hash(i, 2, 91) * H * 0.85, sz, sz)
+                ctx.fillRect(
+                  hash(i, 1, 91) * W,
+                  hash(i, 2, 91) * H * 0.85,
+                  sz,
+                  sz,
+                )
               }
               ctx.globalAlpha = 1
             }
@@ -22465,16 +22815,6 @@
             }
             ctx.globalAlpha = 1
             nightBulbs.length = 0
-            // 밤에는 내 캐릭터 주변이 확실히 밝아요
-            const px = sxv(P.x),
-              py = syv(P.y) - TS * 0.4,
-              R = TS * 5,
-              g = ctx.createRadialGradient(px, py, 0, px, py, R)
-            g.addColorStop(0, `rgba(255,232,185,${0.3 * DN.n})`)
-            g.addColorStop(0.45, `rgba(255,225,170,${0.26 * DN.n})`)
-            g.addColorStop(1, "rgba(255,225,170,0)")
-            ctx.fillStyle = g
-            ctx.fillRect(px - R, py - R, R * 2, R * 2)
             if (save.equip && save.equip.pet === "x10" && PET.init) {
               const nx = sxv(PET.x),
                 ny = syv(PET.y) - TS * 0.5,
@@ -23315,10 +23655,10 @@
           k === "snowluck"
             ? "+" + v.toFixed(1)
             : k === "snowtwin"
-            ? "+" + Math.round(v * 100) + "%p"
-            : k === "skate" || k === "cane" || k === "sense"
-              ? "ON"
-              : fmtSp0(k, v)
+              ? "+" + Math.round(v * 100) + "%p"
+              : k === "skate" || k === "cane" || k === "sense"
+                ? "ON"
+                : fmtSp0(k, v)
         const fmtSp0 = (k, v) =>
           k === "swim"
             ? "×" + (1 + v).toFixed(1)
@@ -24512,7 +24852,14 @@
             "루돌프",
             4,
             { luck: 1.3, bite: 0.7, zone: 0.5 },
-            { t: "deer", a: "#a8693a", b: "#f6e4c8", c: "#e8c47a", nose: 1, sp: 1 },
+            {
+              t: "deer",
+              a: "#a8693a",
+              b: "#f6e4c8",
+              c: "#e8c47a",
+              nose: 1,
+              sp: 1,
+            },
             { sprint: 0.14, gold: 0.1, coop: 0.08, sense: 1 },
           ],
         ].map(([id, slot, n, ri, st, art, sp]) => ({
@@ -27042,10 +27389,12 @@
           guard: "릴 감기에 실패해도 줄 체력이 덜 닳아요 (최대 80%)",
           coop: "근처(7칸 안)에 함께 낚시하는 동료가 있으면 입질과 행운이 올라가요",
           snowtwin: "눈 위에 서 있으면 쌍걸이 확률이 올라가요",
-          snowluck: "눈 위에 서 있으면 행운이 올라가요 (낚는 순간 눈 위에 서 있을 때)",
+          snowluck:
+            "눈 위에 서 있으면 행운이 올라가요 (낚는 순간 눈 위에 서 있을 때)",
           skate: "눈 위에서 이동 속도가 +55%, 얼음처럼 미끄러져요",
           cane: "나무에 줄을 걸고 빙글빙글 돌아요",
-          sense: "보물이 가까울수록 루돌프의 코가 더 빠르고 밝게 깜빡여요 (최대 100칸)",
+          sense:
+            "보물이 가까울수록 루돌프의 코가 더 빠르고 밝게 깜빡여요 (최대 100칸)",
         }
         document.addEventListener("click", (e) => {
           const c = e.target.closest && e.target.closest(".stl[data-d]")
@@ -27183,7 +27532,8 @@
           질주: "땅에서 달리는 속도가 빨라져요",
           대물: "물고기가 더 크고 비싸게 잡혀요",
           보호: "리듬을 놓칠 때 받는 피해가 줄어요",
-          "눈 쌍걸이": "눈이 쌓인 곳에 서 있으면 쌍걸이 확률이 올라가고, 산타 모자 끝이 빛나요",
+          "눈 쌍걸이":
+            "눈이 쌓인 곳에 서 있으면 쌍걸이 확률이 올라가고, 산타 모자 끝이 빛나요",
           "눈 행운": "눈 위에서 낚으면 행운이 올라가요",
           스케이트: "눈 위에서 이동 속도 +55%, 얼음처럼 쭉 미끄러져요",
           걸기: "낚싯대를 나무에 걸고 이동하면 빙글빙글 돌아요. 다시 누르면 장애물을 무시하고 돌던 방향으로 멀리 날아가요",
@@ -27199,7 +27549,8 @@
           if (g.sprint) l.push(["질주", "+" + Math.round(g.sprint * 100) + "%"])
           if (g.big) l.push(["대물", "+" + Math.round(g.big * 100) + "%"])
           if (g.guard) l.push(["보호", "-" + Math.round(g.guard * 100) + "%"])
-          if (g.snowtwin) l.push(["눈 쌍걸이", "+" + Math.round(g.snowtwin * 100) + "%p"])
+          if (g.snowtwin)
+            l.push(["눈 쌍걸이", "+" + Math.round(g.snowtwin * 100) + "%p"])
           if (g.snowluck) l.push(["눈 행운", "+" + g.snowluck.toFixed(1)])
           if (g.skate) l.push(["스케이트", "ON"])
           if (g.cane) l.push(["걸기", "ON"])
@@ -27773,9 +28124,7 @@
               ok: !!(h && h.ok),
             }))
           if (Array.isArray(s.chips))
-            p.chips = s.chips
-              .filter((x) => typeof x === "string")
-              .slice(0, 50)
+            p.chips = s.chips.filter((x) => typeof x === "string").slice(0, 50)
           if (s.qs && typeof s.qs === "object") {
             const q = s.qs,
               three = (arr) =>
@@ -28251,7 +28600,15 @@
             o.mv = Math.min(1, sp / 1.5)
             if (Math.abs(o.fx) > 0.25) o.side = o.fx > 0 ? 1 : -1
             if (o.ep) {
-              const b = petTarget(o.ep, o.x, o.y, o.fx, o.fy, o.dvx || 0, o.dvy || 0)
+              const b = petTarget(
+                o.ep,
+                o.x,
+                o.y,
+                o.fx,
+                o.fy,
+                o.dvx || 0,
+                o.dvy || 0,
+              )
               if (!o.pp) o.pp = { x: b.x, y: b.y, ph: 0 }
               petFollow(o.pp, b.x, b.y, h, undefined, petMvOf(o.ep).k)
               o.pp.idleT = o.mv > 0.2 ? 0 : (o.pp.idleT || 0) + h
@@ -28285,8 +28642,12 @@
             y: +P.y.toFixed(2),
             vx: +P.vx.toFixed(2),
             vy: +P.vy.toFixed(2),
-            fx: +(F.phase === "charge" || F.phase === "swing" ? F.dx : P.fx).toFixed(2),
-            fy: +(F.phase === "charge" || F.phase === "swing" ? F.dy : P.fy).toFixed(2),
+            fx: +(
+              F.phase === "charge" || F.phase === "swing" ? F.dx : P.fx
+            ).toFixed(2),
+            fy: +(
+              F.phase === "charge" || F.phase === "swing" ? F.dy : P.fy
+            ).toFixed(2),
             sw:
               F.phase === "swing" && F.sw
                 ? [+F.sw.ax.toFixed(2), +F.sw.ay.toFixed(2)]
@@ -28898,7 +29259,9 @@
             ax = sxv(o.sw[0]),
             ay = syv(o.sw[1]) - HOOK_H * TS,
             mx = (tipX + ax) / 2,
-            my = (tipY + ay) / 2 + Math.min(14 * s, Math.hypot(ax - tipX, ay - tipY) * 0.05)
+            my =
+              (tipY + ay) / 2 +
+              Math.min(14 * s, Math.hypot(ax - tipX, ay - tipY) * 0.05)
           ctx.save()
           ctx.lineCap = "round"
           ctx.lineWidth = 2.6 * s
