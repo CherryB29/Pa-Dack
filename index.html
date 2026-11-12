@@ -271,6 +271,13 @@
         user-select: none;
         touch-action: none;
       }
+      /* 스크롤 영역(장비 패널·아이템 시트) 안은 세로 드래그 스크롤을 허용 */
+      .panel,
+      .panel *,
+      .sbody,
+      .sbody * {
+        touch-action: pan-y;
+      }
 
       svg {
         width: 1em;
@@ -16480,8 +16487,11 @@
             xAirShadow(P.x, P.y, P.lf)
             ctx.save()
             ctx.translate(0, -P.lf)
+            P.tipX = P.tipY = null // 이번 프레임에 새로 그린 낚싯대 끝만 쓰도록 비움
             drawPlayer()
             ctx.restore()
+            // 줄 시작점(낚싯대 끝)도 몸과 같이 위로 올려서 기록해야 줄이 낚싯대 끝에서 나와요
+            if (P.tipY != null) P.tipY -= P.lf
             return
           }
           if (!P.sl) return drawPlayer()
