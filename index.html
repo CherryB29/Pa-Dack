@@ -13403,18 +13403,42 @@
           }
           for (const f of afish) {
             f.turn -= dt
+            if (f.ta === undefined) f.ta = f.a
             if (f.turn <= 0) {
-              f.a += rnd(-0.9, 0.9)
-              f.turn = rnd(0.8, 2.5)
+              // 가끔은 크게, 가끔은 살짝 — 자유롭게 방향을 바꿔요
+              f.ta = f.a + rnd(-1, 1) * (Math.random() < 0.3 ? 3 : 1.4)
+              f.turn = rnd(0.6, 2.8)
+            }
+            {
+              const d = Math.atan2(Math.sin(f.ta - f.a), Math.cos(f.ta - f.a)),
+                m = 3.2 * dt
+              f.a += Math.abs(d) < m ? d : Math.sign(d) * m
             }
             const nx = f.x + Math.cos(f.a) * f.sp * dt * 1.4,
               ny = f.y + Math.sin(f.a) * f.sp * dt * 1.4
-            if (wAt(nx, ny) > 0.6 && isSea(nx, ny) === f.sea) {
+            if (
+              wAt(nx, ny) > 0.6 &&
+              isSea(nx, ny) === f.sea &&
+              (shadowWet(nx, ny, f.a, f.sz) || !shadowWet(f.x, f.y, f.a, f.sz))
+            ) {
               f.x = nx
               f.y = ny
             } else {
-              f.a += Math.PI * rnd(0.6, 1.4)
-              f.turn = 1
+              // 막히면 갈 수 있는 방향을 찾아 부드럽게 돌아요
+              let best = null
+              for (let k = 0; k < 8 && best === null; k++) {
+                const ta = f.a + rnd(-Math.PI, Math.PI),
+                  tx = f.x + Math.cos(ta) * 0.5,
+                  ty = f.y + Math.sin(ta) * 0.5
+                if (
+                  wAt(tx, ty) > 0.6 &&
+                  isSea(tx, ty) === f.sea &&
+                  shadowWet(tx, ty, ta, f.sz)
+                )
+                  best = ta
+              }
+              f.ta = best === null ? f.a + Math.PI : best
+              f.turn = rnd(0.8, 1.6)
             }
           }
         }
@@ -14980,13 +15004,22 @@
           F.zone = zoneAt(F.tx, F.ty, F.wt ? 1 : 0)
           F.pick = rollFish(F.depth, F.wt ? "sea" : "fresh", F.zone)
           F.waitDur = rnd(7, 13) / (save.gear.bite * coBuff().bite * CFGX.bite)
+          /* 입질: 물고기가 찌 근처까지 와서 → 톡 치고 → 빠졌다가 → 다시 다가오고, 마지막에 문다 */
           {
-            const n = Math.floor(rnd(0, 4)),
-              lo = Math.max(1.2, F.waitDur * 0.35),
-              hi = F.waitDur - 0.3
-            F.nib = Array.from({ length: n }, () => rnd(lo, hi)).sort(
-              (a, b) => a - b,
-            )
+            const d0 = F.waitDur * 0.32,
+              tAE = d0 + clamp((F.waitDur - d0) * 0.45, 0.6, 2.2),
+              lo = tAE + 0.5,
+              hi = F.waitDur - 1.3,
+              span = hi - lo,
+              n =
+                span > 0
+                  ? Math.min(1 + Math.floor(rnd(0, 3)), 1 + Math.floor(span / 0.9))
+                  : 0,
+              slack = n > 0 ? span - (n - 1) * 0.9 : 0
+            F.tAE = tAE
+            F.nib = Array.from({ length: n }, () => rnd(0, slack))
+              .sort((a, b) => a - b)
+              .map((r, i) => lo + r + i * 0.9)
           }
           F.nibI = 0
           F.rippleT = 0.5
@@ -15006,6 +15039,7 @@
               break
             }
           }
+          const lr0 = Math.hypot(lx - F.bx, ly - F.by)
           F.lure = {
             x0: lx,
             y0: ly,
@@ -15013,6 +15047,9 @@
             y: ly,
             a: 0,
             sc: 0.85 + Math.random() * 0.75,
+            r0: lr0, // 처음 찌까지의 거리
+            th0: Math.atan2(ly - F.by, lx - F.bx), // 찌 기준 물고기가 있는 방향
+            rs: Math.min(0.45, lr0), // 톡톡 치기 전에 맴도는 거리(가깝게)
           }
         }
         function doBite() {
@@ -15578,13 +15615,37 @@
               const L = F.lure
               if (L) {
                 const d0 = F.waitDur * 0.32,
-                  k = clamp((F.t - d0) / (F.waitDur - 0.95 - d0), 0, 1),
-                  e = eOut(k),
-                  wob = Math.sin(F.t * 3) * (1 - k) * 0.5
-                L.x = lerp(L.x0, F.bx, e) - F.dy * wob
-                L.y = lerp(L.y0, F.by, e) + F.dx * wob
-                L.a =
-                  Math.atan2(F.by - L.y, F.bx - L.x) + (k >= 1 ? F.t * 2.2 : 0)
+                  tAE = F.tAE,
+                  RS = L.rs,
+                  tf = F.waitDur - 0.7,
+                  base = (t) =>
+                    lerp(L.r0, RS, eOut(clamp((t - d0) / (tAE - d0), 0, 1))),
+                  rAt = (t) => {
+                    let r = base(t)
+                    for (const tn of F.nib) {
+                      if (t >= tn - 0.22 && t <= tn)
+                        r = lerp(RS, 0.08, (t - (tn - 0.22)) / 0.22) // 톡! 하고 찌를 치러 들어가요
+                      else if (t > tn && t < tn + 0.4)
+                        r = lerp(0.08, RS, eOut((t - tn) / 0.4)) // 놀란 듯 빠져요
+                    }
+                    if (t >= tf) {
+                      const u = clamp((t - tf) / 0.65, 0, 1)
+                      r = lerp(base(tf), 0.05, u * u) // 마지막엔 다시 달려들어 물어요
+                    }
+                    return r
+                  },
+                  kA = clamp((F.t - d0) / (tAE - d0), 0, 1),
+                  r = rAt(F.t),
+                  th =
+                    L.th0 +
+                    Math.sin(F.t * 1.6) * 0.35 * kA * clamp(r / (RS || 1), 0, 1),
+                  wob = Math.sin(F.t * 3) * (1 - kA) * 0.5
+                L.x = F.bx + Math.cos(th) * r - Math.sin(th) * wob
+                L.y = F.by + Math.sin(th) * r + Math.cos(th) * wob
+                // 항상 찌를 바라본 채로, 빠질 땐 뒤로 후진해요
+                const tgt = th + Math.PI,
+                  da = Math.atan2(Math.sin(tgt - L.a), Math.cos(tgt - L.a))
+                L.a += da * Math.min(1, dt * 12)
               }
               while (F.nibI < F.nib.length && F.t >= F.nib[F.nibI]) {
                 F.nibI++
@@ -18153,7 +18214,7 @@
             const px = sxv(f.x),
               py = syv(f.y)
             if (px < -60 || px > W + 60 || py < -60 || py > H + 60) continue
-            drawShadow(px, py, f.a, f.sz, f.ph + time * 5, 0.2)
+            drawShadow(px, py, f.a, f.sz, f.ph + time * 5, 0.2, f.x, f.y)
           }
           if (F.lure && F.phase === "wait") {
             const al = 0.3 * clamp((F.t - F.waitDur * 0.32 + 0.5) / 0.7, 0, 1)
@@ -18165,6 +18226,8 @@
                 0.42 * F.lure.sc,
                 time * 7,
                 al,
+                F.lure.x,
+                F.lure.y,
               )
           }
           for (const r of ripples) {
@@ -18176,22 +18239,75 @@
             ctx.stroke()
           }
         }
-        function drawShadow(px, py, a, sz, ph, al) {
+        /* 그림자 몸통·꼬리가 닿는 곳이 전부 물일 때만 그려요 (부두 아래는 물이라 OK, 부두 위 부분만 아래에서 가려요) */
+        function shadowWet(wx, wy, a, sz) {
+          const c = Math.cos(a),
+            s = Math.sin(a)
+          for (const u of [-0.6, -0.3, 0, 0.5])
+            for (const v of [-0.22, 0, 0.22]) {
+              const x = wx + (c * u - s * v) * sz,
+                y = wy + (s * u + c * v) * sz
+              if (x < 0 || y < 0 || x >= MW || y >= MH || !(wAt(x, y) > 0.5))
+                return false
+            }
+          return true
+        }
+        function drawShadow(px, py, a, sz, ph, al, wx, wy) {
+          if (wx !== undefined && !shadowWet(wx, wy, a, sz)) return
           const L = sz * TS
           ctx.save()
+          if (wx !== undefined) {
+            const r = sz * 0.9 // 그림자가 닿을 수 있는 반경(타일)
+            let cl = null
+            for (const p of PIERS) {
+              if (
+                p.x > wx + r ||
+                p.x + p.w < wx - r ||
+                p.y > wy + r ||
+                p.y + p.h < wy - r
+              )
+                continue
+              if (!cl) {
+                cl = new Path2D()
+                cl.rect(-1e4, -1e4, 2e4, 2e4)
+              }
+              const k = TS / 48
+              cl.rect(
+                sxv(p.x) - k,
+                syv(p.y) - k,
+                p.w * TS + 2 * k,
+                p.h * TS + 5 * k,
+              )
+            }
+            if (cl) ctx.clip(cl, "evenodd") // 부두 위는 가리고, 부두 밖으로 삐져나온 부분만 보여요
+          }
           ctx.translate(px, py)
           ctx.rotate(a)
           ctx.fillStyle = `rgba(15,70,110,${al})`
+          /* 물고기 실루엣: 둥근 머리 → 볼록한 몸통 → 잘록한 꼬리자루 → 갈라진 꼬리 (한 번에 칠해서 겹쳐도 진해지지 않아요) */
+          const w = Math.sin(ph) * 0.08,
+            w2 = w * 0.45,
+            X = (v) => v * L
           ctx.beginPath()
-          ctx.ellipse(0, 0, L * 0.5, L * 0.2, 0, 0, 6.3)
-          ctx.fill()
-          const w = Math.sin(ph) * L * 0.12
-          ctx.beginPath()
-          ctx.moveTo(-L * 0.4, 0)
-          ctx.lineTo(-L * 0.75, -L * 0.2 + w)
-          ctx.lineTo(-L * 0.75, L * 0.2 + w)
+          ctx.moveTo(X(0.5), 0)
+          ctx.bezierCurveTo(X(0.5), X(-0.13), X(0.3), X(-0.2), X(0.05), X(-0.19))
+          ctx.bezierCurveTo(X(-0.12), X(-0.18), X(-0.22), X(-0.07), X(-0.33), X(-0.035 + w2))
+          ctx.bezierCurveTo(X(-0.4), X(-0.03 + w2), X(-0.44), X(-0.09 + w), X(-0.56), X(-0.18 + w))
+          ctx.quadraticCurveTo(X(-0.49), X(w), X(-0.56), X(0.18 + w))
+          ctx.bezierCurveTo(X(-0.44), X(0.09 + w), X(-0.4), X(0.03 + w2), X(-0.33), X(0.035 + w2))
+          ctx.bezierCurveTo(X(-0.22), X(0.07), X(-0.12), X(0.18), X(0.05), X(0.19))
+          ctx.bezierCurveTo(X(0.3), X(0.2), X(0.5), X(0.13), X(0.5), 0)
           ctx.closePath()
-          ctx.fill()
+          // 가슴지느러미 (몸통과 같은 방향으로 그려야 겹쳐도 한 번만 칠해져요)
+          ctx.moveTo(X(0.2), X(-0.12))
+          ctx.quadraticCurveTo(X(0.05), X(-0.3 - w * 0.4), X(-0.12), X(-0.26 - w * 0.4))
+          ctx.quadraticCurveTo(X(0), X(-0.15), X(0.05), X(-0.1))
+          ctx.closePath()
+          ctx.moveTo(X(0.05), X(0.1))
+          ctx.quadraticCurveTo(X(0), X(0.15), X(-0.12), X(0.26 + w * 0.4))
+          ctx.quadraticCurveTo(X(0.05), X(0.3 + w * 0.4), X(0.2), X(0.12))
+          ctx.closePath()
+          ctx.fill("nonzero")
           ctx.restore()
         }
         const KEYY = {
@@ -20587,7 +20703,7 @@
               px = sxv(f.x),
               py = syv(f.y)
             if (px < -60 || px > W + 60 || py < -60 || py > H + 60) return
-            drawShadow(px, py, f.a, f.sz, f.ph + time * 5, 0.2)
+            drawShadow(px, py, f.a, f.sz, f.ph + time * 5, 0.2, f.x, f.y)
           } else if (it.t === 1) {
             const r = it.r,
               a = 1 - r.life / r.max
@@ -20606,6 +20722,8 @@
                 0.42 * F.lure.sc,
                 time * 7,
                 al,
+                F.lure.x,
+                F.lure.y,
               )
           }
         }
