@@ -16468,20 +16468,29 @@
         function sledPut(s) {
           if (!(MP.on && MP.user && MP.db)) return
           const ref = MP.db.ref("world/main/sleds/" + s.id)
-          ref
-            .set({
-              x: +s.x.toFixed(2),
-              y: +s.y.toFixed(2),
-              h: +s.h.toFixed(2),
-              o: s.owner || sledSelf(),
-              t:
-                s.t === undefined
-                  ? firebase.database.ServerValue.TIMESTAMP
-                  : s.t,
-            })
-            .catch(() => {})
-          // 주인이 게임을 끄거나 연결이 끊기면 썰매도 사라진다
-          if (s.mine) ref.onDisconnect().remove()
+          // 방향은 -π~π 로 정리 (서버 규칙 범위 -7~7 을 넘으면 저장이 거부돼요)
+          s.h = Math.atan2(Math.sin(s.h || 0), Math.cos(s.h || 0))
+          const pos = {
+            x: +clamp(s.x, 0, MW).toFixed(2),
+            y: +clamp(s.y, 0, MH).toFixed(2),
+            h: +s.h.toFixed(2),
+          }
+          if (s.mine || s.owner === sledSelf()) {
+            // 주인: 전체를 새로 쓴다 (t 는 항상 서버 시간 → 규칙의 now 검사 통과)
+            ref
+              .set(
+                Object.assign(
+                  { o: sledSelf(), t: firebase.database.ServerValue.TIMESTAMP },
+                  pos,
+                ),
+              )
+              .catch(() => {})
+            // 주인이 게임을 끄거나 연결이 끊기면 썰매도 사라진다
+            ref.onDisconnect().remove()
+          } else {
+            // 남의 썰매를 마지막에 내린 사람: 위치만 갱신 (주인/시간은 그대로)
+            ref.update(pos).catch(() => {})
+          }
         }
         function sledRemoveMine() {
           const s = sledMine()
@@ -16559,7 +16568,7 @@
                   s.owner = owner
                   s.mine = mineNow
                   s.t = r.t
-                  if (!s.mine && !sledOcc(id).length) {
+                  if (!sledOcc(id).length) {
                     s.x = +r.x
                     s.y = +r.y
                     s.h = h
@@ -16574,7 +16583,9 @@
               }
               SLED_UI.key = ""
             },
-            () => {},
+            () => {
+              sledWatching = false // 구독이 끊기면 다음 프레임에 다시 건다
+            },
           )
         }
         function sledSaveRest(s) {
@@ -27599,8 +27610,8 @@
             n: dispName(),
             a: save.avatar | 0,
             pl: 1,
-            sl: 0, // 개인 썰매는 내 화면에서만 (맵 썰매 번호와 겹치지 않게)
-            ss: 0,
+            sl: P.sl > 0 ? P.sl | 0 : 0, // 탄 썰매 번호 (모두에게 보이도록 서버에 올림)
+            ss: clamp(P.ss | 0, 0, 3),
           }
           if (MP.say) {
             d.s = MP.say.t
